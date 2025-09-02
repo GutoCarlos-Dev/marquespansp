@@ -1,10 +1,48 @@
-// Controle de Estoque da Frota - Lógica Principal
-// Este arquivo contém toda a lógica para gerenciar estoques, pedidos e notificações
+// Controle de Estoque da Frota - Lógica Principal com Login
+// Este arquivo contém toda a lógica para gerenciar login, estoques, pedidos e notificações
+
+// Credenciais iniciais
+const USERNAME = 'admin';
+const PASSWORD = 'admin';
+
+// Elementos do DOM
+const loginScreen = document.getElementById('login-screen');
+const appContent = document.getElementById('app-content');
+const loginForm = document.getElementById('login-form');
+const loginError = document.getElementById('login-error');
 
 // Estruturas de dados globais
 let vehicles = []; // Array de veículos (estoques por placa)
 let requests = []; // Array de pedidos pendentes
 let notifications = []; // Array de notificações
+
+// Função para mostrar o conteúdo principal após login
+function showAppContent() {
+    loginScreen.classList.add('hidden');
+    appContent.classList.remove('hidden');
+}
+
+// Função para mostrar erro de login
+function showLoginError(message) {
+    loginError.textContent = message;
+}
+
+// Evento de submissão do formulário de login
+loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = loginForm.username.value.trim();
+    const password = loginForm.password.value.trim();
+
+    if (username === USERNAME && password === PASSWORD) {
+        showAppContent();
+        loadData();
+        renderVehicles();
+        renderRequests();
+        renderNotifications();
+    } else {
+        showLoginError('Usuário ou senha incorretos.');
+    }
+});
 
 // Carregar dados do localStorage ao iniciar
 function loadData() {
@@ -162,9 +200,4 @@ document.getElementById('adicionar-veiculo').addEventListener('click', () => {
 });
 
 // Inicializar aplicação
-document.addEventListener('DOMContentLoaded', () => {
-    loadData();
-    renderVehicles();
-    renderRequests();
-    renderNotifications();
-});
+// Removido o DOMContentLoaded para iniciar após login

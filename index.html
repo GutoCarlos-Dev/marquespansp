@@ -7,44 +7,60 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <header>
-        <h1>Controle de Estoque da Frota Leve</h1>
-        <nav>
-            <ul>
-                <li><a href="#veiculos">Veículos</a></li>
-                <li><a href="#pedidos">Pedidos</a></li>
-                <li><a href="#notificacoes">Notificações</a></li>
-            </ul>
-        </nav>
-    </header>
+    <!-- Tela de Login -->
+    <div id="login-screen" class="login-screen">
+        <h2>Login</h2>
+        <form id="login-form">
+            <label for="username">Usuário:</label>
+            <input type="text" id="username" name="username" required>
+            <label for="password">Senha:</label>
+            <input type="password" id="password" name="password" required>
+            <button type="submit">Entrar</button>
+        </form>
+        <p id="login-error" class="error-message"></p>
+    </div>
 
-    <main>
-        <section id="veiculos">
-            <h2>Veículos (Estoques)</h2>
-            <div id="lista-veiculos">
-                <!-- Lista de veículos será populada pelo JS -->
-            </div>
-            <button id="adicionar-veiculo">Adicionar Veículo</button>
-        </section>
+    <!-- Conteúdo Principal -->
+    <div id="app-content" class="hidden">
+        <header>
+            <h1>Controle de Estoque da Frota Leve</h1>
+            <nav>
+                <ul>
+                    <li><a href="#veiculos">Veículos</a></li>
+                    <li><a href="#pedidos">Pedidos</a></li>
+                    <li><a href="#notificacoes">Notificações</a></li>
+                </ul>
+            </nav>
+        </header>
 
-        <section id="pedidos">
-            <h2>Pedidos de Peças</h2>
-            <div id="lista-pedidos">
-                <!-- Pedidos pendentes -->
-            </div>
-        </section>
+        <main>
+            <section id="veiculos">
+                <h2>Veículos (Estoques)</h2>
+                <div id="lista-veiculos">
+                    <!-- Lista de veículos será populada pelo JS -->
+                </div>
+                <button id="adicionar-veiculo">Adicionar Veículo</button>
+            </section>
 
-        <section id="notificacoes">
-            <h2>Notificações</h2>
-            <div id="lista-notificacoes">
-                <!-- Notificações para matriz ou supervisores -->
-            </div>
-        </section>
-    </main>
+            <section id="pedidos">
+                <h2>Pedidos de Peças</h2>
+                <div id="lista-pedidos">
+                    <!-- Pedidos pendentes -->
+                </div>
+            </section>
 
-    <footer>
-        <p>&copy; 2023 Empresa - Controle de Estoque</p>
-    </footer>
+            <section id="notificacoes">
+                <h2>Notificações</h2>
+                <div id="lista-notificacoes">
+                    <!-- Notificações para matriz ou supervisores -->
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2023 Empresa - Controle de Estoque</p>
+        </footer>
+    </div>
 
     <script src="js/app.js"></script>
 </body>

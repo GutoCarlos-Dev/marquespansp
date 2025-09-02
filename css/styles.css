@@ -9,13 +9,13 @@
 body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
-    color: #333;
-    background-color: #f4f4f4;
+    color: #155724;
+    background-color: #e6f2e6;
 }
 
 /* Cabeçalho */
 header {
-    background-color: #333;
+    background-color: #2e7d32;
     color: #fff;
     padding: 1rem;
     text-align: center;
@@ -42,7 +42,7 @@ nav a {
 }
 
 nav a:hover {
-    background-color: #555;
+    background-color: #1b5e20;
 }
 
 /* Conteúdo principal */
@@ -64,12 +64,12 @@ section {
 
 section h2 {
     margin-bottom: 1rem;
-    color: #333;
+    color: #155724;
 }
 
 /* Botões */
 button {
-    background-color: #4CAF50;
+    background-color: #4caf50;
     color: white;
     padding: 0.5rem 1rem;
     border: none;
@@ -80,14 +80,14 @@ button {
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: #388e3c;
 }
 
 /* Rodapé */
 footer {
     text-align: center;
     padding: 1rem;
-    background-color: #333;
+    background-color: #2e7d32;
     color: #fff;
     margin-top: 2rem;
 }
@@ -124,4 +124,57 @@ footer {
     main {
         padding: 0 0.5rem;
     }
+}
+
+/* Tela de Login */
+.login-screen {
+    max-width: 400px;
+    margin: 5rem auto;
+    padding: 2rem;
+    background-color: #ffffff;
+    border: 2px solid #4caf50;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+    text-align: center;
+}
+
+.login-screen h2 {
+    margin-bottom: 1rem;
+    color: #2e7d32;
+}
+
+.login-screen label {
+    display: block;
+    margin: 0.5rem 0 0.2rem;
+    color: #155724;
+    text-align: left;
+}
+
+.login-screen input {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #4caf50;
+    border-radius: 4px;
+}
+
+.login-screen button {
+    background-color: #4caf50;
+    color: white;
+    padding: 0.7rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color 0.3s;
+}
+
+.login-screen button:hover {
+    background-color: #388e3c;
+}
+
+.error-message {
+    color: #d32f2f;
+    font-weight: bold;
+    margin-top: 0.5rem;
 }
