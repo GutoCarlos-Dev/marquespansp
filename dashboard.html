@@ -30,13 +30,31 @@
             <!-- Seção do Dashboard -->
             <section id="dashboard-section" class="content-section">
                 <h2>Dashboard</h2>
-                <div id="dashboard-summary">
-                    <p>Veículos cadastrados: <span id="count-veiculos">0</span></p>
-                    <p>Itens em estoque (Positivos): <span id="count-estoque-positivo">0</span></p>
-                    <p>Itens em estoque (Negativos): <span id="count-estoque-negativo">0</span></p>
-                    <p>Pedidos aprovados: <span id="count-pedidos-aprovados">0</span></p>
-                    <p>Pedidos pendentes: <span id="count-pedidos-pendentes">0</span></p>
-                    <p>Total de baixas realizadas: <span id="count-baixas">0</span></p>
+                <div id="dashboard-summary" class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h3>Veículos</h3>
+                        <p>Quantidade de veículos cadastrados:</p>
+                        <p class="count" id="count-veiculos">0</p>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Estoque</h3>
+                        <p>Itens em estoque (Positivos):</p>
+                        <p class="count" id="count-estoque-positivo">0</p>
+                        <p>Itens em estoque (Negativos):</p>
+                        <p class="count" id="count-estoque-negativo">0</p>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Solicitações</h3>
+                        <p>Pedidos aprovados:</p>
+                        <p class="count" id="count-pedidos-aprovados">0</p>
+                        <p>Pedidos pendentes:</p>
+                        <p class="count" id="count-pedidos-pendentes">0</p>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Baixas</h3>
+                        <p>Total de baixas realizadas:</p>
+                        <p class="count" id="count-baixas">0</p>
+                    </div>
                 </div>
             </section>
 

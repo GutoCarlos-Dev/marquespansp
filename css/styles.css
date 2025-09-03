@@ -42,6 +42,36 @@ header h1 {
     overflow-y: auto;
 }
 
+/* Estilos para o grid do dashboard */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* Estilos para os cards do dashboard */
+.dashboard-card {
+    background-color: #e6f2e6;
+    border: 2px solid #4caf50;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.dashboard-card h3 {
+    margin-bottom: 0.5rem;
+    color: #2e7d32;
+}
+
+.dashboard-card .count {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #155724;
+    margin-top: 0.25rem;
+}
+
 /* Estilos para a navegação (usado em outras páginas) */
 nav ul {
     list-style: none;
@@ -417,3 +447,5 @@ footer {
     font-weight: bold;
     margin-top: 0.5rem;
 }
+
+/* Linha em branco adicionada ao final do arquivo */
