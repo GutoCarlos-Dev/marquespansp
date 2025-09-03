@@ -114,3 +114,26 @@
     border: 1px solid #ccc;
     border-radius: 4px;
 }
+
+/* Estilos para o formulário de itens */
+#item-form {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 0.5rem 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+    align-items: center;
+}
+
+#item-form label {
+    justify-self: end;
+    font-weight: bold;
+    color: #155724;
+}
+
+#item-form input {
+    justify-self: start;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
