@@ -520,7 +520,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Menu navigation
         const menuButtons = document.querySelectorAll('.menu-btn');
         menuButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (event) => {
+                event.preventDefault();
                 const target = btn.getAttribute('data-target');
 
                 if (target.endsWith('.html')) {
@@ -536,7 +537,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     sections.forEach(s => s.classList.add('hidden'));
 
                     // Show target section
-                    document.getElementById(target).classList.remove('hidden');
+                    const targetSection = document.getElementById(target);
+                    if (targetSection) {
+                        targetSection.classList.remove('hidden');
+                    }
                 }
             });
         });
