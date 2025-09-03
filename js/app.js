@@ -540,6 +540,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const targetSection = document.getElementById(target);
                     if (targetSection) {
                         targetSection.classList.remove('hidden');
+                    } else {
+                        console.error(`Seção alvo não encontrada: ${target}`);
                     }
                 }
             });
