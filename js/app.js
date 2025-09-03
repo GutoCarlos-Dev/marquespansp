@@ -30,6 +30,14 @@ if (loginForm) {
             showLoginError('Usuário ou senha incorretos.');
         }
     });
+
+    // Corrigir foco para evitar digitação duplicada
+    loginForm.username.addEventListener('focus', () => {
+        loginForm.username.value = '';
+    });
+    loginForm.password.addEventListener('focus', () => {
+        loginForm.password.value = '';
+    });
 }
 
 // Estruturas de dados globais
@@ -546,6 +554,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+
+        // Trigger click on the active menu button to show the initial section
+        const activeBtn = document.querySelector('.menu-btn.active');
+        if (activeBtn) {
+            activeBtn.click();
+        }
     }
 });
 
