@@ -272,30 +272,32 @@ if (addVehicleBtn) {
     });
 }
 
-// Inicializar aplicação
-// Verificar se estamos na página do dashboard e inicializar
-if (document.getElementById('app-content')) {
-    loadData();
-    renderVehicles();
-    renderRequests();
-    renderNotifications();
-    renderStockSummary();
+document.addEventListener('DOMContentLoaded', () => {
+    // Inicializar aplicação
+    // Verificar se estamos na página do dashboard e inicializar
+    if (document.getElementById('app-content')) {
+        loadData();
+        renderVehicles();
+        renderRequests();
+        renderNotifications();
+        renderStockSummary();
 
-    // Menu navigation
-    const menuButtons = document.querySelectorAll('.menu-btn');
-    menuButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Remove active from all
-            menuButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+        // Menu navigation
+        const menuButtons = document.querySelectorAll('.menu-btn');
+        menuButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active from all
+                menuButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
 
-            // Hide all sections
-            const sections = document.querySelectorAll('.content-section');
-            sections.forEach(s => s.classList.add('hidden'));
+                // Hide all sections
+                const sections = document.querySelectorAll('.content-section');
+                sections.forEach(s => s.classList.add('hidden'));
 
-            // Show target section
-            const target = btn.getAttribute('data-target');
-            document.getElementById(target).classList.remove('hidden');
+                // Show target section
+                const target = btn.getAttribute('data-target');
+                document.getElementById(target).classList.remove('hidden');
+            });
         });
-    });
-}
+    }
+});
