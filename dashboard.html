@@ -114,9 +114,48 @@
             <!-- Seção de Estoque -->
             <section id="estoque-section" class="content-section hidden">
                 <h2>Estoque</h2>
-                <!-- Resumo dos estoques totais -->
-                <div id="resumo-estoque">
-                    <!-- Resumo de estoques será exibido aqui -->
+                <div class="estoque-header">
+                    <button id="btn-cadastrar-item" class="btn-primary">Cadastrar Item</button>
+                    <div class="buscar-item">
+                        <label for="buscar-placa">Buscar por Placa:</label>
+                        <input type="text" id="buscar-placa" name="buscar-placa" placeholder="Digite a placa" />
+                        <button id="btn-buscar-item" class="btn-primary">Buscar</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="tabela-itens">
+                        <thead>
+                            <tr>
+                                <th>Placa</th>
+                                <th>Item</th>
+                                <th>Quantidade</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-itens">
+                            <!-- Lista de itens será populada pelo JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Modal para cadastrar/editar item -->
+                <div id="item-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <span id="close-item-modal" class="close">&times;</span>
+                        <h3 id="item-modal-title">Cadastrar Item</h3>
+                        <form id="item-form">
+                            <label for="item-placa">Placa:</label>
+                            <input type="text" id="item-placa" name="item-placa" required />
+
+                            <label for="item-nome">Nome do Item:</label>
+                            <input type="text" id="item-nome" name="item-nome" required />
+
+                            <label for="item-quantidade">Quantidade:</label>
+                            <input type="number" id="item-quantidade" name="item-quantidade" required />
+
+                            <button type="submit" class="btn-primary">Salvar</button>
+                        </form>
+                    </div>
                 </div>
             </section>
 

@@ -313,199 +313,6 @@ if (vehicleForm) {
     });
 }
 
-// Variáveis para controle do modal de itens
-let editingItemIndex = null;
-
-// Renderizar lista de itens no estoque
-function renderItems() {
-    const listaItens = document.getElementById('lista-itens');
-    listaItens.innerHTML = '';
-
-    let allItems = [];
-    vehicles.forEach(vehicle => {
-        Object.entries(vehicle.estoque).forEach(([item, quantidade]) => {
-            allItems.push({
-                placa: vehicle.placa,
-                item,
-                quantidade
-            });
-        });
-    });
-
-    if (allItems.length === 0) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = '<td colspan="4" style="text-align: center; padding: 2rem;">Nenhum item cadastrado</td>';
-        listaItens.appendChild(tr);
-        return;
-    }
-
-    allItems.forEach((entry, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${entry.placa}</td>
-            <td>${entry.item}</td>
-            <td>${entry.quantidade}</td>
-            <td>
-                <button class="action-btn edit-btn" onclick="editItem(${index})">Editar</button>
-                <button class="action-btn delete-btn" onclick="deleteItem(${index})">Excluir</button>
-            </td>
-        `;
-        listaItens.appendChild(tr);
-    });
-}
-
-// Abrir modal para adicionar novo item
-const btnCadastrarItem = document.getElementById('btn-cadastrar-item');
-if (btnCadastrarItem) {
-    btnCadastrarItem.addEventListener('click', () => {
-        editingItemIndex = null;
-        document.getElementById('item-form').reset();
-        document.getElementById('item-modal-title').textContent = 'Cadastrar Item';
-        document.getElementById('item-modal').classList.remove('hidden');
-    });
-}
-
-// Fechar modal de item
-const closeItemModalBtn = document.getElementById('close-item-modal');
-if (closeItemModalBtn) {
-    closeItemModalBtn.addEventListener('click', () => {
-        document.getElementById('item-modal').classList.add('hidden');
-    });
-}
-
-// Editar item
-function editItem(index) {
-    editingItemIndex = index;
-    const listaItens = document.getElementById('lista-itens');
-    const tr = listaItens.children[index];
-    if (!tr) return;
-
-    const placa = tr.children[0].textContent;
-    const item = tr.children[1].textContent;
-    const quantidade = tr.children[2].textContent;
-
-    document.getElementById('item-placa').value = placa;
-    document.getElementById('item-nome').value = item;
-    document.getElementById('item-quantidade').value = quantidade;
-
-    document.getElementById('item-modal-title').textContent = 'Editar Item';
-    document.getElementById('item-modal').classList.remove('hidden');
-}
-
-// Excluir item
-function deleteItem(index) {
-    if (!confirm('Tem certeza que deseja excluir este item?')) return;
-
-    // Encontrar o item na estrutura vehicles e remover
-    let count = 0;
-    for (let v = 0; v < vehicles.length; v++) {
-        const vehicle = vehicles[v];
-        for (const [item, quantidade] of Object.entries(vehicle.estoque)) {
-            if (count === index) {
-                delete vehicle.estoque[item];
-                saveData();
-                renderItems();
-                renderStockSummary();
-                return;
-            }
-            count++;
-        }
-    }
-}
-
-// Salvar item via formulário modal
-const itemForm = document.getElementById('item-form');
-if (itemForm) {
-    itemForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const placa = document.getElementById('item-placa').value.trim();
-        const nome = document.getElementById('item-nome').value.trim();
-        const quantidade = parseInt(document.getElementById('item-quantidade').value.trim());
-
-        if (!placa || !nome || isNaN(quantidade)) {
-            alert('Por favor, preencha todos os campos corretamente.');
-            return;
-        }
-
-        // Encontrar veículo para atualizar ou adicionar item
-        let vehicle = vehicles.find(v => v.placa === placa);
-        if (!vehicle) {
-            alert('Veículo não encontrado para a placa informada.');
-            return;
-        }
-
-        if (editingItemIndex !== null) {
-            // Editar item existente
-            let count = 0;
-            for (const [item, qtd] of Object.entries(vehicle.estoque)) {
-                if (count === editingItemIndex) {
-                    vehicle.estoque[item] = quantidade;
-                    break;
-                }
-                count++;
-            }
-        } else {
-            // Adicionar novo item
-            vehicle.estoque[nome] = (vehicle.estoque[nome] || 0) + quantidade;
-        }
-
-        saveData();
-        renderItems();
-        renderStockSummary();
-        document.getElementById('item-modal').classList.add('hidden');
-    });
-}
-
-// Buscar item por placa
-const btnBuscarItem = document.getElementById('btn-buscar-item');
-if (btnBuscarItem) {
-    btnBuscarItem.addEventListener('click', () => {
-        const placaBusca = document.getElementById('buscar-placa').value.trim().toUpperCase();
-        if (!placaBusca) {
-            alert('Por favor, informe a placa para busca.');
-            return;
-        }
-
-        const listaItens = document.getElementById('lista-itens');
-        listaItens.innerHTML = '';
-
-        let foundItems = [];
-        vehicles.forEach(vehicle => {
-            if (vehicle.placa.toUpperCase() === placaBusca) {
-                Object.entries(vehicle.estoque).forEach(([item, quantidade]) => {
-                    foundItems.push({
-                        placa: vehicle.placa,
-                        item,
-                        quantidade
-                    });
-                });
-            }
-        });
-
-        if (foundItems.length === 0) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="4" style="text-align: center; padding: 2rem;">Nenhum item encontrado para a placa informada.</td>';
-            listaItens.appendChild(tr);
-            return;
-        }
-
-        foundItems.forEach((entry, index) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${entry.placa}</td>
-                <td>${entry.item}</td>
-                <td>${entry.quantidade}</td>
-                <td>
-                    <button class="action-btn edit-btn" onclick="editItem(${index})">Editar</button>
-                    <button class="action-btn delete-btn" onclick="deleteItem(${index})">Excluir</button>
-                </td>
-            `;
-            listaItens.appendChild(tr);
-        });
-    });
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     // Inicializar aplicação
     // Verificar se estamos na página do dashboard e inicializar
@@ -521,23 +328,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const menuButtons = document.querySelectorAll('.menu-btn');
         menuButtons.forEach(btn => {
             btn.addEventListener('click', () => {
+                // Remove active from all
+                menuButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Hide all sections
+                const sections = document.querySelectorAll('.content-section');
+                sections.forEach(s => s.classList.add('hidden'));
+
+                // Show target section
                 const target = btn.getAttribute('data-target');
-
-                if (target.endsWith('.html')) {
-                    // Navigate to the page
-                    window.location.href = target;
-                } else {
-                    // Remove active from all
-                    menuButtons.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-
-                    // Hide all sections
-                    const sections = document.querySelectorAll('.content-section');
-                    sections.forEach(s => s.classList.add('hidden'));
-
-                    // Show target section
-                    document.getElementById(target).classList.remove('hidden');
-                }
+                document.getElementById(target).classList.remove('hidden');
             });
         });
     }
