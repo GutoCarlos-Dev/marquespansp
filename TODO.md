@@ -1,25 +1,12 @@
-# TODO - Controle de Estoque da Frota
+# TODO - Implementar Rodapé Estático com Barra de Rolagem
 
-## Etapas do Projeto
+## Tarefas Concluídas
+- [x] Modificar html e body para height: 100% e display: flex
+- [x] Adicionar estilos para #app-content com flexbox
+- [x] Modificar main para flex: 1 1 auto e overflow-y: auto
+- [x] Modificar footer para margin-top: auto e flex-shrink: 0
 
-- [x] Criar estrutura de pastas (css/, js/)
-- [x] Criar index.html com estrutura básica responsiva
-- [x] Criar css/styles.css com estilos responsivos
-- [x] Criar js/app.js com lógica de controle de estoque
-- [x] Implementar funcionalidades:
-  - [x] Lista de veículos (estoques por placa)
-  - [x] Supervisores e técnicos por veículo
-  - [x] Pedidos de peças por técnicos
-  - [x] Aprovação/rejeição por supervisores
-  - [x] Baixa de estoque ou notificação para matriz
-  - [x] Notificações para estoque negativo
-- [x] Testar responsividade em desktop e mobile (CSS com media queries implementados)
-- [x] Adicionar comentários em todo o código para manutenção
-
-## Melhorias Recentes
-
-- [x] Melhorar centralização profissional da tela de login no index.html (full-screen e elegante)
-- [x] Criar dashboard.html com conteúdo do dashboard
-- [x] Atualizar js/app.js para redirecionar para dashboard.html após login
-- [x] Ajustar css/styles.css para login profissional
-- [x] Atualizar TODO.md com novas tarefas
+## Próximos Passos
+- [ ] Testar o layout em diferentes tamanhos de tela
+- [ ] Verificar se a barra de rolagem aparece corretamente quando o conteúdo é grande
+- [ ] Ajustar responsividade se necessário
