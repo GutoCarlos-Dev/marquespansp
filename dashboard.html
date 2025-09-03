@@ -7,48 +7,78 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <!-- Conteúdo Principal -->
+    <!-- Conteúdo Principal do Dashboard -->
+    <!-- Esta div contém todo o conteúdo da página do dashboard -->
     <div id="app-content">
+        <!-- Cabeçalho com título e menu de navegação -->
         <header>
             <h1>Controle de Estoque da Frota Leve</h1>
+            <!-- Menu superior com botões para navegar entre seções -->
             <nav>
-                <ul>
-                    <li><a href="#veiculos">Veículos</a></li>
-                    <li><a href="#pedidos">Pedidos</a></li>
-                    <li><a href="#notificacoes">Notificações</a></li>
+                <ul class="top-menu">
+                    <li><button data-target="dashboard-section" class="menu-btn active">Dashboard</button></li>
+                    <li><button data-target="veiculo-section" class="menu-btn">Veículo</button></li>
+                    <li><button data-target="estoque-section" class="menu-btn">Estoque</button></li>
+                    <li><button data-target="solicitacao-section" class="menu-btn">Solicitação</button></li>
+                    <li><button data-target="baixa-section" class="menu-btn">Baixa</button></li>
                 </ul>
             </nav>
         </header>
 
+        <!-- Conteúdo principal dividido em seções -->
         <main>
-            <section id="veiculos">
+            <!-- Seção do Dashboard -->
+            <section id="dashboard-section" class="content-section">
+                <h2>Dashboard</h2>
+                <p>Bem-vindo ao painel de controle da frota.</p>
+            </section>
+
+            <!-- Seção de Veículos -->
+            <section id="veiculo-section" class="content-section hidden">
                 <h2>Veículos (Estoques)</h2>
+                <!-- Lista de veículos gerenciada pelo JavaScript -->
                 <div id="lista-veiculos">
                     <!-- Lista de veículos será populada pelo JS -->
                 </div>
+                <!-- Botão para adicionar novo veículo -->
                 <button id="adicionar-veiculo">Adicionar Veículo</button>
             </section>
 
-            <section id="pedidos">
-                <h2>Pedidos de Peças</h2>
+            <!-- Seção de Estoque -->
+            <section id="estoque-section" class="content-section hidden">
+                <h2>Estoque</h2>
+                <!-- Resumo dos estoques totais -->
+                <div id="resumo-estoque">
+                    <!-- Resumo de estoques será exibido aqui -->
+                </div>
+            </section>
+
+            <!-- Seção de Solicitações -->
+            <section id="solicitacao-section" class="content-section hidden">
+                <h2>Solicitação</h2>
+                <!-- Lista de pedidos pendentes -->
                 <div id="lista-pedidos">
                     <!-- Pedidos pendentes -->
                 </div>
             </section>
 
-            <section id="notificacoes">
-                <h2>Notificações</h2>
+            <!-- Seção de Baixa -->
+            <section id="baixa-section" class="content-section hidden">
+                <h2>Baixa</h2>
+                <!-- Lista de notificações e baixas -->
                 <div id="lista-notificacoes">
                     <!-- Notificações para matriz ou supervisores -->
                 </div>
             </section>
         </main>
 
+        <!-- Rodapé da página -->
         <footer>
             <p>&copy; 2023 Empresa - Controle de Estoque</p>
         </footer>
     </div>
 
+    <!-- Script principal da aplicação -->
     <script src="js/app.js"></script>
 </body>
 </html>

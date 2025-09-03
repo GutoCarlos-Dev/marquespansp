@@ -13,8 +13,8 @@
   - [x] Aprovação/rejeição por supervisores
   - [x] Baixa de estoque ou notificação para matriz
   - [x] Notificações para estoque negativo
-- [ ] Testar responsividade em desktop e mobile
-- [ ] Adicionar comentários em todo o código para manutenção
+- [x] Testar responsividade em desktop e mobile (CSS com media queries implementados)
+- [x] Adicionar comentários em todo o código para manutenção
 
 ## Melhorias Recentes
 

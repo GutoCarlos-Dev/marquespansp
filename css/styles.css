@@ -1,11 +1,11 @@
-/* Reset básico para garantir consistência */
+/* Reset básico para garantir consistência em todos os navegadores */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Corpo da página */
+/* Estilos para o corpo da página */
 body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
@@ -13,7 +13,7 @@ body {
     background-color: #e6f2e6;
 }
 
-/* Cabeçalho */
+/* Estilos para o cabeçalho */
 header {
     background-color: #2e7d32;
     color: #fff;
@@ -25,7 +25,7 @@ header h1 {
     margin-bottom: 0.5rem;
 }
 
-/* Navegação */
+/* Estilos para a navegação (usado em outras páginas) */
 nav ul {
     list-style: none;
     display: flex;
@@ -43,6 +43,43 @@ nav a {
 
 nav a:hover {
     background-color: #1b5e20;
+}
+
+/* Estilos para o menu superior no dashboard */
+.top-menu {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0;
+    margin: 0;
+}
+
+.menu-btn {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+}
+
+.menu-btn:hover {
+    background-color: #388e3c;
+}
+
+.menu-btn.active {
+    background-color: #2e7d32;
+}
+
+/* Estilos para as seções de conteúdo no dashboard */
+.content-section {
+    display: block;
+}
+
+.content-section.hidden {
+    display: none;
 }
 
 /* Conteúdo principal */
@@ -146,6 +183,16 @@ footer {
     max-width: 400px;
     box-sizing: border-box;
     z-index: 1000;
+}
+
+/* Estilos para o logo */
+#logo {
+    max-width: 150px;
+    height: auto;
+    margin-bottom: 1rem;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .login-screen h2 {

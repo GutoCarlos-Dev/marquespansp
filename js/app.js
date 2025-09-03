@@ -1,11 +1,11 @@
 // Controle de Estoque da Frota - Lógica Principal com Login
 // Este arquivo contém toda a lógica para gerenciar login, estoques, pedidos e notificações
 
-// Credenciais iniciais
+// Credenciais iniciais para login
 const USERNAME = 'admin';
 const PASSWORD = 'admin';
 
-// Elementos do DOM
+// Elementos do DOM para a tela de login
 const loginScreen = document.getElementById('login-screen');
 const appContent = document.getElementById('app-content');
 const loginForm = document.getElementById('login-form');
@@ -115,6 +115,31 @@ function renderNotifications() {
     });
 }
 
+// Renderizar resumo de estoque
+function renderStockSummary() {
+    const resumoEstoque = document.getElementById('resumo-estoque');
+    resumoEstoque.innerHTML = '';
+
+    const totalItems = {};
+    vehicles.forEach(vehicle => {
+        Object.entries(vehicle.estoque).forEach(([peca, qtd]) => {
+            totalItems[peca] = (totalItems[peca] || 0) + qtd;
+        });
+    });
+
+    if (Object.keys(totalItems).length === 0) {
+        resumoEstoque.innerHTML = '<p>Nenhum item em estoque.</p>';
+    } else {
+        const ul = document.createElement('ul');
+        Object.entries(totalItems).forEach(([peca, qtd]) => {
+            const li = document.createElement('li');
+            li.textContent = `${peca}: ${qtd}`;
+            ul.appendChild(li);
+        });
+        resumoEstoque.appendChild(ul);
+    }
+}
+
 // Adicionar novo veículo
 function addVehicle(placa, supervisor, tecnicos, estoqueInicial) {
     const vehicle = {
@@ -126,6 +151,7 @@ function addVehicle(placa, supervisor, tecnicos, estoqueInicial) {
     vehicles.push(vehicle);
     saveData();
     renderVehicles();
+    renderStockSummary();
 }
 
 // Criar pedido de peça
@@ -183,6 +209,7 @@ function approveRequest(id, aprovado) {
     renderRequests();
     renderNotifications();
     renderVehicles(); // Atualizar estoques
+    renderStockSummary();
 }
 
 // Event listeners
@@ -207,4 +234,23 @@ if (document.getElementById('app-content')) {
     renderVehicles();
     renderRequests();
     renderNotifications();
+    renderStockSummary();
+
+    // Menu navigation
+    const menuButtons = document.querySelectorAll('.menu-btn');
+    menuButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Remove active from all
+            menuButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Hide all sections
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(s => s.classList.add('hidden'));
+
+            // Show target section
+            const target = btn.getAttribute('data-target');
+            document.getElementById(target).classList.remove('hidden');
+        });
+    });
 }
