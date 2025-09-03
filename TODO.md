@@ -15,3 +15,11 @@
   - [x] Notificações para estoque negativo
 - [ ] Testar responsividade em desktop e mobile
 - [ ] Adicionar comentários em todo o código para manutenção
+
+## Melhorias Recentes
+
+- [x] Melhorar centralização profissional da tela de login no index.html (full-screen e elegante)
+- [x] Criar dashboard.html com conteúdo do dashboard
+- [x] Atualizar js/app.js para redirecionar para dashboard.html após login
+- [x] Ajustar css/styles.css para login profissional
+- [x] Atualizar TODO.md com novas tarefas

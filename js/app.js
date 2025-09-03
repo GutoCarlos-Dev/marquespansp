@@ -11,38 +11,36 @@ const appContent = document.getElementById('app-content');
 const loginForm = document.getElementById('login-form');
 const loginError = document.getElementById('login-error');
 
+// Inicializar login se estiver na página de login
+if (loginForm) {
+    // Função para mostrar erro de login
+    function showLoginError(message) {
+        loginError.textContent = message;
+    }
+
+    // Evento de submissão do formulário de login
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const username = loginForm.username.value.trim();
+        const password = loginForm.password.value.trim();
+
+        if (username === USERNAME && password === PASSWORD) {
+            showAppContent();
+        } else {
+            showLoginError('Usuário ou senha incorretos.');
+        }
+    });
+}
+
 // Estruturas de dados globais
 let vehicles = []; // Array de veículos (estoques por placa)
 let requests = []; // Array de pedidos pendentes
 let notifications = []; // Array de notificações
 
-// Função para mostrar o conteúdo principal após login
+// Função para redirecionar para o dashboard após login
 function showAppContent() {
-    loginScreen.classList.add('hidden');
-    appContent.classList.remove('hidden');
+    window.location.href = 'dashboard.html';
 }
-
-// Função para mostrar erro de login
-function showLoginError(message) {
-    loginError.textContent = message;
-}
-
-// Evento de submissão do formulário de login
-loginForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const username = loginForm.username.value.trim();
-    const password = loginForm.password.value.trim();
-
-    if (username === USERNAME && password === PASSWORD) {
-        showAppContent();
-        loadData();
-        renderVehicles();
-        renderRequests();
-        renderNotifications();
-    } else {
-        showLoginError('Usuário ou senha incorretos.');
-    }
-});
 
 // Carregar dados do localStorage ao iniciar
 function loadData() {
@@ -188,16 +186,25 @@ function approveRequest(id, aprovado) {
 }
 
 // Event listeners
-document.getElementById('adicionar-veiculo').addEventListener('click', () => {
-    const placa = prompt('Digite a placa do veículo:');
-    const supervisor = prompt('Digite o nome do supervisor:');
-    const tecnicos = prompt('Digite os nomes dos técnicos (separados por vírgula):');
-    const estoque = {}; // Para simplificar, estoque inicial vazio
+const addVehicleBtn = document.getElementById('adicionar-veiculo');
+if (addVehicleBtn) {
+    addVehicleBtn.addEventListener('click', () => {
+        const placa = prompt('Digite a placa do veículo:');
+        const supervisor = prompt('Digite o nome do supervisor:');
+        const tecnicos = prompt('Digite os nomes dos técnicos (separados por vírgula):');
+        const estoque = {}; // Para simplificar, estoque inicial vazio
 
-    if (placa && supervisor && tecnicos) {
-        addVehicle(placa, supervisor, tecnicos, estoque);
-    }
-});
+        if (placa && supervisor && tecnicos) {
+            addVehicle(placa, supervisor, tecnicos, estoque);
+        }
+    });
+}
 
 // Inicializar aplicação
-// Removido o DOMContentLoaded para iniciar após login
+// Verificar se estamos na página do dashboard e inicializar
+if (document.getElementById('app-content')) {
+    loadData();
+    renderVehicles();
+    renderRequests();
+    renderNotifications();
+}
