@@ -77,6 +77,12 @@
 }
 
 /* Estilos para as seções de conteúdo no dashboard */
+#dashboard-section {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
 .content-section {
     display: block;
 }
