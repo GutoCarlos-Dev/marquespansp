@@ -94,22 +94,22 @@
 
 /* Estilos para o formulário de veículo */
 #vehicle-form {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 0.5rem 1rem;
     max-width: 600px;
     margin: 0 auto;
     align-items: center;
 }
 
 #vehicle-form label {
-    flex: 0 0 120px;
+    justify-self: end;
     font-weight: bold;
     color: #155724;
 }
 
 #vehicle-form input {
-    flex: 1 1 auto;
+    justify-self: start;
     padding: 0.4rem 0.5rem;
     border: 1px solid #ccc;
     border-radius: 4px;
