@@ -26,6 +26,17 @@
     grid-area: baixa;
 }
 
+/* Centralizar conteúdo da seção dashboard */
+#dashboard-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;   /* Centraliza horizontalmente */
+    justify-content: center; /* Centraliza verticalmente */
+    min-height: 60vh;      /* Ajuste conforme necessário */
+    text-align: center;    /* Centraliza textos */
+}
+
+
 /* Estilos para os cards do dashboard */
 .dashboard-card {
     background-color: #e6f2e6;
