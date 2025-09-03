@@ -281,6 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderRequests();
         renderNotifications();
         renderStockSummary();
+        renderDashboardSummary();
 
         // Menu navigation
         const menuButtons = document.querySelectorAll('.menu-btn');
@@ -301,3 +302,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Função para renderizar os resumos no dashboard
+function renderDashboardSummary() {
+    // Veículos cadastrados
+    const countVeiculos = vehicles.length;
+
+    // Itens em estoque positivos e negativos
+    let estoquePositivo = 0;
+    let estoqueNegativo = 0;
+    vehicles.forEach(vehicle => {
+        Object.values(vehicle.estoque).forEach(qtd => {
+            if (qtd > 0) estoquePositivo += qtd;
+            else if (qtd < 0) estoqueNegativo += qtd;
+        });
+    });
+
+    // Pedidos aprovados e pendentes
+    let pedidosAprovados = 0;
+    let pedidosPendentes = 0;
+    requests.forEach(req => {
+        if (req.status && req.status.toLowerCase() === 'aprovado') pedidosAprovados++;
+        else if (req.status && req.status.toLowerCase() === 'pendente') pedidosPendentes++;
+    });
+
+    // Total de baixas realizadas (notificações)
+    const totalBaixas = notifications.length;
+
+    // Atualizar o DOM
+    document.getElementById('count-veiculos').textContent = countVeiculos;
+    document.getElementById('count-estoque-positivo').textContent = estoquePositivo;
+    document.getElementById('count-estoque-negativo').textContent = estoqueNegativo;
+    document.getElementById('count-pedidos-aprovados').textContent = pedidosAprovados;
+    document.getElementById('count-pedidos-pendentes').textContent = pedidosPendentes;
+    document.getElementById('count-baixas').textContent = totalBaixas;
+}
