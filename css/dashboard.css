@@ -1,9 +1,29 @@
 /* Estilos para o grid do dashboard */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+        "veiculos baixa"
+        "estoque solicitacoes";
     gap: 1rem;
     margin-top: 1rem;
+}
+
+.dashboard-card.veiculos {
+    grid-area: veiculos;
+}
+
+.dashboard-card.estoque {
+    grid-area: estoque;
+}
+
+.dashboard-card.solicitacoes {
+    grid-area: solicitacoes;
+}
+
+.dashboard-card.baixa {
+    grid-area: baixa;
 }
 
 /* Estilos para os cards do dashboard */
