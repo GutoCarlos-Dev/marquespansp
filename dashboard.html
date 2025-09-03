@@ -65,6 +65,32 @@
                 <!-- Botão para adicionar novo veículo -->
                 <button id="adicionar-veiculo" class="btn-primary">Adicionar Veículo</button>
 
+                <!-- Modal para adicionar/editar veículo -->
+                <div id="vehicle-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <span id="close-modal" class="close">&times;</span>
+                        <h3 id="modal-title">Adicionar Veículo</h3>
+                        <form id="vehicle-form">
+                            <label for="placa">Placa:</label>
+                            <input type="text" id="placa" name="placa" required />
+
+                            <label for="modelo">Modelo:</label>
+                            <input type="text" id="modelo" name="modelo" required />
+
+                            <label for="marca">Marca:</label>
+                            <input type="text" id="marca" name="marca" required />
+
+                            <label for="renavan">Renavan:</label>
+                            <input type="text" id="renavan" name="renavan" required />
+
+                            <label for="ano">Ano:</label>
+                            <input type="number" id="ano" name="ano" required />
+
+                            <button type="submit" class="btn-primary">Salvar</button>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- Tabela de veículos -->
                 <div class="table-container">
                     <table id="tabela-veiculos">

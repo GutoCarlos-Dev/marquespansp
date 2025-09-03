@@ -165,28 +165,26 @@ function addVehicle(placa, modelo, marca, renavan, ano) {
     renderStockSummary();
 }
 
-// Editar veículo
-function editVehicle(index) {
-    const vehicle = vehicles[index];
-    const placa = prompt('Placa:', vehicle.placa);
-    const modelo = prompt('Modelo:', vehicle.modelo);
-    const marca = prompt('Marca:', vehicle.marca);
-    const renavan = prompt('Renavan:', vehicle.renavan);
-    const ano = prompt('Ano:', vehicle.ano);
+// Variável para controlar o índice do veículo sendo editado
+let editingVehicleIndex = null;
 
-    if (placa && modelo && marca && renavan && ano) {
-        vehicles[index] = {
-            ...vehicle,
-            placa: placa.toUpperCase(),
-            modelo,
-            marca,
-            renavan,
-            ano
-        };
-        saveData();
-        renderVehicles();
-        renderStockSummary();
-    }
+// Editar veículo usando modal
+function editVehicle(index) {
+    editingVehicleIndex = index;
+    const vehicle = vehicles[index];
+
+    // Preencher o formulário do modal com os dados do veículo
+    document.getElementById('placa').value = vehicle.placa || '';
+    document.getElementById('modelo').value = vehicle.modelo || '';
+    document.getElementById('marca').value = vehicle.marca || '';
+    document.getElementById('renavan').value = vehicle.renavan || '';
+    document.getElementById('ano').value = vehicle.ano || '';
+
+    // Atualizar título do modal
+    document.getElementById('modal-title').textContent = 'Editar Veículo';
+
+    // Mostrar modal
+    document.getElementById('vehicle-modal').classList.remove('hidden');
 }
 
 // Excluir veículo
@@ -257,18 +255,61 @@ function approveRequest(id, aprovado) {
     renderStockSummary();
 }
 
-// Event listeners
 const addVehicleBtn = document.getElementById('adicionar-veiculo');
 if (addVehicleBtn) {
     addVehicleBtn.addEventListener('click', () => {
-        const placa = prompt('Digite a placa do veículo:');
-        const supervisor = prompt('Digite o nome do supervisor:');
-        const tecnicos = prompt('Digite os nomes dos técnicos (separados por vírgula):');
-        const estoque = {}; // Para simplificar, estoque inicial vazio
+        // Limpar formulário
+        document.getElementById('vehicle-form').reset();
+        editingVehicleIndex = null;
+        document.getElementById('modal-title').textContent = 'Adicionar Veículo';
+        document.getElementById('vehicle-modal').classList.remove('hidden');
+    });
+}
 
-        if (placa && supervisor && tecnicos) {
-            addVehicle(placa, supervisor, tecnicos, estoque);
+// Fechar modal
+const closeModalBtn = document.getElementById('close-modal');
+if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => {
+        document.getElementById('vehicle-modal').classList.add('hidden');
+    });
+}
+
+// Salvar veículo via formulário modal
+const vehicleForm = document.getElementById('vehicle-form');
+if (vehicleForm) {
+    vehicleForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const placa = document.getElementById('placa').value.trim();
+        const modelo = document.getElementById('modelo').value.trim();
+        const marca = document.getElementById('marca').value.trim();
+        const renavan = document.getElementById('renavan').value.trim();
+        const ano = document.getElementById('ano').value.trim();
+
+        if (!placa || !modelo || !marca || !renavan || !ano) {
+            alert('Por favor, preencha todos os campos.');
+            return;
         }
+
+        if (editingVehicleIndex !== null) {
+            // Editar veículo existente
+            vehicles[editingVehicleIndex] = {
+                ...vehicles[editingVehicleIndex],
+                placa: placa.toUpperCase(),
+                modelo,
+                marca,
+                renavan,
+                ano
+            };
+        } else {
+            // Adicionar novo veículo
+            addVehicle(placa, modelo, marca, renavan, ano);
+        }
+
+        saveData();
+        renderVehicles();
+        renderStockSummary();
+        document.getElementById('vehicle-modal').classList.add('hidden');
     });
 }
 
