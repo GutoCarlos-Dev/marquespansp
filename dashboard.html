@@ -122,7 +122,9 @@
                     <h3>Adicionar Item</h3>
                     <form id="item-form">
                         <label for="item-placa">Placa:</label>
-                        <input type="text" id="item-placa" name="item-placa" required />
+                        <select id="item-placa" name="item-placa" required>
+                            <option value="" disabled selected>Selecione a placa</option>
+                        </select>
 
                         <label for="item-codigo">Código:</label>
                         <input type="text" id="item-codigo" name="item-codigo" required />

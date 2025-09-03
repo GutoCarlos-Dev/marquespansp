@@ -142,7 +142,47 @@ if (itemForm) {
         saveData();
         renderItems();
         renderStockSummary();
-        document.getElementById('item-modal').classList.add('hidden');
+        // Hide the item form section instead of modal
+        document.getElementById('item-form-section').classList.add('hidden');
+    });
+}
+
+// Populate placa select options in item form
+function populatePlacaOptions() {
+    const placaSelect = document.getElementById('item-placa');
+    if (!placaSelect) return;
+
+    // Clear existing options except the placeholder
+    placaSelect.innerHTML = '<option value="" disabled selected>Selecione a placa</option>';
+
+    vehicles.forEach(vehicle => {
+        const option = document.createElement('option');
+        option.value = vehicle.placa;
+        option.textContent = vehicle.placa;
+        placaSelect.appendChild(option);
+    });
+}
+
+// Call populatePlacaOptions when Estoque section is shown
+function showEstoqueSection() {
+    // Show the Estoque section and hide others
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.add('hidden');
+    });
+    const estoqueSection = document.getElementById('estoque-section');
+    if (estoqueSection) {
+        estoqueSection.classList.remove('hidden');
+    }
+
+    // Populate placa options
+    populatePlacaOptions();
+}
+
+// Assuming you have a menu button for Estoque with data-target="estoque-section"
+const estoqueMenuBtn = document.querySelector('button[data-target="estoque-section"]');
+if (estoqueMenuBtn) {
+    estoqueMenuBtn.addEventListener('click', () => {
+        showEstoqueSection();
     });
 }
 
