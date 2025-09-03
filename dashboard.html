@@ -35,13 +35,28 @@
 
             <!-- Seção de Veículos -->
             <section id="veiculo-section" class="content-section hidden">
-                <h2>Veículos (Estoques)</h2>
-                <!-- Lista de veículos gerenciada pelo JavaScript -->
-                <div id="lista-veiculos">
-                    <!-- Lista de veículos será populada pelo JS -->
-                </div>
+                <h2>Veículos</h2>
                 <!-- Botão para adicionar novo veículo -->
-                <button id="adicionar-veiculo">Adicionar Veículo</button>
+                <button id="adicionar-veiculo" class="btn-primary">Adicionar Veículo</button>
+
+                <!-- Tabela de veículos -->
+                <div class="table-container">
+                    <table id="tabela-veiculos">
+                        <thead>
+                            <tr>
+                                <th>Placa</th>
+                                <th>Modelo</th>
+                                <th>Marca</th>
+                                <th>Renavan</th>
+                                <th>Ano</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-veiculos">
+                            <!-- Lista de veículos será populada pelo JS -->
+                        </tbody>
+                    </table>
+                </div>
             </section>
 
             <!-- Seção de Estoque -->

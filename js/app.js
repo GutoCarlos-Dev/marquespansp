@@ -33,7 +33,7 @@ if (loginForm) {
 }
 
 // Estruturas de dados globais
-let vehicles = []; // Array de veículos (estoques por placa)
+let vehicles = []; // Array de veículos
 let requests = []; // Array de pedidos pendentes
 let notifications = []; // Array de notificações
 
@@ -65,20 +65,27 @@ function renderVehicles() {
     const listaVeiculos = document.getElementById('lista-veiculos');
     listaVeiculos.innerHTML = '';
 
-    vehicles.forEach(vehicle => {
-        const div = document.createElement('div');
-        div.className = 'vehicle-item';
-        div.innerHTML = `
-            <h3>Placa: ${vehicle.placa}</h3>
-            <p>Supervisor: ${vehicle.supervisor}</p>
-            <p>Técnicos: ${vehicle.tecnicos.join(', ')}</p>
-            <h4>Estoque:</h4>
-            <ul>
-                ${Object.entries(vehicle.estoque).map(([peca, qtd]) => `<li>${peca}: ${qtd}</li>`).join('')}
-            </ul>
-            <button onclick="createRequest('${vehicle.placa}')">Criar Pedido</button>
+    if (vehicles.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td colspan="6" style="text-align: center; padding: 2rem;">Nenhum veículo cadastrado</td>';
+        listaVeiculos.appendChild(tr);
+        return;
+    }
+
+    vehicles.forEach((vehicle, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${vehicle.placa || ''}</td>
+            <td>${vehicle.modelo || ''}</td>
+            <td>${vehicle.marca || ''}</td>
+            <td>${vehicle.renavan || ''}</td>
+            <td>${vehicle.ano || ''}</td>
+            <td>
+                <button class="action-btn edit-btn" onclick="editVehicle(${index})">Editar</button>
+                <button class="action-btn delete-btn" onclick="deleteVehicle(${index})">Excluir</button>
+            </td>
         `;
-        listaVeiculos.appendChild(div);
+        listaVeiculos.appendChild(tr);
     });
 }
 
@@ -141,17 +148,55 @@ function renderStockSummary() {
 }
 
 // Adicionar novo veículo
-function addVehicle(placa, supervisor, tecnicos, estoqueInicial) {
+function addVehicle(placa, modelo, marca, renavan, ano) {
     const vehicle = {
-        placa,
-        supervisor,
-        tecnicos: tecnicos.split(',').map(t => t.trim()),
-        estoque: estoqueInicial || {}
+        placa: placa.toUpperCase(),
+        modelo,
+        marca,
+        renavan,
+        ano,
+        supervisor: '',
+        tecnicos: [],
+        estoque: {}
     };
     vehicles.push(vehicle);
     saveData();
     renderVehicles();
     renderStockSummary();
+}
+
+// Editar veículo
+function editVehicle(index) {
+    const vehicle = vehicles[index];
+    const placa = prompt('Placa:', vehicle.placa);
+    const modelo = prompt('Modelo:', vehicle.modelo);
+    const marca = prompt('Marca:', vehicle.marca);
+    const renavan = prompt('Renavan:', vehicle.renavan);
+    const ano = prompt('Ano:', vehicle.ano);
+
+    if (placa && modelo && marca && renavan && ano) {
+        vehicles[index] = {
+            ...vehicle,
+            placa: placa.toUpperCase(),
+            modelo,
+            marca,
+            renavan,
+            ano
+        };
+        saveData();
+        renderVehicles();
+        renderStockSummary();
+    }
+}
+
+// Excluir veículo
+function deleteVehicle(index) {
+    if (confirm('Tem certeza que deseja excluir este veículo?')) {
+        vehicles.splice(index, 1);
+        saveData();
+        renderVehicles();
+        renderStockSummary();
+    }
 }
 
 // Criar pedido de peça
