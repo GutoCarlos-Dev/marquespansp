@@ -26,8 +26,8 @@ function renderVehicles() {
             <td>${vehicle.renavan || ''}</td>
             <td>${vehicle.ano || ''}</td>
             <td>
-                <button class="action-btn edit-btn" onclick="editVehicle(${index})">Editar</button>
-                <button class="action-btn delete-btn" onclick="deleteVehicle(${index})">Excluir</button>
+                <button class="action-btn edit" onclick="editVehicle(${index})">Editar</button>
+                <button class="action-btn delete" onclick="deleteVehicle(${index})">Excluir</button>
             </td>
         `;
         listaVeiculos.appendChild(tr);

@@ -63,6 +63,7 @@ function renderDashboardSummary() {
 }
 
 // Navegação do menu no dashboard
+
 document.addEventListener('DOMContentLoaded', () => {
     // Inicializar aplicação
     // Verificar se estamos na página do dashboard e inicializar
@@ -109,5 +110,80 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activeBtn) {
             activeBtn.click();
         }
+
+        // Código para abrir e fechar modais na seção Estoque
+
+        // Botões para abrir modais
+        const btnOpenGerenciarEstoque = document.getElementById('btn-selecione-estoque');
+        const btnOpenCatalogoItens = document.getElementById('btn-abrir-catalogo');
+
+        // Modais
+        const modalGerenciarEstoque = document.getElementById('modal-gerenciar-estoque');
+        const modalCatalogoItens = document.getElementById('modal-catalogo-itens');
+
+        // Botões para fechar modais
+        const btnCloseGerenciarEstoque = document.getElementById('close-modal-gerenciar-estoque');
+        const btnCloseCatalogoItens = document.getElementById('close-modal-catalogo-itens');
+
+        // Abrir modal Gerenciar Estoque
+        if (btnOpenGerenciarEstoque && modalGerenciarEstoque) {
+            btnOpenGerenciarEstoque.addEventListener('click', () => {
+                modalGerenciarEstoque.classList.remove('hidden');
+                updateModalButtonsStyle(modalGerenciarEstoque);
+            });
+        } else {
+            console.error('Botão ou modal Gerenciar Estoque não encontrado');
+        }
+
+        // Abrir modal Catálogo de Itens
+        if (btnOpenCatalogoItens && modalCatalogoItens) {
+            btnOpenCatalogoItens.addEventListener('click', () => {
+                modalCatalogoItens.classList.remove('hidden');
+                updateModalButtonsStyle(modalCatalogoItens);
+            });
+        } else {
+            console.error('Botão ou modal Catálogo de Itens não encontrado');
+        }
+
+        // Fechar modal Gerenciar Estoque
+        if (btnCloseGerenciarEstoque && modalGerenciarEstoque) {
+            btnCloseGerenciarEstoque.addEventListener('click', () => {
+                modalGerenciarEstoque.classList.add('hidden');
+            });
+        } else {
+            console.error('Botão fechar ou modal Gerenciar Estoque não encontrado');
+        }
+
+        // Fechar modal Catálogo de Itens
+        if (btnCloseCatalogoItens && modalCatalogoItens) {
+            btnCloseCatalogoItens.addEventListener('click', () => {
+                modalCatalogoItens.classList.add('hidden');
+            });
+        } else {
+            console.error('Botão fechar ou modal Catálogo de Itens não encontrado');
+        }
     }
 });
+
+// Função para atualizar o estilo dos botões dentro dos modais
+function updateModalButtonsStyle(modalElement) {
+    if (!modalElement) return;
+    const editButtons = modalElement.querySelectorAll('button.edit-btn, button.btn-primary');
+    const deleteButtons = modalElement.querySelectorAll('button.delete-btn, button.btn-secondary');
+
+    editButtons.forEach(btn => {
+        btn.classList.remove('edit-btn', 'btn-primary');
+        btn.classList.add('btn-primary');
+        btn.style.padding = '';
+        btn.style.fontSize = '';
+        btn.style.backgroundColor = '';
+    });
+
+    deleteButtons.forEach(btn => {
+        btn.classList.remove('delete-btn', 'btn-secondary');
+        btn.classList.add('btn-secondary');
+        btn.style.backgroundColor = '#e74c3c';
+        btn.style.padding = '5px 10px';
+        btn.style.fontSize = '0.85rem';
+    });
+}

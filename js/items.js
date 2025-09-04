@@ -35,8 +35,8 @@ function renderItems() {
             <td>${entry.item}</td>
             <td>${entry.quantidade}</td>
             <td>
-                <button class="action-btn edit-btn" onclick="editItem(${index})">Editar</button>
-                <button class="action-btn delete-btn" onclick="deleteItem(${index})">Excluir</button>
+                <button class="btn-primary" style="background-color:#2980b9; padding: 5px 10px; font-size: 0.85rem; onclick="editItem(${index})">Editar</button>
+                <button class="btn-secondary" style="background-color:#e74c3c; padding: 5px 10px; font-size: 0.85rem;" onclick="deleteItem(${index})">Excluir</button>
             </td>
         `;
         listaItens.appendChild(tr);
@@ -226,9 +226,9 @@ if (btnBuscarItem) {
                 <td>${entry.item}</td>
                 <td>${entry.quantidade}</td>
                 <td>
-                    <button class="action-btn edit-btn" onclick="editItem(${index})">Editar</button>
-                    <button class="action-btn delete-btn" onclick="deleteItem(${index})">Excluir</button>
-                </td>
+                <button class="action-btn edit" onclick="editItem(${index})">Editar</button>
+                <button class="action-btn delete" onclick="deleteItem(${index})">Excluir</button>
+            </td>
             `;
             listaItens.appendChild(tr);
         });

@@ -511,10 +511,27 @@ document.addEventListener('DOMContentLoaded', () => {
     populateItemSelectionDropdown();
 });
 
+// Event listeners for main Estoque buttons
+const btnSelecioneEstoque = document.getElementById('btn-selecione-estoque');
+if (btnSelecioneEstoque) {
+    btnSelecioneEstoque.addEventListener('click', () => {
+        document.getElementById('selecione-estoque-section').classList.remove('hidden');
+        document.getElementById('cadastrar-itens-section').classList.add('hidden');
+    });
+}
+
+const btnCadastrarItens = document.getElementById('btn-cadastrar-itens');
+if (btnCadastrarItens) {
+    btnCadastrarItens.addEventListener('click', () => {
+        document.getElementById('cadastrar-itens-section').classList.remove('hidden');
+        document.getElementById('selecione-estoque-section').classList.add('hidden');
+    });
+}
+
 // Abrir modal para adicionar novo item
-const btnCadastrarItem = document.getElementById('btn-add-item');
-if (btnCadastrarItem) {
-    btnCadastrarItem.addEventListener('click', () => {
+const btnAddItem = document.getElementById('btn-add-item');
+if (btnAddItem) {
+    btnAddItem.addEventListener('click', () => {
         editingItemIndex = null;
         document.getElementById('item-modal-form').reset();
         document.getElementById('item-modal-title').textContent = 'Adicionar Item';

@@ -119,122 +119,126 @@
             <!-- Seção de Estoque -->
             <section id="estoque-section" class="content-section hidden">
                 <h2>Gerenciamento de Estoque</h2>
-            <section>
-                <form id="item-form">
-                <button id="btn-add-item" class="btn-primary" type="button" >Add Item</button>
-                <button id="btn-cadastrar-item" class="btn-primary" type="button" >Cadastrar Item</button>    
-                </form>
-            </section><br>
-                
-                <section id="slecioneestoque" class="selecioneestoque">
-                    <form id="item-form">
-                    <button id="btn-add-item" class="btn-primary" type="button" >Add Item</button><br>
-                    <label for="item-placa" >Placa:</label>
-                    <select id="item-placa" name="item-placa" required>
-                    <option value="" disabled selected >Selecione a placa</option>
-                    </select>
-                
-                    
 
-                </form>
-            <div class="table-container">
-                <table id="tabela-itens">
-                    <thead>
-                        <tr>
-                            <th>Placa</th>
-                            <th>Item</th>
-                            <th>Quantidade</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lista-itens">
-                        <!-- Lista de itens será populada pelo JS -->
-                    </tbody>
-                </table>
-            </div>
+                <!-- Botões principais -->
+                <div id="estoque-main-buttons">
+                    <button id="btn-selecione-estoque" class="btn-primary">Selecione Estoque</button>
+                    <button id="btn-abrir-catalogo" class="btn-primary">Abrir Catálogo</button>
+                </div><br>
 
-                </section><br>
-
-
-            <!-- Modal para adicionar/editar item -->
-            <div id="item-modal" class="modal hidden">
-                <div class="modal-content">
-                    <button id="close-item-modal" class="btn-primary" style="float: right;">Fechar</button>
-                    <section id="item-form-modal">
-                        <h3 id="item-modal-title">Cadastrar Item</h3><br>
-                        <form id="item-modal-form">
-                            <label for="modal-item-placa">Placa:</label>
-                            <input type="text" id="modal-item-placa" name="modal-item-placa" readonly /><br>
-
-                            <label for="modal-item-nome">Nome do Item:</label>
-                            <input type="text" id="modal-item-nome" name="modal-item-nome" required />
-                            <button type="button" id="btn-open-item-selection" class="btn-secondary" style="margin-left: 10px;">Selecionar Item</button><br>
-
-                            <label for="modal-item-quantidade">Quantidade:</label>
-                            <input type="number" id="modal-item-quantidade" name="modal-item-quantidade" required /><br>
-
-                            <button type="submit" class="btn-primary">Salvar</button>
+                <!-- Modal Gerenciar Estoque por Veículo -->
+                <div id="modal-gerenciar-estoque" class="modal hidden">
+                    <div class="modal-content">
+                        <button id="close-modal-gerenciar-estoque" class="btn-primary" style="float: right;">Fechar</button>
+                        <h3>Gerenciar Estoque por Veículo</h3>
+                        <form id="item-form">
+                            <button id="btn-add-item" class="btn-primary" type="button">Add Item</button><br>
+                            <label for="item-placa">Placa:</label>
+                            <select id="item-placa" name="item-placa" required>
+                                <option value="" disabled selected>Selecione a placa</option>
+                            </select>
                         </form>
-                    </section>
+                        <div class="table-container">
+                            <table id="tabela-itens">
+                                <thead>
+                                    <tr>
+                                        <th>Placa</th>
+                                        <th>Item</th>
+                                        <th>Quantidade</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lista-itens">
+                                    <!-- Lista de itens será populada pelo JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Modal para seleção de item com Código e Nome Sale -->
-            <div id="item-selection-modal" class="modal hidden">
-                <div class="modal-content">
-                    <button id="close-item-selection-modal" class="btn-primary" style="float: right;">Fechar</button>
-                    <section id="item-selection-form-modal">
-                        <h3>Selecionar Item</h3><br>
-                        <form id="item-selection-form">
-                            <label for="select-item-catalog">Selecionar Item:</label>
-                            <select id="select-item-catalog" name="select-item-catalog" required>
-                                <option value="" disabled selected>Selecione um item</option>
-                            </select><br>
-
-                            <button type="submit" class="btn-primary">Selecionar</button>
-                            <button type="button" id="btn-add-new-catalog-item" class="btn-secondary">Adicionar Novo Item</button>
-                        </form>
-                    </section>
+                <!-- Modal Catálogo de Itens -->
+                <div id="modal-catalogo-itens" class="modal hidden">
+                    <div class="modal-content">
+                        <button id="close-modal-catalogo-itens" class="btn-primary" style="float: right;">Fechar</button>
+                        <h3>Catálogo de Itens</h3>
+                        <button id="btn-add-catalog-item" class="btn-primary">Cadastrar Itens</button><br>
+                        <div class="table-container">
+                            <table id="tabela-catalogo-itens">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Nome</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lista-catalogo-itens">
+                                    <!-- Itens do catálogo serão populados pelo JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <section>
-            <h3 class="titulo">Catálogo de Itens</h3><br>
-            <button id="btn-add-catalog-item" class="btn-primary">Cadastrar Itens</button><br>
+                <!-- Modal para adicionar/editar item -->
+                <div id="item-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <button id="close-item-modal" class="btn-primary" style="float: right;">Fechar</button>
+                        <section id="item-form-modal">
+                            <h3 id="item-modal-title">Cadastrar Item</h3><br>
+                            <form id="item-modal-form">
+                                <label for="modal-item-placa">Placa:</label>
+                                <input type="text" id="modal-item-placa" name="modal-item-placa" readonly /><br>
 
-            <div class="table-container">
-                <table id="tabela-catalogo-itens">
-                    <thead>
-                        <tr>
-                            <th>Código</th>
-                            <th>Nome</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lista-catalogo-itens">
-                        <!-- Itens do catálogo serão populados pelo JS -->
-                    </tbody>
-                </table>
-            </div>
-            </section>
-            <!-- Modal para adicionar/editar item do catálogo -->
-            <div id="catalog-item-modal" class="modal hidden">
-                <div class="modal-content">
-                    <button id="close-catalog-item-modal" class="btn-primary" style="float: right;">Fechar</button>
-                    <section id="catalog-item-form-modal">
-                        <h3 id="catalog-item-modal-title">Adicionar Item ao Catálogo</h3><br>
-                        <form id="catalog-item-form">
-                            <label for="catalog-item-codigo">Código:</label>
-                            <input type="text" id="catalog-item-codigo" name="catalog-item-codigo" required /><br>
+                                <label for="modal-item-nome">Nome do Item:</label>
+                                <input type="text" id="modal-item-nome" name="modal-item-nome" required />
+                                <button type="button" id="btn-open-item-selection" class="btn-secondary" style="margin-left: 10px;">Selecionar Item</button><br>
 
-                            <label for="catalog-item-nome-sale">Nome:</label>
-                            <input type="text" id="catalog-item-nome-sale" name="catalog-item-nome-sale" required /><br>
+                                <label for="modal-item-quantidade">Quantidade:</label>
+                                <input type="number" id="modal-item-quantidade" name="modal-item-quantidade" required /><br>
 
-                            <button type="submit" class="btn-primary">Salvar</button>
-                        </form>
-                    </section>
+                                <button type="submit" class="btn-primary">Salvar</button>
+                            </form>
+                        </section>
+                    </div>
                 </div>
-            </div>
+
+                <!-- Modal para seleção de item com Código e Nome Sale -->
+                <div id="item-selection-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <button id="close-item-selection-modal" class="btn-primary" style="float: right;">Fechar</button>
+                        <section id="item-selection-form-modal">
+                            <h3>Selecionar Item</h3><br>
+                            <form id="item-selection-form">
+                                <label for="select-item-catalog">Selecionar Item:</label>
+                                <select id="select-item-catalog" name="select-item-catalog" required>
+                                    <option value="" disabled selected>Selecione um item</option>
+                                </select><br>
+
+                                <button type="submit" class="btn-primary">Selecionar</button>
+                                <button type="button" id="btn-add-new-catalog-item" class="btn-secondary">Adicionar Novo Item</button>
+                            </form>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- Modal para adicionar/editar item do catálogo -->
+                <div id="catalog-item-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <button id="close-catalog-item-modal" class="btn-primary" style="float: right;">Fechar</button>
+                        <section id="catalog-item-form-modal">
+                            <h3 id="catalog-item-modal-title">Adicionar Item ao Catálogo</h3><br>
+                            <form id="catalog-item-form">
+                                <label for="catalog-item-codigo">Código:</label>
+                                <input type="text" id="catalog-item-codigo" name="catalog-item-codigo" required /><br>
+
+                                <label for="catalog-item-nome-sale">Nome:</label>
+                                <input type="text" id="catalog-item-nome-sale" name="catalog-item-nome-sale" required /><br>
+
+                                <button type="submit" class="btn-primary">Salvar</button>
+                            </form>
+                        </section>
+                    </div>
+                </div>
             </section>
 
             <!-- Seção de Solicitações -->
@@ -333,5 +337,6 @@
 
     <!-- Script principal da aplicação -->
     <script src="js/app.js"></script>
+    <script src="js/dashboard.js"></script>
 </body>
 </html>
