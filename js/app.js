@@ -324,6 +324,9 @@ if (vehicleForm) {
 // Variáveis para controle do modal de itens
 let editingItemIndex = null;
 
+// Array para catálogo global de itens
+let catalogItems = [];
+
 // Renderizar lista de itens no estoque
 function renderItems() {
     const listaItens = document.getElementById('lista-itens');
@@ -362,13 +365,164 @@ function renderItems() {
     });
 }
 
+// Renderizar catálogo global de itens
+function renderCatalogItems() {
+    const listaCatalogo = document.getElementById('lista-catalogo-itens');
+    listaCatalogo.innerHTML = '';
+
+    if (catalogItems.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td colspan="3" style="text-align: center; padding: 2rem;">Nenhum item no catálogo</td>';
+        listaCatalogo.appendChild(tr);
+        return;
+    }
+
+    catalogItems.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${item.codigo}</td>
+            <td>${item.nomeSale}</td>
+            <td>
+                <button class="action-btn edit-btn" onclick="editCatalogItem(${index})">Editar</button>
+                <button class="action-btn delete-btn" onclick="deleteCatalogItem(${index})">Excluir</button>
+            </td>
+        `;
+        listaCatalogo.appendChild(tr);
+    });
+}
+
+// Abrir modal para adicionar novo item ao catálogo
+const btnAddCatalogItem = document.getElementById('btn-add-catalog-item');
+if (btnAddCatalogItem) {
+    btnAddCatalogItem.addEventListener('click', () => {
+        editingCatalogItemIndex = null;
+        document.getElementById('catalog-item-form').reset();
+        document.getElementById('catalog-item-modal-title').textContent = 'Adicionar Item ao Catálogo';
+        document.getElementById('catalog-item-modal').classList.remove('hidden');
+    });
+}
+
+// Variável para controle do modal de catálogo
+let editingCatalogItemIndex = null;
+
+// Fechar modal do catálogo
+const closeCatalogItemModalBtn = document.getElementById('close-catalog-item-modal');
+if (closeCatalogItemModalBtn) {
+    closeCatalogItemModalBtn.addEventListener('click', () => {
+        document.getElementById('catalog-item-modal').classList.add('hidden');
+    });
+}
+
+// Salvar item do catálogo via formulário modal
+const catalogItemForm = document.getElementById('catalog-item-form');
+if (catalogItemForm) {
+    catalogItemForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const codigo = document.getElementById('catalog-item-codigo').value.trim();
+        const nomeSale = document.getElementById('catalog-item-nome-sale').value.trim();
+
+        if (!codigo || !nomeSale) {
+            alert('Por favor, preencha todos os campos do catálogo.');
+            return;
+        }
+
+        if (editingCatalogItemIndex !== null) {
+            // Editar item existente
+            catalogItems[editingCatalogItemIndex] = { codigo, nomeSale };
+        } else {
+            // Adicionar novo item
+            catalogItems.push({ codigo, nomeSale });
+        }
+
+        saveData();
+        renderCatalogItems();
+        document.getElementById('catalog-item-modal').classList.add('hidden');
+        populateItemSelectionDropdown();
+    });
+}
+
+// Editar item do catálogo
+function editCatalogItem(index) {
+    editingCatalogItemIndex = index;
+    const item = catalogItems[index];
+    if (!item) return;
+
+    document.getElementById('catalog-item-codigo').value = item.codigo;
+    document.getElementById('catalog-item-nome-sale').value = item.nomeSale;
+    document.getElementById('catalog-item-modal-title').textContent = 'Editar Item do Catálogo';
+    document.getElementById('catalog-item-modal').classList.remove('hidden');
+}
+
+// Excluir item do catálogo
+function deleteCatalogItem(index) {
+    if (!confirm('Tem certeza que deseja excluir este item do catálogo?')) return;
+    catalogItems.splice(index, 1);
+    saveData();
+    renderCatalogItems();
+    populateItemSelectionDropdown();
+}
+
+// Atualizar localStorage para incluir catálogo
+function saveData() {
+    localStorage.setItem('vehicles', JSON.stringify(vehicles));
+    localStorage.setItem('requests', JSON.stringify(requests));
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+    localStorage.setItem('catalogItems', JSON.stringify(catalogItems));
+}
+
+// Carregar dados do localStorage incluindo catálogo
+function loadData() {
+    const storedVehicles = localStorage.getItem('vehicles');
+    const storedRequests = localStorage.getItem('requests');
+    const storedNotifications = localStorage.getItem('notifications');
+    const storedCatalogItems = localStorage.getItem('catalogItems');
+
+    if (storedVehicles) vehicles = JSON.parse(storedVehicles);
+    if (storedRequests) requests = JSON.parse(storedRequests);
+    if (storedNotifications) notifications = JSON.parse(storedNotifications);
+    if (storedCatalogItems) catalogItems = JSON.parse(storedCatalogItems);
+}
+
+// Popular dropdown do modal de seleção com itens do catálogo
+function populateItemSelectionDropdown() {
+    const selectItemCatalog = document.getElementById('select-item-catalog');
+
+    if (!selectItemCatalog) return;
+
+    // Limpar campos
+    selectItemCatalog.innerHTML = '<option value="" disabled selected>Selecione um item</option>';
+
+    // Criar opções para o select
+    catalogItems.forEach((item, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `${item.codigo} - ${item.nomeSale}`;
+        selectItemCatalog.appendChild(option);
+    });
+}
+
+
+
+// Inicializar catálogo e dropdown ao carregar a página
+document.addEventListener('DOMContentLoaded', () => {
+    loadData();
+    renderCatalogItems();
+    populateItemSelectionDropdown();
+});
+
 // Abrir modal para adicionar novo item
-const btnCadastrarItem = document.getElementById('btn-cadastrar-item');
+const btnCadastrarItem = document.getElementById('btn-add-item');
 if (btnCadastrarItem) {
     btnCadastrarItem.addEventListener('click', () => {
         editingItemIndex = null;
-        document.getElementById('item-form').reset();
-        document.getElementById('item-modal-title').textContent = 'Cadastrar Item';
+        document.getElementById('item-modal-form').reset();
+        document.getElementById('item-modal-title').textContent = 'Adicionar Item';
+        // Pre-fill placa if selected
+        const selectedPlaca = document.getElementById('item-placa').value;
+        if (selectedPlaca) {
+            document.getElementById('modal-item-placa').value = selectedPlaca;
+        }
         document.getElementById('item-modal').classList.remove('hidden');
     });
 }
@@ -381,20 +535,80 @@ if (closeItemModalBtn) {
     });
 }
 
+// Abrir modal de seleção de item
+const btnOpenItemSelection = document.getElementById('btn-open-item-selection');
+if (btnOpenItemSelection) {
+    btnOpenItemSelection.addEventListener('click', () => {
+        document.getElementById('item-selection-modal').classList.remove('hidden');
+    });
+}
+
+// Fechar modal de seleção de item
+const closeItemSelectionModalBtn = document.getElementById('close-item-selection-modal');
+if (closeItemSelectionModalBtn) {
+    closeItemSelectionModalBtn.addEventListener('click', () => {
+        document.getElementById('item-selection-modal').classList.add('hidden');
+    });
+}
+
+// Selecionar item no modal de seleção e preencher no modal principal
+const itemSelectionForm = document.getElementById('item-selection-form');
+if (itemSelectionForm) {
+    itemSelectionForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const selectedIndex = document.getElementById('select-item-catalog').value;
+        if (!selectedIndex) {
+            alert('Por favor, selecione um item.');
+            return;
+        }
+
+        const selectedItem = catalogItems[selectedIndex];
+        const modalItemNome = document.getElementById('modal-item-nome');
+        if (modalItemNome) {
+            modalItemNome.value = `${selectedItem.codigo} - ${selectedItem.nomeSale}`;
+        }
+
+        // Fechar modal de seleção
+        document.getElementById('item-selection-modal').classList.add('hidden');
+    });
+}
+
+// Botão para adicionar novo item ao catálogo do modal de seleção
+const btnAddNewCatalogItem = document.getElementById('btn-add-new-catalog-item');
+if (btnAddNewCatalogItem) {
+    btnAddNewCatalogItem.addEventListener('click', () => {
+        document.getElementById('item-selection-modal').classList.add('hidden');
+        editingCatalogItemIndex = null;
+        document.getElementById('catalog-item-form').reset();
+        document.getElementById('catalog-item-modal-title').textContent = 'Adicionar Item ao Catálogo';
+        document.getElementById('catalog-item-modal').classList.remove('hidden');
+    });
+}
+
 // Editar item
 function editItem(index) {
-    editingItemIndex = index;
-    const listaItens = document.getElementById('lista-itens');
-    const tr = listaItens.children[index];
-    if (!tr) return;
+    const selectedPlaca = document.getElementById('item-placa').value;
+    if (!selectedPlaca) {
+        alert('Selecione uma placa primeiro.');
+        return;
+    }
 
-    const placa = tr.children[0].textContent;
-    const item = tr.children[1].textContent;
-    const quantidade = tr.children[2].textContent;
+    const vehicle = vehicles.find(v => v.placa === selectedPlaca);
+    if (!vehicle) {
+        alert('Veículo não encontrado.');
+        return;
+    }
 
-    document.getElementById('item-placa').value = placa;
-    document.getElementById('item-nome').value = item;
-    document.getElementById('item-quantidade').value = quantidade;
+    // Get the item at the local index
+    const items = Object.keys(vehicle.estoque);
+    const itemName = items[index];
+    if (!itemName) return;
+
+    editingItemIndex = index; // Local index within the vehicle's stock
+    document.getElementById('modal-item-placa').value = selectedPlaca;
+    document.getElementById('modal-item-nome').value = itemName;
+    document.getElementById('modal-item-quantidade').value = vehicle.estoque[itemName];
 
     document.getElementById('item-modal-title').textContent = 'Editar Item';
     document.getElementById('item-modal').classList.remove('hidden');
@@ -404,32 +618,41 @@ function editItem(index) {
 function deleteItem(index) {
     if (!confirm('Tem certeza que deseja excluir este item?')) return;
 
-    // Encontrar o item na estrutura vehicles e remover
-    let count = 0;
-    for (let v = 0; v < vehicles.length; v++) {
-        const vehicle = vehicles[v];
-        for (const [item, quantidade] of Object.entries(vehicle.estoque)) {
-            if (count === index) {
-                delete vehicle.estoque[item];
-                saveData();
-                renderItems();
-                renderStockSummary();
-                return;
-            }
-            count++;
-        }
+    const selectedPlaca = document.getElementById('item-placa').value;
+    if (!selectedPlaca) {
+        alert('Selecione uma placa primeiro.');
+        return;
+    }
+
+    const vehicle = vehicles.find(v => v.placa === selectedPlaca);
+    if (!vehicle) {
+        alert('Veículo não encontrado.');
+        return;
+    }
+
+    // Get the item at the local index
+    const items = Object.keys(vehicle.estoque);
+    const itemToDelete = items[index];
+    if (itemToDelete) {
+        delete vehicle.estoque[itemToDelete];
+        saveData();
+        renderItems();
+        renderStockSummary();
+
+        // Refresh the filtered list
+        renderItemsByPlaca(selectedPlaca);
     }
 }
 
 // Salvar item via formulário modal
-const itemForm = document.getElementById('item-form');
-if (itemForm) {
-    itemForm.addEventListener('submit', (e) => {
+const itemModalForm = document.getElementById('item-modal-form');
+if (itemModalForm) {
+    itemModalForm.addEventListener('submit', (e) => {
         e.preventDefault();
 
-        const placa = document.getElementById('item-placa').value.trim();
-        const nome = document.getElementById('item-nome').value.trim();
-        const quantidade = parseInt(document.getElementById('item-quantidade').value.trim());
+        const placa = document.getElementById('modal-item-placa').value.trim();
+        const nome = document.getElementById('modal-item-nome').value.trim();
+        const quantidade = parseInt(document.getElementById('modal-item-quantidade').value.trim());
 
         if (!placa || !nome || isNaN(quantidade)) {
             alert('Por favor, preencha todos os campos corretamente.');
@@ -445,13 +668,10 @@ if (itemForm) {
 
         if (editingItemIndex !== null) {
             // Editar item existente
-            let count = 0;
-            for (const [item, qtd] of Object.entries(vehicle.estoque)) {
-                if (count === editingItemIndex) {
-                    vehicle.estoque[item] = quantidade;
-                    break;
-                }
-                count++;
+            const items = Object.keys(vehicle.estoque);
+            const itemToEdit = items[editingItemIndex];
+            if (itemToEdit) {
+                vehicle.estoque[itemToEdit] = quantidade;
             }
         } else {
             // Adicionar novo item
@@ -461,6 +681,13 @@ if (itemForm) {
         saveData();
         renderItems();
         renderStockSummary();
+
+        // Atualizar a lista de itens para a placa selecionada
+        const selectedPlaca = document.getElementById('item-placa').value;
+        if (selectedPlaca) {
+            renderItemsByPlaca(selectedPlaca);
+        }
+
         document.getElementById('item-modal').classList.add('hidden');
     });
 }
@@ -524,6 +751,61 @@ document.addEventListener('DOMContentLoaded', () => {
         renderNotifications();
         renderStockSummary();
         renderDashboardSummary();
+
+        // Popula o select de placas na seção Estoque
+        const placaSelect = document.getElementById('item-placa');
+        if (placaSelect) {
+            placaSelect.innerHTML = '<option value="" disabled selected>Selecione a placa</option>';
+            vehicles.forEach(vehicle => {
+                const option = document.createElement('option');
+                option.value = vehicle.placa;
+                option.textContent = vehicle.placa;
+                placaSelect.appendChild(option);
+            });
+
+            // Adicionar listener para atualizar a lista de itens ao mudar a placa selecionada
+            placaSelect.addEventListener('change', () => {
+                const selectedPlaca = placaSelect.value;
+                renderItemsByPlaca(selectedPlaca);
+            });
+        }
+
+        // Função para renderizar itens filtrados por placa
+        function renderItemsByPlaca(placa) {
+            const listaItens = document.getElementById('lista-itens');
+            listaItens.innerHTML = '';
+
+            if (!placa) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td colspan="4" style="text-align: center; padding: 2rem;">Selecione uma placa para ver os itens.</td>';
+                listaItens.appendChild(tr);
+                return;
+            }
+
+            const vehicle = vehicles.find(v => v.placa === placa);
+            if (!vehicle || !vehicle.estoque || Object.keys(vehicle.estoque).length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td colspan="4" style="text-align: center; padding: 2rem;">Nenhum item cadastrado para esta placa.</td>';
+                listaItens.appendChild(tr);
+                return;
+            }
+
+            let index = 0;
+            for (const [item, quantidade] of Object.entries(vehicle.estoque)) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${placa}</td>
+                    <td>${item}</td>
+                    <td>${quantidade}</td>
+                    <td>
+                        <button class="action-btn edit-btn" onclick="editItem(${index})">Editar</button>
+                        <button class="action-btn delete-btn" onclick="deleteItem(${index})">Excluir</button>
+                    </td>
+                `;
+                listaItens.appendChild(tr);
+                index++;
+            }
+        }
 
         // Menu navigation
         const menuButtons = document.querySelectorAll('.menu-btn');

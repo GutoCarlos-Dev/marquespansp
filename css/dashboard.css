@@ -140,3 +140,11 @@
     border: 1px solid #ccc;
     border-radius: 4px;
 }
+
+/* New styles for catalog items table container to add scrollbar */
+.table-container {
+    max-height: 300px; /* Adjust height as needed */
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
