@@ -35,7 +35,7 @@ function renderItems() {
             <td>${entry.item}</td>
             <td>${entry.quantidade}</td>
             <td>
-                <button class="btn-primary" style="background-color:#2980b9; padding: 5px 10px; font-size: 0.85rem; onclick="editItem(${index})">Editar</button>
+                <button class="btn-primary" style="background-color:#2980b9; padding: 5px 10px; font-size: 0.85rem;" onclick="editItem(${index})">Editar</button>
                 <button class="btn-secondary" style="background-color:#e74c3c; padding: 5px 10px; font-size: 0.85rem;" onclick="deleteItem(${index})">Excluir</button>
             </td>
         `;
@@ -127,12 +127,20 @@ if (itemForm) {
         if (editingItemIndex !== null) {
             // Editar item existente
             let count = 0;
+            let oldItemName = null;
             for (const [item, qtd] of Object.entries(vehicle.estoque)) {
                 if (count === editingItemIndex) {
-                    vehicle.estoque[item] = quantidade;
+                    oldItemName = item;
                     break;
                 }
                 count++;
+            }
+            if (oldItemName !== null) {
+                // Se o nome do item foi alterado, remover o antigo e adicionar o novo
+                if (oldItemName !== nome) {
+                    delete vehicle.estoque[oldItemName];
+                }
+                vehicle.estoque[nome] = quantidade;
             }
         } else {
             // Adicionar novo item
@@ -144,6 +152,8 @@ if (itemForm) {
         renderStockSummary();
         // Hide the item form section instead of modal
         document.getElementById('item-form-section').classList.add('hidden');
+        // Close the modal after saving
+        document.getElementById('item-modal').classList.add('hidden');
     });
 }
 
