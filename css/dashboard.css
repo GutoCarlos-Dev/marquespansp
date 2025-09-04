@@ -115,6 +115,16 @@
     border-radius: 4px;
 }
 
+
+.selecioneestoque
+{
+    display: block;
+    text-align: center;
+    justify-self: left;
+    color: #155724;
+}
+
+
 /* Estilos para o formulário de itens */
 #item-form {
     display: grid;

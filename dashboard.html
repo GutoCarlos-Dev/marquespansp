@@ -79,16 +79,16 @@
                                 <input type="text" id="placa" name="placa" required />
 
                                 <label for="modelo">Modelo:</label>
-                                <input type="text" id="modelo" name="modelo" required />
+                                <input type="text" id="modelo" name="modelo" />
 
                                 <label for="marca">Marca:</label>
-                                <input type="text" id="marca" name="marca" required />
+                                <input type="text" id="marca" name="marca" />
 
                                 <label for="renavan">Renavan:</label>
-                                <input type="text" id="renavan" name="renavan" required />
+                                <input type="text" id="renavan" name="renavan" />
 
                                 <label for="ano">Ano:</label>
-                                <input type="number" id="ano" name="ano" required />
+                                <input type="number" id="ano" name="ano" />
 
                                 <button type="submit" class="btn-primary">Salvar</button>
                             </form>
@@ -126,12 +126,16 @@
                 </form>
             </section><br>
                 
-                <section>
-                <form id="item-form" class="#item-form select">
+                <section id="slecioneestoque" class="selecioneestoque">
+                    <form id="item-form">
+                    <button id="btn-add-item" class="btn-primary" type="button" >Add Item</button><br>
                     <label for="item-placa" >Placa:</label>
                     <select id="item-placa" name="item-placa" required>
-                    <option value="" disabled selected>Selecione a placa</option>
-                    </select>   
+                    <option value="" disabled selected >Selecione a placa</option>
+                    </select>
+                
+                    
+
                 </form>
             <div class="table-container">
                 <table id="tabela-itens">
@@ -195,7 +199,7 @@
             </div>
 
             <section>
-            <h3 class="titulo">Catálogo de Itens</h3>
+            <h3 class="titulo">Catálogo de Itens</h3><br>
             <button id="btn-add-catalog-item" class="btn-primary">Cadastrar Itens</button><br>
 
             <div class="table-container">
@@ -203,7 +207,7 @@
                     <thead>
                         <tr>
                             <th>Código</th>
-                            <th>Nome Sale</th>
+                            <th>Nome</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
@@ -223,7 +227,7 @@
                             <label for="catalog-item-codigo">Código:</label>
                             <input type="text" id="catalog-item-codigo" name="catalog-item-codigo" required /><br>
 
-                            <label for="catalog-item-nome-sale">Nome Sale:</label>
+                            <label for="catalog-item-nome-sale">Nome:</label>
                             <input type="text" id="catalog-item-nome-sale" name="catalog-item-nome-sale" required /><br>
 
                             <button type="submit" class="btn-primary">Salvar</button>
