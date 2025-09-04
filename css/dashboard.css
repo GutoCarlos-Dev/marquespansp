@@ -148,3 +148,10 @@
     border: 1px solid #ccc;
     border-radius: 4px;
 }
+
+/* Organização dos titulos*/
+.titulo {
+    text-align: center; /* ou right, center, conforme desejar */
+    margin-left: 0;   /* opcional, para garantir alinhamento à esquerda */
+}
+
