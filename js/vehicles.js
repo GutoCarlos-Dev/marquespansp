@@ -12,12 +12,19 @@ function renderVehicles() {
 
     if (vehicles.length === 0) {
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td colspan="7" style="text-align: center; padding: 2rem;">Nenhum veículo cadastrado</td>';
+        tr.innerHTML = '<td colspan="6" style="text-align: center; padding: 2rem;">Nenhum veículo cadastrado</td>';
         listaVeiculos.appendChild(tr);
         return;
     }
 
-    vehicles.forEach((vehicle, index) => {
+    // Ordenar veículos por placa antes de renderizar
+    const sortedVehicles = vehicles.slice().sort((a, b) => {
+        if (!a.placa) return 1;
+        if (!b.placa) return -1;
+        return a.placa.localeCompare(b.placa);
+    });
+
+    sortedVehicles.forEach((vehicle, index) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${vehicle.placa || ''}</td>
@@ -25,7 +32,6 @@ function renderVehicles() {
             <td>${vehicle.marca || ''}</td>
             <td>${vehicle.renavan || ''}</td>
             <td>${vehicle.ano || ''}</td>
-            <td>${vehicle.supervisor || ''}</td>
             <td>
                 <button class="action-btn edit" onclick="editVehicle(${index})" style="margin-right: 5px;">Editar</button>
                 <button class="action-btn delete" onclick="deleteVehicle(${index})">Excluir</button>
@@ -36,14 +42,13 @@ function renderVehicles() {
 }
 
 // Adicionar novo veículo
-function addVehicle(placa, modelo, marca, renavan, ano, supervisor = '') {
+function addVehicle(placa, modelo, marca, renavan, ano) {
     const vehicle = {
         placa: placa.toUpperCase(),
         modelo,
         marca,
         renavan,
         ano,
-        supervisor,
         tecnicos: [],
         estoque: {}
     };
@@ -64,7 +69,6 @@ function editVehicle(index) {
     document.getElementById('marca').value = vehicle.marca || '';
     document.getElementById('renavan').value = vehicle.renavan || '';
     document.getElementById('ano').value = vehicle.ano || '';
-    document.getElementById('supervisor').value = vehicle.supervisor || '';
 
     // Atualizar título do modal
     document.getElementById('modal-title').textContent = 'Editar Veículo';
@@ -127,12 +131,10 @@ if (vehicleForm) {
                 marca,
                 renavan,
                 ano,
-                supervisor: document.getElementById('supervisor').value.trim()
             };
         } else {
             // Adicionar novo veículo
-            const supervisor = document.getElementById('supervisor').value.trim();
-            addVehicle(placa, modelo, marca, renavan, ano, supervisor);
+            addVehicle(placa, modelo, marca, renavan, ano);
         }
 
         saveData();
