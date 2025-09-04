@@ -125,7 +125,10 @@
     align-items: center;
 }
 
-#item-form label {
+#item-form label,
+#item-form select {
+    display: block;
+    text-align: left;
     justify-self: end;
     font-weight: bold;
     color: #155724;
