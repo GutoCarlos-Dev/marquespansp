@@ -270,10 +270,10 @@
                         <tr>
                             <th>ID</th>
                             <th>Status</th>
+                            <th>Data</th>
                             <th>Placa</th>
                             <th>Supervisor</th>
                             <th>Técnico</th>
-                            <th>Data</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
@@ -298,6 +298,10 @@
                             <input type="text" id="status" name="status" readonly value="Pendente" />
                         </div>
                         <div class="form-group">
+                            <label for="data">Data:</label>
+                            <input type="date" id="data" name="data" value="2025-08-25" />
+                        </div>
+                        <div class="form-group">
                             <label for="placa">Placa:</label>
                             <select id="placa" name="placa" required>
                                 <option value="" disabled selected>Selecione a placa</option>
@@ -311,27 +315,18 @@
                             <label for="tecnico">Técnico:</label>
                             <input type="text" id="tecnico" name="tecnico" required />
                         </div>
-                            <div class="form-group">
-                            <label for="cidade">Cidade:</label>
-                            <input type="text" id="cidade" name="cidade" value="MARTINOPOLIS - SP" />
-                        </div>
                         <div class="form-group">
-                            <label for="requerente">Requerente:</label>
-                            <input type="text" id="requerente" name="requerente" value="RAFAEL" />
-                        </div>
-                        <div class="form-group">
-                            <label for="receptor">Receptor:</label>
-                            <input type="text" id="receptor" name="receptor" value="GABRIELA" />
-                        </div>
-                        <div class="form-group">
-                            <label for="data">Data:</label>
-                            <input type="date" id="data" name="data" value="2025-08-25" />
+                            <label for="rota">Rota:</label>
+                            <input type="text" id="rota" name="rota" value="" />
                         </div>
                         <div class="form-group">
                             <label for="motivo">Motivo:</label>
-                            <input type="text" id="motivo" name="motivo" value="AUMENTO+TROCA" />
+                            <select id="motivo" name="motivo" class="form-control">
+                                <option value="TROCA">TROCA</option>
+                                <option value="REPOSIÇÃO">REPOSIÇÃO</option>
+                                <option value="TROCA/REPOSIÇÃO">TROCA/REPOSIÇÃO</option>
+                            </select>
                         </div>
-
                         <div class="form-group">
                             <label>Equipamentos:</label>
                             <button type="button" id="add-equip-btn" class="btn-secondary">Adicionar Equipamento</button>
@@ -340,10 +335,8 @@
                         <table id="equip-table">
                             <thead>
                                 <tr>
+                                    <th>ITEM</th>
                                     <th>QTD</th>
-                                    <th>EQUIP</th>
-                                    <th>MOD.</th>
-                                    <th>Estoque Disponível</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
