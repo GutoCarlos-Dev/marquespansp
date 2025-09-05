@@ -2,6 +2,28 @@
 
 // Variáveis declaradas em data.js: equipmentRequests, requests, notifications, vehicles
 
+function toggleSection(sectionId) {
+    // Hide all content sections
+    const sections = document.querySelectorAll('.content-section');
+    sections.forEach(section => {
+        if (section.id === sectionId) {
+            section.classList.remove('hidden');
+        } else {
+            section.classList.add('hidden');
+        }
+    });
+
+    // Update active menu button
+    const menuButtons = document.querySelectorAll('.menu-btn');
+    menuButtons.forEach(button => {
+        if (button.dataset.target === sectionId) {
+            button.classList.add('active');
+        } else {
+            button.classList.remove('active');
+        }
+    });
+}
+
 // Funções para mostrar/ocultar seções na tela de solicitações
 function showRealizarSolicitacao() {
     const modal = document.getElementById('modal-solicitacao');
@@ -25,6 +47,17 @@ function showRealizarSolicitacao() {
     // Limpar campos supervisor e tecnico
     document.getElementById('supervisor').value = '';
     document.getElementById('tecnico').value = '';
+
+    // Set current date in data input and make it readonly
+    const dataInput = document.getElementById('data');
+    if (dataInput) {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        dataInput.value = `${yyyy}-${mm}-${dd}`;
+        dataInput.readOnly = true;
+    }
 }
 
 // Preencher dropdown de placa com placas de veículos
@@ -156,7 +189,18 @@ function getStockForEquip(placa, equipName) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-// Mostrar modal no clique do botão
+    // Menu buttons toggle sections
+    const menuButtons = document.querySelectorAll('.menu-btn');
+    menuButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const target = button.dataset.target;
+            if (target) {
+                toggleSection(target);
+            }
+        });
+    });
+
+    // Mostrar modal no clique do botão
     const btnRealizarSolicitacao = document.getElementById('btn-realizar-solicitacao');
     if (btnRealizarSolicitacao) {
         btnRealizarSolicitacao.addEventListener('click', () => {
