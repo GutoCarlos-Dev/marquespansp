@@ -245,87 +245,129 @@
             <section id="solicitacao-section" class="content-section hidden">
                 <h2>Requisição de Equipamento</h2>
 
-                <!-- Botões principais -->
-                <div id="solicitacao-main-buttons">
-                    <button id="btn-realizar-solicitacao" class="btn-primary">Realizar Solicitação</button>
-                    <button id="btn-buscar-solicitacao" class="btn-primary">Buscar Solicitação</button>
-                </div><br>
+            <!-- Botões principais -->
+            <div id="solicitacao-main-buttons">
+                <button id="btn-realizar-solicitacao" class="btn-primary">Realizar Solicitação</button>
+                <button id="btn-buscar-solicitacao" class="btn-primary">Buscar Solicitação</button>
+            </div><br>
 
-                <!-- Lista de pedidos -->
-                <div id="lista-pedidos" class="hidden"></div>
+            <!-- Campo para busca por placa ou data -->
+            <div id="buscar-solicitacao-filtros" class="hidden">
+                <label for="buscar-placa">Buscar por Placa:</label>
+                <input type="text" id="buscar-placa" name="buscar-placa" placeholder="Digite a placa" />
+                <label for="buscar-data">Buscar por Data:</label>
+                <input type="date" id="buscar-data" name="buscar-data" />
+                <button id="btn-filtrar-solicitacoes" class="btn-primary">Filtrar</button>
+            </div><br>
 
-                <!-- Formulário de requisição -->
-                <form id="requisicao-form" class="hidden">
-                    <div class="form-group">
-                        <label for="status">Status:</label>
-                        <input type="text" id="status" name="status" readonly value="Pendente" />
-                    </div>
-                    <div class="form-group">
-                        <label for="cliente">Cliente:</label>
-                        <input type="text" id="cliente" name="cliente" value="SUPERMERCADO MAX MANIA (3562)" />
-                    </div>
-                    <div class="form-group">
-                        <label for="cidade">Cidade:</label>
-                        <input type="text" id="cidade" name="cidade" value="MARTINOPOLIS - SP" />
-                    </div>
-                    <div class="form-group">
-                        <label for="requerente">Requerente:</label>
-                        <input type="text" id="requerente" name="requerente" value="RAFAEL" />
-                    </div>
-                    <div class="form-group">
-                        <label for="receptor">Receptor:</label>
-                        <input type="text" id="receptor" name="receptor" value="GABRIELA" />
-                    </div>
-                    <div class="form-group">
-                        <label for="data">Data:</label>
-                        <input type="date" id="data" name="data" value="2025-08-25" />
-                    </div>
-                    <div class="form-group">
-                        <label for="motivo">Motivo:</label>
-                        <input type="text" id="motivo" name="motivo" value="AUMENTO+TROCA" />
-                    </div>
+            <!-- Tabela de solicitações -->
+            <div class="table-container">
+                <table id="tabela-solicitacoes">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Status</th>
+                            <th>Placa</th>
+                            <th>Supervisor</th>
+                            <th>Técnico</th>
+                            <th>Cliente</th>
+                            <th>Data</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-pedidos">
+                        <!-- Lista de solicitações será populada pelo JS -->
+                    </tbody>
+                </table>
+            </div>
 
-                    <table id="equip-table">
-                        <thead>
-                            <tr>
-                                <th>QTD</th>
-                                <th>EQUIP</th>
-                                <th>MOD.</th>
-                                <th>N</th>
-                                <th>U</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><input type="number" name="qtd" value="1" /></td>
-                                <td><input type="text" name="equip" value="FREEZER" /></td>
-                                <td><input type="text" name="mod" value="TROCA" /></td>
-                                <td><input type="checkbox" name="n" checked /></td>
-                                <td><input type="checkbox" name="u" checked /></td>
-                            </tr>
-                            <tr>
-                                <td><input type="number" name="qtd" value="1" /></td>
-                                <td><input type="text" name="equip" value="FREEZER" /></td>
-                                <td><input type="text" name="mod" value="VERT/AUMENTO" /></td>
-                                <td><input type="checkbox" name="n" /></td>
-                                <td><input type="checkbox" name="u" checked /></td>
-                            </tr>
-                            <!-- Additional rows can be added dynamically -->
-                        </tbody>
-                    </table>
+            <!-- Modal para realizar/editar solicitação -->
+            <div id="modal-solicitacao" class="modal hidden">
+                <div class="modal-content">
+                    <button id="close-modal-solicitacao" class="btn-primary" style="float: right;">Fechar</button>
+                    <h3 id="modal-solicitacao-title">Realizar Solicitação</h3>
+                    <form id="requisicao-form">
+                        <div class="form-group">
+                            <label for="id-solicitacao">ID Solicitação:</label>
+                            <input type="text" id="id-solicitacao" name="id-solicitacao" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Status:</label>
+                            <input type="text" id="status" name="status" readonly value="Pendente" />
+                        </div>
+                        <div class="form-group">
+                            <label for="placa">Placa:</label>
+                            <select id="placa" name="placa" required>
+                                <option value="" disabled selected>Selecione a placa</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="supervisor">Supervisor:</label>
+                            <input type="text" id="supervisor" name="supervisor" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="tecnico">Técnico:</label>
+                            <input type="text" id="tecnico" name="tecnico" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="cliente">Cliente:</label>
+                            <input type="text" id="cliente" name="cliente" value="SUPERMERCADO MAX MANIA (3562)" />
+                        </div>
+                        <div class="form-group">
+                            <label for="cidade">Cidade:</label>
+                            <input type="text" id="cidade" name="cidade" value="MARTINOPOLIS - SP" />
+                        </div>
+                        <div class="form-group">
+                            <label for="requerente">Requerente:</label>
+                            <input type="text" id="requerente" name="requerente" value="RAFAEL" />
+                        </div>
+                        <div class="form-group">
+                            <label for="receptor">Receptor:</label>
+                            <input type="text" id="receptor" name="receptor" value="GABRIELA" />
+                        </div>
+                        <div class="form-group">
+                            <label for="data">Data:</label>
+                            <input type="date" id="data" name="data" value="2025-08-25" />
+                        </div>
+                        <div class="form-group">
+                            <label for="motivo">Motivo:</label>
+                            <input type="text" id="motivo" name="motivo" value="AUMENTO+TROCA" />
+                        </div>
 
-                    <div class="form-group">
-                        <label for="observacao">Observação:</label>
-                        <textarea id="observacao" name="observacao" rows="4"></textarea>
-                    </div>
+                        <div class="form-group">
+                            <label>Equipamentos:</label>
+                            <button type="button" id="add-equip-btn" class="btn-secondary">Adicionar Equipamento</button>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="responsavel">Responsável:</label>
-                        <input type="text" id="responsavel" name="responsavel" />
-                    </div>
+                        <table id="equip-table">
+                            <thead>
+                                <tr>
+                                    <th>QTD</th>
+                                    <th>EQUIP</th>
+                                    <th>MOD.</th>
+                                    <th>Estoque Disponível</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="equip-tbody">
+                                <!-- Equipamentos serão adicionados dinamicamente -->
+                            </tbody>
+                        </table>
 
-                    <button type="submit" class="btn-primary">Enviar Requisição</button>
-                </form>
+                        <div class="form-group">
+                            <label for="observacao">Observação:</label>
+                            <textarea id="observacao" name="observacao" rows="4"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="responsavel">Responsável:</label>
+                            <input type="text" id="responsavel" name="responsavel" />
+                        </div>
+
+                        <button type="submit" class="btn-primary">Salvar</button>
+                    </form>
+                </div>
+            </div>
             </section>
 
 
@@ -346,7 +388,9 @@
     </div>
 
     <!-- Script principal da aplicação -->
+    <script src="js/data.js"></script>
     <script src="js/app.js"></script>
     <script src="js/dashboard.js"></script>
+    <script src="js/requests.js"></script>
 </body>
 </html>

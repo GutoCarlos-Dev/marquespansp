@@ -1,7 +1,15 @@
-# TODO List for Adding Buttons to Solicitação Section
+# TODO - Configuração da Tela de Solicitação
 
-- [x] Add two buttons "Realizar solicitação" and "Buscar Solicitação" to the solicitacao-section in dashboard.html
-- [x] Add event listeners for the new buttons in js/requests.js
-- [x] Implement functionality for "Realizar solicitação" button (show form or modal)
-- [x] Implement functionality for "Buscar Solicitação" button (show list of requests)
-- [x] Test the buttons and functionality
+## Passos para Completar
+
+- [ ] Verificar e melhorar a funcionalidade dos botões "Realizar Solicitação" e "Buscar Solicitação" para alternar entre formulário e lista.
+- [ ] Melhorar a renderização da lista de solicitações pendentes.
+- [ ] Verificar e aprimorar o formulário de requisição de equipamento, incluindo validação e submissão.
+- [ ] Integrar o salvamento de solicitações de equipamento no localStorage.
+- [ ] Testar a criação de solicitações de equipamento.
+- [ ] Testar a visualização e aprovação/rejeição de solicitações.
+- [ ] Verificar se há melhorias necessárias na UI/UX da tela de solicitação.
+- [ ] Teste completo da tela de solicitação e fluxos relacionados.
+
+## Progresso
+- Iniciado: Verificação inicial dos arquivos relacionados.

@@ -40,32 +40,9 @@ if (loginForm) {
     });
 }
 
-// Estruturas de dados globais
-let vehicles = []; // Array de veículos
-let requests = []; // Array de pedidos pendentes
-let notifications = []; // Array de notificações
-
 // Função para redirecionar para o dashboard após login
 function showAppContent() {
     window.location.href = 'dashboard.html';
-}
-
-// Carregar dados do localStorage ao iniciar
-function loadData() {
-    const storedVehicles = localStorage.getItem('vehicles');
-    const storedRequests = localStorage.getItem('requests');
-    const storedNotifications = localStorage.getItem('notifications');
-
-    if (storedVehicles) vehicles = JSON.parse(storedVehicles);
-    if (storedRequests) requests = JSON.parse(storedRequests);
-    if (storedNotifications) notifications = JSON.parse(storedNotifications);
-}
-
-// Salvar dados no localStorage
-function saveData() {
-    localStorage.setItem('vehicles', JSON.stringify(vehicles));
-    localStorage.setItem('requests', JSON.stringify(requests));
-    localStorage.setItem('notifications', JSON.stringify(notifications));
 }
 
 // Renderizar lista de veículos na página
@@ -824,20 +801,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Adicionar event listeners para os botões de solicitação
-        const btnRealizarSolicitacao = document.getElementById('btn-realizar-solicitacao');
-        if (btnRealizarSolicitacao) {
-            btnRealizarSolicitacao.addEventListener('click', () => {
-                showRealizarSolicitacao();
-            });
-        }
 
-        const btnBuscarSolicitacao = document.getElementById('btn-buscar-solicitacao');
-        if (btnBuscarSolicitacao) {
-            btnBuscarSolicitacao.addEventListener('click', () => {
-                showBuscarSolicitacao();
-            });
-        }
 
         // Menu navigation
         const menuButtons = document.querySelectorAll('.menu-btn');
