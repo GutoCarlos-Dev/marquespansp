@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Controle de Estoque da Frota</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <!-- Conteúdo Principal do Dashboard -->
+    <!-- Esta div contém todo o conteúdo da página do dashboard -->
+    <div id="app-content">
+        <!-- Cabeçalho com título e menu de navegação -->
+        <header>
+            <h1>Controle de Estoque da Frota Leve</h1>
+            <!-- Menu superior com botões para navegar entre seções -->
+            <nav>
+                <ul class="top-menu">
+                    <li><button data-target="dashboard-section" class="menu-btn active">Dashboard</button></li>
+                    <li><button data-target="veiculo-section" class="menu-btn">Veículo</button></li>
+                    <li><button data-target="estoque-section" class="menu-btn">Estoque</button></li>
+                    <li><button data-target="solicitacao-section" class="menu-btn">Solicitação</button></li>
+                    <li><button data-target="baixa-section" class="menu-btn">Baixa</button></li>
+                    <li><button data-target="index.html" class="menu-btn">Finalizar Sessão</button></li>
+                </ul>
+            </nav>
+        </header>
+
+        <!-- Conteúdo principal dividido em seções -->
+        <main>
+            <!-- Seção do Dashboard -->
+            <section id="dashboard-section" class="content-section">
+                <h2>Dashboard</h2>
+                <div id="dashboard-summary" class="dashboard-grid">
+                    <div class="dashboard-card veiculos">
+                        <h3>Veículos</h3>
+                        <p>Quantidade de veículos cadastrados:</p>
+                        <p class="count" id="count-veiculos">0</p>
+                    </div>
+                    <div class="dashboard-card estoque">
+                        <h3>Estoque</h3>
+                        <p>Itens em estoque (Positivos):</p>
+                        <p class="count" id="count-estoque-positivo">0</p>
+                        <p>Itens em estoque (Negativos):</p>
+                        <p class="count" id="count-estoque-negativo">0</p>
+                    </div>
+                    <div class="dashboard-card solicitacoes">
+                        <h3>Solicitações</h3>
+                        <p>Pedidos aprovados:</p>
+                        <p class="count" id="count-pedidos-aprovados">0</p>
+                        <p>Pedidos pendentes:</p>
+                        <p class="count" id="count-pedidos-pendentes">0</p>
+                    </div>
+                    <div class="dashboard-card baixa">
+                        <h3>Baixas</h3>
+                        <p>Total de baixas realizadas:</p>
+                        <p class="count" id="count-baixas">0</p>
+                    </div>
+                </div>
+                <div id="resumo-estoque"></div>
+            </section>
+
+            <!-- Seção de Veículos -->
+            <section id="veiculo-section" class="content-section hidden">
+                <h2>Veículos</h2>
+                <!-- Botão para adicionar novo veículo -->
+                <button id="adicionar-veiculo" class="btn-primary">Adicionar Veículo</button>
+
+                <!-- Modal para adicionar/editar veículo -->
+                <div id="vehicle-modal" class="modal hidden">
+                    <div class="modal-content">
+                        
+                        <h3 id="modal-title">Adicionar Veículo</h3>
+                        <section id="vehicle-form-section">
+                        <form id="vehicle-form">
+
+                            <label for="modelo">Modelo:</label>
+                            <input type="text" id="modelo" name="modelo" required />
+
+                            <label for="marca">Marca:</label>
+                            <input type="text" id="marca" name="marca" required />
+
+                            <label for="renavan">Renavan:</label>
+                            <input type="text" id="renavan" name="renavan" required />
+
+                            <label for="ano">Ano:</label>
+                            <input type="number" id="ano" name="ano" required />
+
+                            <button type="submit" class="btn-primary">Salvar</button>
+                        </form>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- Tabela de veículos -->
+                <div class="table-container">
+                    <table id="tabela-veiculos">
+                        <thead>
+                            <tr>
+                                <th>Placa</th>
+                                <th>Modelo</th>
+                                <th>Marca</th>
+                                <th>Renavan</th>
+                                <th>Ano</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-veiculos">
+                            <!-- Lista de veículos será populada pelo JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Seção de Estoque -->
+            <section id="estoque-section" class="content-section hidden">
+                <h2>Estoque</h2>
+                <section>
+                    <form id="item-form">
+                        <label for="item-placa">Placa:</label>
+                        <select id="item-placa" name="item-placa" required>
+                            <option value="" disabled selected>Selecione a placa</option>
+                    </form>
+                        </select>
+                </section><br>
+                <section id="item-form-section">
+                    <h3>Adicionar Item</h3><br>
+                                     
+                    <form id="item-form">
+                    
+                        <label for="item-codigo">Código:</label>
+                        <input type="text" id="item-codigo" name="item-codigo" required />
+
+                        <label for="item-nome">Nome do Item:</label>
+                        <input type="text" id="item-nome" name="item-nome" required />
+
+                        <label for="item-quantidade">Quantidade:</label>
+                        <input type="number" id="item-quantidade" name="item-quantidade" required />
+
+                        <button type="submit" class="btn-primary">Salvar</button>
+                    </form>
+                </section>
+
+                <div class="table-container">
+                    <table id="tabela-itens">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Quantidade</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-itens">
+                            <!-- Lista de itens será populada pelo JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Seção de Solicitações -->
+            <section id="solicitacao-section" class="content-section hidden">
+                <h2>Requisição de Equipamento</h2>
+                <div id="lista-pedidos"></div>
+                <form id="requisicao-form">
+                    <div class="form-group">
+                        <label for="status">Status:</label>
+                        <input type="text" id="status" name="status" readonly value="Pendente" />
+                    </div>
+                    <div class="form-group">
+                        <label for="cliente">Cliente:</label>
+                        <input type="text" id="cliente" name="cliente" value="SUPERMERCADO MAX MANIA (3562)" />
+                    </div>
+                    <div class="form-group">
+                        <label for="cidade">Cidade:</label>
+                        <input type="text" id="cidade" name="cidade" value="MARTINOPOLIS - SP" />
+                    </div>
+                    <div class="form-group">
+                        <label for="requerente">Requerente:</label>
+                        <input type="text" id="requerente" name="requerente" value="RAFAEL" />
+                    </div>
+                    <div class="form-group">
+                        <label for="receptor">Receptor:</label>
+                        <input type="text" id="receptor" name="receptor" value="GABRIELA" />
+                    </div>
+                    <div class="form-group">
+                        <label for="data">Data:</label>
+                        <input type="date" id="data" name="data" value="2025-08-25" />
+                    </div>
+                    <div class="form-group">
+                        <label for="motivo">Motivo:</label>
+                        <input type="text" id="motivo" name="motivo" value="AUMENTO+TROCA" />
+                    </div>
+
+                    <table id="equip-table">
+                        <thead>
+                            <tr>
+                                <th>QTD</th>
+                                <th>EQUIP</th>
+                                <th>MOD.</th>
+                                <th>N</th>
+                                <th>U</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="number" name="qtd" value="1" /></td>
+                                <td><input type="text" name="equip" value="FREEZER" /></td>
+                                <td><input type="text" name="mod" value="TROCA" /></td>
+                                <td><input type="checkbox" name="n" checked /></td>
+                                <td><input type="checkbox" name="u" checked /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" name="qtd" value="1" /></td>
+                                <td><input type="text" name="equip" value="FREEZER" /></td>
+                                <td><input type="text" name="mod" value="VERT/AUMENTO" /></td>
+                                <td><input type="checkbox" name="n" /></td>
+                                <td><input type="checkbox" name="u" checked /></td>
+                            </tr>
+                            <!-- Additional rows can be added dynamically -->
+                        </tbody>
+                    </table>
+
+                    <div class="form-group">
+                        <label for="observacao">Observação:</label>
+                        <textarea id="observacao" name="observacao" rows="4"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="responsavel">Responsável:</label>
+                        <input type="text" id="responsavel" name="responsavel" />
+                    </div>
+
+                    <button type="submit" class="btn-primary">Enviar Requisição</button>
+                </form>
+            </section>
+
+            <!-- Seção de Baixa -->
+            <section id="baixa-section" class="content-section hidden">
+                <h2>Baixa</h2>
+                <!-- Lista de notificações e baixas -->
+                <div id="lista-notificacoes">
+                    <!-- Notificações para matriz ou supervisores -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Rodapé da página -->
+        <footer>
+            <p>&copy; 2023 Marquespan - Equipe de Manutenção de equipamentos, Desenvolvido por Gultembergue Carlos</p>
+        </footer>
+    </div>
+
+    <!-- Script principal da aplicação -->
+    <script src="js/app.js"></script>
+</body>
+</html>
