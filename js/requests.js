@@ -1,5 +1,21 @@
 // requests.js - funções e eventos para gerenciamento de pedidos
 
+// Funções para mostrar/ocultar seções na tela de solicitações
+function showRealizarSolicitacao() {
+    const form = document.getElementById('requisicao-form');
+    const list = document.getElementById('lista-pedidos');
+    if (form) form.classList.remove('hidden');
+    if (list) list.classList.add('hidden');
+}
+
+function showBuscarSolicitacao() {
+    const form = document.getElementById('requisicao-form');
+    const list = document.getElementById('lista-pedidos');
+    if (form) form.classList.add('hidden');
+    if (list) list.classList.remove('hidden');
+    renderRequests(); // Renderizar a lista de pedidos
+}
+
 // Renderizar pedidos pendentes
 function renderRequests() {
     const listaPedidos = document.getElementById('lista-pedidos');
@@ -79,3 +95,17 @@ function approveRequest(id, aprovado) {
     renderVehicles(); // Atualizar estoques
     renderStockSummary();
 }
+
+// Event listener para o formulário de requisição
+document.addEventListener('DOMContentLoaded', () => {
+    const requisicaoForm = document.getElementById('requisicao-form');
+    if (requisicaoForm) {
+        requisicaoForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            // Aqui você pode adicionar lógica para processar o formulário
+            alert('Requisição enviada com sucesso!');
+            // Resetar formulário ou outras ações
+            requisicaoForm.reset();
+        });
+    }
+});

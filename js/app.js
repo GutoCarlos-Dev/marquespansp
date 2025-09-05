@@ -824,6 +824,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Adicionar event listeners para os botões de solicitação
+        const btnRealizarSolicitacao = document.getElementById('btn-realizar-solicitacao');
+        if (btnRealizarSolicitacao) {
+            btnRealizarSolicitacao.addEventListener('click', () => {
+                showRealizarSolicitacao();
+            });
+        }
+
+        const btnBuscarSolicitacao = document.getElementById('btn-buscar-solicitacao');
+        if (btnBuscarSolicitacao) {
+            btnBuscarSolicitacao.addEventListener('click', () => {
+                showBuscarSolicitacao();
+            });
+        }
+
         // Menu navigation
         const menuButtons = document.querySelectorAll('.menu-btn');
         menuButtons.forEach(btn => {

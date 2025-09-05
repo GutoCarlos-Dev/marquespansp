@@ -244,8 +244,18 @@
             <!-- Seção de Solicitações -->
             <section id="solicitacao-section" class="content-section hidden">
                 <h2>Requisição de Equipamento</h2>
-                <div id="lista-pedidos"></div>
-                <form id="requisicao-form">
+
+                <!-- Botões principais -->
+                <div id="solicitacao-main-buttons">
+                    <button id="btn-realizar-solicitacao" class="btn-primary">Realizar Solicitação</button>
+                    <button id="btn-buscar-solicitacao" class="btn-primary">Buscar Solicitação</button>
+                </div><br>
+
+                <!-- Lista de pedidos -->
+                <div id="lista-pedidos" class="hidden"></div>
+
+                <!-- Formulário de requisição -->
+                <form id="requisicao-form" class="hidden">
                     <div class="form-group">
                         <label for="status">Status:</label>
                         <input type="text" id="status" name="status" readonly value="Pendente" />

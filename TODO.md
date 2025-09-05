@@ -1,12 +1,7 @@
-# TODO - Implementar Rodapé Estático com Barra de Rolagem
+# TODO List for Adding Buttons to Solicitação Section
 
-## Tarefas Concluídas
-- [x] Modificar html e body para height: 100% e display: flex
-- [x] Adicionar estilos para #app-content com flexbox
-- [x] Modificar main para flex: 1 1 auto e overflow-y: auto
-- [x] Modificar footer para margin-top: auto e flex-shrink: 0
-
-## Próximos Passos
-- [ ] Testar o layout em diferentes tamanhos de tela
-- [ ] Verificar se a barra de rolagem aparece corretamente quando o conteúdo é grande
-- [ ] Ajustar responsividade se necessário
+- [x] Add two buttons "Realizar solicitação" and "Buscar Solicitação" to the solicitacao-section in dashboard.html
+- [x] Add event listeners for the new buttons in js/requests.js
+- [x] Implement functionality for "Realizar solicitação" button (show form or modal)
+- [x] Implement functionality for "Buscar Solicitação" button (show list of requests)
+- [x] Test the buttons and functionality
