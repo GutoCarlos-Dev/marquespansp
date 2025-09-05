@@ -1,15 +1,7 @@
-# TODO - Configuração da Tela de Solicitação
+# TODO List for Making Placa Field in Modal-Solicitação Equal to Item-Modal
 
-## Passos para Completar
-
-- [ ] Verificar e melhorar a funcionalidade dos botões "Realizar Solicitação" e "Buscar Solicitação" para alternar entre formulário e lista.
-- [ ] Melhorar a renderização da lista de solicitações pendentes.
-- [ ] Verificar e aprimorar o formulário de requisição de equipamento, incluindo validação e submissão.
-- [ ] Integrar o salvamento de solicitações de equipamento no localStorage.
-- [ ] Testar a criação de solicitações de equipamento.
-- [ ] Testar a visualização e aprovação/rejeição de solicitações.
-- [ ] Verificar se há melhorias necessárias na UI/UX da tela de solicitação.
-- [ ] Teste completo da tela de solicitação e fluxos relacionados.
-
-## Progresso
-- Iniciado: Verificação inicial dos arquivos relacionados.
+- [x] Edit dashboard.html to change the select for placa in modal-solicitacao to input readonly
+- [x] Edit requests.js to remove populatePlacaDropdown call in showRealizarSolicitacao
+- [x] Edit requests.js to remove the change event listener for placa select
+- [ ] Test the modal for new requests (field should be empty readonly)
+- [ ] Test the modal for editing requests (field should be filled readonly)

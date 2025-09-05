@@ -2,6 +2,8 @@
 
 // Variáveis declaradas em data.js: equipmentRequests, requests, notifications, vehicles
 
+import { supabase } from './supabaseClient.js';
+
 function toggleSection(sectionId) {
     // Hide all content sections
     const sections = document.querySelectorAll('.content-section');
@@ -25,7 +27,10 @@ function toggleSection(sectionId) {
 }
 
 // Funções para mostrar/ocultar seções na tela de solicitações
-function showRealizarSolicitacao() {
+async function showRealizarSolicitacao() {
+    await loadVehiclesFromSupabase();
+    populatePlacaDropdown();
+
     const modal = document.getElementById('modal-solicitacao');
     if (modal) modal.classList.remove('hidden');
 
@@ -35,8 +40,7 @@ function showRealizarSolicitacao() {
     if (filtros) filtros.classList.add('hidden');
     if (listaPedidos) listaPedidos.classList.add('hidden');
 
-    // Preencher dropdown de placa
-    populatePlacaDropdown();
+
 
     // Gerar e definir ID de solicitação automático
     generateRequestId();
@@ -60,6 +64,19 @@ function showRealizarSolicitacao() {
     }
 }
 
+// Função para carregar veículos do Supabase
+async function loadVehiclesFromSupabase() {
+    const { data, error } = await supabase
+        .from('vehicles')
+        .select('*');
+    if (error) {
+        console.error('Erro ao carregar veículos:', error);
+        vehicles = [];
+    } else {
+        vehicles = data;
+    }
+}
+
 // Preencher dropdown de placa com placas de veículos
 function populatePlacaDropdown() {
     const placaSelect = document.getElementById('placa');
@@ -74,6 +91,15 @@ function populatePlacaDropdown() {
         option.textContent = `${vehicle.placa} - Estoque: ${getTotalStock(vehicle.placa)}`;
         placaSelect.appendChild(option);
     });
+}
+
+function loadData() {
+    const storedVehicles = localStorage.getItem('vehicles');
+    if (storedVehicles) {
+        vehicles = JSON.parse(storedVehicles);
+    } else {
+        vehicles = [];
+    }
 }
 
 // Obter estoque total para uma placa dada
@@ -225,13 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-// Atualizar estoque disponível quando placa muda
-    const placaSelect = document.getElementById('placa');
-    if (placaSelect) {
-        placaSelect.addEventListener('change', () => {
-            updateStockAvailable();
-        });
-    }
+
 
 // Atualizar estoque disponível quando nome do equipamento muda
     const equipTbody = document.getElementById('equip-tbody');
@@ -243,13 +263,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-// Submissão do formulário
     const requisicaoForm = document.getElementById('requisicao-form');
     if (requisicaoForm) {
-        requisicaoForm.addEventListener('submit', (e) => {
+        requisicaoForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-// Coletar dados do formulário
+            // Coletar dados do formulário
             const formData = new FormData(requisicaoForm);
             const data = {
                 id: formData.get('id-solicitacao'),
@@ -268,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 equipamentos: []
             };
 
-// Coletar itens de equipamento
+            // Coletar itens de equipamento
             const tbody = document.getElementById('equip-tbody');
             if (tbody) {
                 Array.from(tbody.children).forEach(row => {
@@ -286,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-// Validar quantidades contra o estoque
+            // Validar quantidades contra o estoque
             for (const item of data.equipamentos) {
                 const stockQty = getStockForEquip(data.placa, item.equip);
                 if (stockQty === null) {
@@ -299,20 +318,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-// Verificar se está editando ou criando novo
+            // Verificar se está editando ou criando novo
             const editIndex = requisicaoForm.dataset.editIndex;
             if (editIndex !== undefined) {
-// Atualizar solicitação existente
+                // Atualizar solicitação existente
                 equipmentRequests[editIndex] = data;
                 delete requisicaoForm.dataset.editIndex;
                 alert('Solicitação atualizada com sucesso!');
             } else {
-// Adicionar nova solicitação
+                // Adicionar nova solicitação
                 equipmentRequests.push(data);
                 alert('Requisição enviada com sucesso!');
             }
 
-// Salvar e renderizar
+            // Salvar e renderizar localmente
             saveData();
             renderEquipmentRequests();
 
@@ -320,15 +339,15 @@ document.addEventListener('DOMContentLoaded', () => {
             clearEquipmentTable();
             generateRequestId();
 
-// Resetar título do modal
+            // Resetar título do modal
             document.getElementById('modal-solicitacao-title').textContent = 'Realizar Solicitação';
 
-// Fechar modal
+            // Fechar modal
             const modal = document.getElementById('modal-solicitacao');
             if (modal) modal.classList.add('hidden');
         });
     }
-})
+});
 
 // Renderizar solicitações de equipamento em formato de tabela
 function renderEquipmentRequests() {
