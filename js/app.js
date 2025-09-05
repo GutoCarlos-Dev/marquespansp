@@ -132,23 +132,8 @@ function renderStockSummary() {
     }
 }
 
-// Adicionar novo veículo
-function addVehicle(placa, modelo, marca, renavan, ano) {
-    const vehicle = {
-        placa: placa.toUpperCase(),
-        modelo,
-        marca,
-        renavan,
-        ano,
-        supervisor: '',
-        tecnicos: [],
-        estoque: {}
-    };
-    vehicles.push(vehicle);
-    saveData();
-    renderVehicles();
-    renderStockSummary();
-}
+// Adicionar novo veículo agora é feito via vehicles.js
+// Removido cadastro local
 
 // Variável para controlar o índice do veículo sendo editado
 let editingVehicleIndex = null;
@@ -276,25 +261,17 @@ if (vehicleForm) {
             return;
         }
 
-        if (editingVehicleIndex !== null) {
-            // Editar veículo existente
-            vehicles[editingVehicleIndex] = {
-                ...vehicles[editingVehicleIndex],
-                placa: placa.toUpperCase(),
-                modelo,
-                marca,
-                renavan,
-                ano
-            };
-        } else {
-            // Adicionar novo veículo
-            addVehicle(placa, modelo, marca, renavan, ano);
-        }
-
-        saveData();
-        renderVehicles();
-        renderStockSummary();
-        document.getElementById('vehicle-modal').classList.add('hidden');
+        // Chamar função do vehicles.js para salvar no Supabase
+        import('./vehicles.js').then(async (mod) => {
+            if (editingVehicleIndex !== null) {
+                // Editar veículo existente
+                await mod.editVehicleInSupabase(editingVehicleIndex, placa, modelo, ano);
+            } else {
+                // Adicionar novo veículo
+                await mod.addVehicle(placa, modelo, ano);
+            }
+            document.getElementById('vehicle-modal').classList.add('hidden');
+        });
     });
 }
 
