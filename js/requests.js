@@ -1,10 +1,6 @@
 // requests.js - funções e eventos para gerenciamento de pedidos
 
-let equipmentRequests = [];
-let requests = [];
-let notifications = [];
-// Remove local vehicles array to avoid conflict with js/data.js
-// let vehicles = []; // Assuming vehicles data is loaded elsewhere
+// Variables declared in data.js: equipmentRequests, requests, notifications, vehicles
 
 // Funções para mostrar/ocultar seções na tela de solicitações
 function showRealizarSolicitacao() {
@@ -151,8 +147,7 @@ function getStockForEquip(placa, equipName) {
     return vehicle.estoque[equipName] || 0;
 }
 
-// Event listeners setup
-document.addEventListener('DOMContentLoaded'), () => {
+document.addEventListener('DOMContentLoaded', () => {
     // Show modal on button click
     const btnRealizarSolicitacao = document.getElementById('btn-realizar-solicitacao');
     if (btnRealizarSolicitacao) {
@@ -281,12 +276,7 @@ document.addEventListener('DOMContentLoaded'), () => {
             if (modal) modal.classList.add('hidden');
         });
     }
-}
-
-// Placeholder saveData function (should be implemented elsewhere)
-function saveData() {
-    // Implement saving to localStorage or backend as needed
-}
+})
 
 // Render equipment requests in table format
 function renderEquipmentRequests() {
@@ -423,5 +413,4 @@ function deleteEquipmentRequest(index) {
         renderEquipmentRequests();
     }
 }
-
 
