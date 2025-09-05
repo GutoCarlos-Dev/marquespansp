@@ -1,6 +1,6 @@
 // requests.js - funções e eventos para gerenciamento de pedidos
 
-// Variables declared in data.js: equipmentRequests, requests, notifications, vehicles
+// Variáveis declaradas em data.js: equipmentRequests, requests, notifications, vehicles
 
 // Funções para mostrar/ocultar seções na tela de solicitações
 function showRealizarSolicitacao() {
@@ -13,26 +13,26 @@ function showRealizarSolicitacao() {
     if (filtros) filtros.classList.add('hidden');
     if (listaPedidos) listaPedidos.classList.add('hidden');
 
-    // Populate placa dropdown
+    // Preencher dropdown de placa
     populatePlacaDropdown();
 
-    // Generate and set automatic request ID
+    // Gerar e definir ID de solicitação automático
     generateRequestId();
 
-    // Clear equipment table
+    // Limpar tabela de equipamentos
     clearEquipmentTable();
 
-    // Clear supervisor and tecnico fields
+    // Limpar campos supervisor e tecnico
     document.getElementById('supervisor').value = '';
     document.getElementById('tecnico').value = '';
 }
 
-// Populate placa dropdown with vehicle plates
+// Preencher dropdown de placa com placas de veículos
 function populatePlacaDropdown() {
     const placaSelect = document.getElementById('placa');
     if (!placaSelect) return;
 
-    // Clear existing options except the placeholder
+// Limpar opções existentes exceto o placeholder
     placaSelect.innerHTML = '<option value="" disabled selected>Selecione a placa</option>';
 
     vehicles.forEach(vehicle => {
@@ -43,37 +43,45 @@ function populatePlacaDropdown() {
     });
 }
 
-// Get total stock for a given placa
+// Obter estoque total para uma placa dada
 function getTotalStock(placa) {
     const vehicle = vehicles.find(v => v.placa === placa);
     if (!vehicle || !vehicle.estoque) return 0;
     return Object.values(vehicle.estoque).reduce((acc, qty) => acc + qty, 0);
 }
 
-// Generate automatic request ID
+// Gerar ID de solicitação automático
 function generateRequestId() {
     const idInput = document.getElementById('id-solicitacao');
     if (!idInput) return;
 
-    // Simple auto-increment based on current timestamp
-    idInput.value = 'REQ-' + Date.now();
+// Gerar ID sequencial P-1, P-2, etc.
+    let maxId = 0;
+    equipmentRequests.forEach(request => {
+        const match = request.id.match(/^P-(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1]);
+            if (num > maxId) maxId = num;
+        }
+    });
+    idInput.value = 'P-' + (maxId + 1);
 }
 
-// Clear equipment table body
+// Limpar corpo da tabela de equipamentos
 function clearEquipmentTable() {
     const tbody = document.getElementById('equip-tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
 }
 
-// Add new equipment row
+// Adicionar nova linha de equipamento
 function addEquipmentRow() {
     const tbody = document.getElementById('equip-tbody');
     if (!tbody) return;
 
     const row = document.createElement('tr');
 
-    // Quantity input
+    // Campo de entrada de quantidade
     const qtyTd = document.createElement('td');
     const qtyInput = document.createElement('input');
     qtyInput.type = 'number';
@@ -83,7 +91,7 @@ function addEquipmentRow() {
     qtyTd.appendChild(qtyInput);
     row.appendChild(qtyTd);
 
-    // Equip input
+    // Campo de entrada de equipamento
     const equipTd = document.createElement('td');
     const equipInput = document.createElement('input');
     equipInput.type = 'text';
@@ -91,7 +99,7 @@ function addEquipmentRow() {
     equipTd.appendChild(equipInput);
     row.appendChild(equipTd);
 
-    // Mod input
+    // Campo de entrada de modelo
     const modTd = document.createElement('td');
     const modInput = document.createElement('input');
     modInput.type = 'text';
@@ -99,12 +107,12 @@ function addEquipmentRow() {
     modTd.appendChild(modInput);
     row.appendChild(modTd);
 
-    // Stock available display
+    // Exibição de estoque disponível
     const stockTd = document.createElement('td');
-    stockTd.textContent = ''; // Will be updated based on placa and equip
+    stockTd.textContent = ''; // Será atualizado baseado na placa e equipamento
     row.appendChild(stockTd);
 
-    // Actions (remove button)
+    // Ações (botão remover)
     const actionTd = document.createElement('td');
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
@@ -119,7 +127,7 @@ function addEquipmentRow() {
     tbody.appendChild(row);
 }
 
-// Update stock available for equipment rows based on selected placa
+// Atualizar estoque disponível para linhas de equipamento baseado na placa selecionada
 function updateStockAvailable() {
     const placaSelect = document.getElementById('placa');
     if (!placaSelect) return;
@@ -140,7 +148,7 @@ function updateStockAvailable() {
     });
 }
 
-// Get stock quantity for a specific equipment in a vehicle
+// Obter quantidade de estoque para um equipamento específico em um veículo
 function getStockForEquip(placa, equipName) {
     const vehicle = vehicles.find(v => v.placa === placa);
     if (!vehicle || !vehicle.estoque) return null;
@@ -148,7 +156,7 @@ function getStockForEquip(placa, equipName) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Show modal on button click
+// Mostrar modal no clique do botão
     const btnRealizarSolicitacao = document.getElementById('btn-realizar-solicitacao');
     if (btnRealizarSolicitacao) {
         btnRealizarSolicitacao.addEventListener('click', () => {
@@ -156,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Close modal button
+// Botão para fechar modal
     const closeModalBtn = document.getElementById('close-modal-solicitacao');
     if (closeModalBtn) {
         closeModalBtn.addEventListener('click', () => {
@@ -165,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Add equipment button
+// Botão para adicionar equipamento
     const addEquipBtn = document.getElementById('add-equip-btn');
     if (addEquipBtn) {
         addEquipBtn.addEventListener('click', () => {
@@ -173,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Update stock available when placa changes
+// Atualizar estoque disponível quando placa muda
     const placaSelect = document.getElementById('placa');
     if (placaSelect) {
         placaSelect.addEventListener('change', () => {
@@ -181,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Update stock available when equipment name changes
+// Atualizar estoque disponível quando nome do equipamento muda
     const equipTbody = document.getElementById('equip-tbody');
     if (equipTbody) {
         equipTbody.addEventListener('input', (event) => {
@@ -191,13 +199,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Form submission
+// Submissão do formulário
     const requisicaoForm = document.getElementById('requisicao-form');
     if (requisicaoForm) {
         requisicaoForm.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            // Collect form data
+// Coletar dados do formulário
             const formData = new FormData(requisicaoForm);
             const data = {
                 id: formData.get('id-solicitacao'),
@@ -216,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 equipamentos: []
             };
 
-            // Collect equipment items
+// Coletar itens de equipamento
             const tbody = document.getElementById('equip-tbody');
             if (tbody) {
                 Array.from(tbody.children).forEach(row => {
@@ -234,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            // Validate quantities against stock
+// Validar quantidades contra o estoque
             for (const item of data.equipamentos) {
                 const stockQty = getStockForEquip(data.placa, item.equip);
                 if (stockQty === null) {
@@ -247,20 +255,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Check if editing or creating new
+// Verificar se está editando ou criando novo
             const editIndex = requisicaoForm.dataset.editIndex;
             if (editIndex !== undefined) {
-                // Update existing request
+// Atualizar solicitação existente
                 equipmentRequests[editIndex] = data;
                 delete requisicaoForm.dataset.editIndex;
                 alert('Solicitação atualizada com sucesso!');
             } else {
-                // Add new request
+// Adicionar nova solicitação
                 equipmentRequests.push(data);
                 alert('Requisição enviada com sucesso!');
             }
 
-            // Save and render
+// Salvar e renderizar
             saveData();
             renderEquipmentRequests();
 
@@ -268,17 +276,17 @@ document.addEventListener('DOMContentLoaded', () => {
             clearEquipmentTable();
             generateRequestId();
 
-            // Reset modal title
+// Resetar título do modal
             document.getElementById('modal-solicitacao-title').textContent = 'Realizar Solicitação';
 
-            // Close modal
+// Fechar modal
             const modal = document.getElementById('modal-solicitacao');
             if (modal) modal.classList.add('hidden');
         });
     }
 })
 
-// Render equipment requests in table format
+// Renderizar solicitações de equipamento em formato de tabela
 function renderEquipmentRequests() {
     const listaPedidos = document.getElementById('lista-pedidos');
     if (!listaPedidos) return;
@@ -302,7 +310,7 @@ function renderEquipmentRequests() {
             </td>
         `;
 
-        // Add event listeners to buttons
+// Adicionar event listeners aos botões
         const editBtn = row.querySelector('.edit-btn');
         const deleteBtn = row.querySelector('.delete-btn');
 
@@ -313,12 +321,12 @@ function renderEquipmentRequests() {
     });
 }
 
-// Edit equipment request
+// Editar solicitação de equipamento
 function editEquipmentRequest(index) {
     const request = equipmentRequests[index];
     if (!request) return;
 
-    // Populate form with request data
+// Preencher formulário com dados da solicitação
     document.getElementById('id-solicitacao').value = request.id;
     document.getElementById('status').value = request.status;
     document.getElementById('placa').value = request.placa;
@@ -333,31 +341,31 @@ function editEquipmentRequest(index) {
     document.getElementById('observacao').value = request.observacao;
     document.getElementById('responsavel').value = request.responsavel;
 
-    // Populate equipment table
+// Preencher tabela de equipamentos
     clearEquipmentTable();
     request.equipamentos.forEach(equip => {
         addEquipmentRowWithData(equip.qtd, equip.equip, equip.mod);
     });
 
-    // Update modal title
+// Atualizar título do modal
     document.getElementById('modal-solicitacao-title').textContent = 'Editar Solicitação';
 
-    // Show modal
+// Mostrar modal
     const modal = document.getElementById('modal-solicitacao');
     if (modal) modal.classList.remove('hidden');
 
-    // Store index for update
+// Armazenar índice para atualização
     document.getElementById('requisicao-form').dataset.editIndex = index;
 }
 
-// Add equipment row with data
+// Adicionar linha de equipamento com dados
 function addEquipmentRowWithData(qtd, equip, mod) {
     const tbody = document.getElementById('equip-tbody');
     if (!tbody) return;
 
     const row = document.createElement('tr');
 
-    // Quantity input
+    // Campo de entrada de quantidade
     const qtyTd = document.createElement('td');
     const qtyInput = document.createElement('input');
     qtyInput.type = 'number';
@@ -367,7 +375,7 @@ function addEquipmentRowWithData(qtd, equip, mod) {
     qtyTd.appendChild(qtyInput);
     row.appendChild(qtyTd);
 
-    // Equip input
+    // Campo de entrada de equipamento
     const equipTd = document.createElement('td');
     const equipInput = document.createElement('input');
     equipInput.type = 'text';
@@ -376,7 +384,7 @@ function addEquipmentRowWithData(qtd, equip, mod) {
     equipTd.appendChild(equipInput);
     row.appendChild(equipTd);
 
-    // Mod input
+    // Campo de entrada de modelo
     const modTd = document.createElement('td');
     const modInput = document.createElement('input');
     modInput.type = 'text';
@@ -385,12 +393,12 @@ function addEquipmentRowWithData(qtd, equip, mod) {
     modTd.appendChild(modInput);
     row.appendChild(modTd);
 
-    // Stock available display
+    // Exibição de estoque disponível
     const stockTd = document.createElement('td');
-    stockTd.textContent = ''; // Will be updated based on placa and equip
+    stockTd.textContent = ''; // Será atualizado baseado na placa e equipamento
     row.appendChild(stockTd);
 
-    // Actions (remove button)
+    // Ações (botão remover)
     const actionTd = document.createElement('td');
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
@@ -405,7 +413,7 @@ function addEquipmentRowWithData(qtd, equip, mod) {
     tbody.appendChild(row);
 }
 
-// Delete equipment request
+// Excluir solicitação de equipamento
 function deleteEquipmentRequest(index) {
     if (confirm('Tem certeza que deseja excluir esta solicitação?')) {
         equipmentRequests.splice(index, 1);
