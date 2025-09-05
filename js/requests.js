@@ -152,7 +152,7 @@ function getStockForEquip(placa, equipName) {
 }
 
 // Event listeners setup
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded'), () => {
     // Show modal on button click
     const btnRealizarSolicitacao = document.getElementById('btn-realizar-solicitacao');
     if (btnRealizarSolicitacao) {
