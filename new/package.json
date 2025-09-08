@@ -1,0 +1,14 @@
+{
+  "name": "supabase-test-project",
+  "version": "1.0.0",
+  "description": "Projeto local para testar inserções no Supabase",
+  "main": "supabase-test.js",
+  "type": "module",
+  "scripts": {
+    "start": "node supabase-test.js",
+    "test": "node supabase-test.js"
+  },
+  "keywords": ["supabase", "test", "database"],
+  "author": "Gultembergue Carlos",
+  "license": "ISC"
+}

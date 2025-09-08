@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Inserção Supabase</title>
+</head>
+<body>
+    <h1>Teste de Inserção no Supabase</h1>
+    <button id="insert-vehicle">Inserir Veículo</button>
+    <button id="insert-catalog">Inserir Item no Catálogo</button>
+    <button id="insert-request">Inserir Solicitação</button>
+    <div id="result"></div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+        // Configurações do Supabase
+        const SUPABASE_URL = 'https://tetshxfxrdbzovajmfoz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRldHNoeGZ4cmRiem92YWptZm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxMDI1NDUsImV4cCI6MjA3MjY3ODU0NX0.dG09yVDrzofmRc7XmVHwgVJKVOG1xjPGkwxJGdYpk4U';
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const resultDiv = document.getElementById('result');
+
+        async function insertVehicle() {
+            const vehicle = {
+                placa: 'TEST1234',
+                modelo: 'Modelo Teste',
+                marca: 'Marca Teste',
+                renavan: '987654321',
+                ano: 2024,
+                tecnicos: [],
+                estoque: {}
+            };
+
+            const { data, error } = await supabase
+                .from('vehicles')
+                .insert([vehicle]);
+
+            if (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Erro ao inserir veículo: ${error.message}</p>`;
+            } else {
+                resultDiv.innerHTML = `<p style="color: green;">Veículo inserido com sucesso!</p>`;
+                console.log('Veículo inserido:', data);
+            }
+        }
+
+        async function insertCatalogItem() {
+            const item = {
+                codigo: 'TEST001',
+                nome_sale: 'Item de Teste'
+            };
+
+            const { data, error } = await supabase
+                .from('catalog')
+                .insert([item]);
+
+            if (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Erro ao inserir item no catálogo: ${error.message}</p>`;
+            } else {
+                resultDiv.innerHTML = `<p style="color: green;">Item inserido no catálogo com sucesso!</p>`;
+                console.log('Item inserido:', data);
+            }
+        }
+
+        async function insertRequest() {
+            const request = {
+                id: 'TEST-001',
+                status: 'Pendente',
+                placa: 'TEST1234',
+                supervisor: 'Supervisor Teste',
+                tecnico: 'Técnico Teste',
+                data: new Date().toISOString().split('T')[0],
+                equipamentos: []
+            };
+
+            const { data, error } = await supabase
+                .from('equipment_requests')
+                .insert([request]);
+
+            if (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Erro ao inserir solicitação: ${error.message}</p>`;
+            } else {
+                resultDiv.innerHTML = `<p style="color: green;">Solicitação inserida com sucesso!</p>`;
+                console.log('Solicitação inserida:', data);
+            }
+        }
+
+        document.getElementById('insert-vehicle').addEventListener('click', insertVehicle);
+        document.getElementById('insert-catalog').addEventListener('click', insertCatalogItem);
+        document.getElementById('insert-request').addEventListener('click', insertRequest);
+    </script>
+</body>
+</html>
