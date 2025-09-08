@@ -1,7 +1,5 @@
 // vehicles.js - funções e eventos para gerenciamento de veículos
 
-import { supabase } from './supabaseClient.js';
-
 // Variável para controlar o índice do veículo sendo editado
 let editingVehicleIndex = null;
 
@@ -14,7 +12,7 @@ function renderVehicles() {
 
     if (vehicles.length === 0) {
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td colspan="4" style="text-align: center; padding: 2rem;">Nenhum veículo cadastrado</td>';
+        tr.innerHTML = '<td colspan="6" style="text-align: center; padding: 2rem;">Nenhum veículo cadastrado</td>';
         listaVeiculos.appendChild(tr);
         return;
     }
@@ -31,6 +29,8 @@ function renderVehicles() {
         tr.innerHTML = `
             <td>${vehicle.placa || ''}</td>
             <td>${vehicle.modelo || ''}</td>
+            <td>${vehicle.marca || ''}</td>
+            <td>${vehicle.renavan || ''}</td>
             <td>${vehicle.ano || ''}</td>
             <td>
                 <button class="action-btn edit" onclick="editVehicle(${index})" style="margin-right: 5px;">Editar</button>
@@ -42,41 +42,20 @@ function renderVehicles() {
 }
 
 // Adicionar novo veículo
-async function addVehicle(placa, modelo, ano) {
+function addVehicle(placa, modelo, marca, renavan, ano) {
     const vehicle = {
         placa: placa.toUpperCase(),
         modelo,
-        ano: parseInt(ano),
+        marca,
+        renavan,
+        ano,
         tecnicos: [],
         estoque: {}
     };
-
-    try {
-        // Upload to Supabase
-        const { data, error } = await supabase
-            .from('vehicles')
-            .insert([{
-                placa: vehicle.placa,
-                modelo: vehicle.modelo,
-                ano: vehicle.ano,
-                estoque: vehicle.estoque
-            }]);
-
-        if (error) {
-            console.error('Erro ao salvar no Supabase:', error);
-            alert('Erro ao salvar veículo no banco de dados.');
-            return;
-        }
-
-        vehicles.push(vehicle);
-        saveData();
-        renderVehicles();
-        renderStockSummary();
-        alert('Veículo cadastrado com sucesso!');
-    } catch (err) {
-        console.error('Erro inesperado:', err);
-        alert('Erro ao cadastrar veículo.');
-    }
+    vehicles.push(vehicle);
+    saveData();
+    renderVehicles();
+    renderStockSummary();
 }
 
 // Editar veículo usando modal
@@ -87,6 +66,8 @@ function editVehicle(index) {
     // Preencher o formulário do modal com os dados do veículo
     document.getElementById('placa').value = vehicle.placa || '';
     document.getElementById('modelo').value = vehicle.modelo || '';
+    document.getElementById('marca').value = vehicle.marca || '';
+    document.getElementById('renavan').value = vehicle.renavan || '';
     document.getElementById('ano').value = vehicle.ano || '';
 
     // Atualizar título do modal
@@ -94,45 +75,6 @@ function editVehicle(index) {
 
     // Mostrar modal
     document.getElementById('vehicle-modal').classList.remove('hidden');
-}
-
-// Editar veículo no Supabase
-async function editVehicleInSupabase(index, placa, modelo, ano) {
-    const vehicle = vehicles[index];
-    const updatedVehicle = {
-        ...vehicle,
-        placa: placa.toUpperCase(),
-        modelo,
-        ano: parseInt(ano),
-    };
-
-    try {
-        // Update in Supabase
-        const { data, error } = await supabase
-            .from('vehicles')
-            .update({
-                placa: updatedVehicle.placa,
-                modelo: updatedVehicle.modelo,
-                ano: updatedVehicle.ano,
-                estoque: updatedVehicle.estoque
-            })
-            .eq('placa', vehicle.placa);
-
-        if (error) {
-            console.error('Erro ao atualizar no Supabase:', error);
-            alert('Erro ao atualizar veículo no banco de dados.');
-            return;
-        }
-
-        vehicles[index] = updatedVehicle;
-        saveData();
-        renderVehicles();
-        renderStockSummary();
-        alert('Veículo atualizado com sucesso!');
-    } catch (err) {
-        console.error('Erro inesperado:', err);
-        alert('Erro ao atualizar veículo.');
-    }
 }
 
 // Excluir veículo
@@ -166,26 +108,38 @@ if (closeModalBtn) {
 
 const vehicleForm = document.getElementById('vehicle-form');
 if (vehicleForm) {
-    vehicleForm.addEventListener('submit', async (e) => {
+    vehicleForm.addEventListener('submit', (e) => {
         e.preventDefault();
 
         const placa = document.getElementById('placa').value.trim();
         const modelo = document.getElementById('modelo').value.trim();
+        const marca = document.getElementById('marca').value.trim();
+        const renavan = document.getElementById('renavan').value.trim();
         const ano = document.getElementById('ano').value.trim();
 
-        if (!placa || !modelo || !ano) {
+        if (!placa || !modelo || !marca || !renavan || !ano) {
             alert('Por favor, preencha todos os campos.');
             return;
         }
 
         if (editingVehicleIndex !== null) {
             // Editar veículo existente
-            await editVehicleInSupabase(editingVehicleIndex, placa, modelo, ano);
+            vehicles[editingVehicleIndex] = {
+                ...vehicles[editingVehicleIndex],
+                placa: placa.toUpperCase(),
+                modelo,
+                marca,
+                renavan,
+                ano,
+            };
         } else {
             // Adicionar novo veículo
-            await addVehicle(placa, modelo, ano);
+            addVehicle(placa, modelo, marca, renavan, ano);
         }
 
+        saveData();
+        renderVehicles();
+        renderStockSummary();
         document.getElementById('vehicle-modal').classList.add('hidden');
     });
 }
