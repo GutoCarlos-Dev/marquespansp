@@ -1,5 +1,7 @@
 // vehicles.js - funções e eventos para gerenciamento de veículos
 
+import { supabase } from './supabaseClient.js';
+
 // Variável para controlar o índice do veículo sendo editado
 let editingVehicleIndex = null;
 
@@ -78,12 +80,13 @@ function editVehicle(index) {
 }
 
 // Excluir veículo
-function deleteVehicle(index) {
+async function deleteVehicle(index) {
     if (confirm('Tem certeza que deseja excluir este veículo?')) {
-        vehicles.splice(index, 1);
-        saveData();
-        renderVehicles();
-        renderStockSummary();
+        const success = await deleteVehicleFromSupabase(index);
+        if (success) {
+            renderVehicles();
+            renderStockSummary();
+        }
     }
 }
 
@@ -106,40 +109,85 @@ if (closeModalBtn) {
     });
 }
 
-const vehicleForm = document.getElementById('vehicle-form');
-if (vehicleForm) {
-    vehicleForm.addEventListener('submit', (e) => {
-        e.preventDefault();
 
-        const placa = document.getElementById('placa').value.trim();
-        const modelo = document.getElementById('modelo').value.trim();
-        const marca = document.getElementById('marca').value.trim();
-        const renavan = document.getElementById('renavan').value.trim();
-        const ano = document.getElementById('ano').value.trim();
 
-        if (!placa || !modelo || !marca || !renavan || !ano) {
-            alert('Por favor, preencha todos os campos.');
-            return;
-        }
+// Função para adicionar veículo no Supabase
+async function addVehicleToSupabase(placa, modelo, marca, renavan, ano) {
+    const vehicle = {
+        placa: placa.toUpperCase(),
+        modelo,
+        marca,
+        renavan,
+        ano,
+        tecnicos: [],
+        estoque: {}
+    };
 
-        if (editingVehicleIndex !== null) {
-            // Editar veículo existente
-            vehicles[editingVehicleIndex] = {
-                ...vehicles[editingVehicleIndex],
-                placa: placa.toUpperCase(),
-                modelo,
-                marca,
-                renavan,
-                ano,
-            };
-        } else {
-            // Adicionar novo veículo
-            addVehicle(placa, modelo, marca, renavan, ano);
-        }
+    const { data, error } = await supabase
+        .from('vehicles')
+        .insert([vehicle]);
 
-        saveData();
+    if (error) {
+        console.error('Erro ao adicionar veículo no Supabase:', error);
+        alert('Erro ao salvar veículo no banco de dados.');
+        return false;
+    } else {
+        vehicles.push(vehicle);
         renderVehicles();
         renderStockSummary();
-        document.getElementById('vehicle-modal').classList.add('hidden');
-    });
+        return true;
+    }
 }
+
+// Função para editar veículo no Supabase
+async function editVehicleInSupabase(index, placa, modelo, marca, renavan, ano) {
+    const vehicle = vehicles[index];
+    const updatedVehicle = {
+        ...vehicle,
+        placa: placa.toUpperCase(),
+        modelo,
+        marca,
+        renavan,
+        ano
+    };
+
+    const { data, error } = await supabase
+        .from('vehicles')
+        .update(updatedVehicle)
+        .eq('placa', vehicle.placa);
+
+    if (error) {
+        console.error('Erro ao editar veículo no Supabase:', error);
+        alert('Erro ao atualizar veículo no banco de dados.');
+        return false;
+    } else {
+        vehicles[index] = updatedVehicle;
+        renderVehicles();
+        renderStockSummary();
+        return true;
+    }
+}
+
+// Função para excluir veículo no Supabase
+async function deleteVehicleFromSupabase(index) {
+    const vehicle = vehicles[index];
+
+    const { data, error } = await supabase
+        .from('vehicles')
+        .delete()
+        .eq('placa', vehicle.placa);
+
+    if (error) {
+        console.error('Erro ao excluir veículo no Supabase:', error);
+        alert('Erro ao excluir veículo no banco de dados.');
+        return false;
+    } else {
+        vehicles.splice(index, 1);
+        renderVehicles();
+        renderStockSummary();
+        return true;
+    }
+}
+
+// Exportar funções para uso em outros módulos
+export { addVehicleToSupabase, editVehicleInSupabase, deleteVehicleFromSupabase };

@@ -265,10 +265,10 @@ if (vehicleForm) {
         import('./vehicles.js').then(async (mod) => {
             if (editingVehicleIndex !== null) {
                 // Editar veículo existente
-                await mod.editVehicleInSupabase(editingVehicleIndex, placa, modelo, ano);
+                await mod.editVehicleInSupabase(editingVehicleIndex, placa, modelo, marca, renavan, ano);
             } else {
                 // Adicionar novo veículo
-                await mod.addVehicle(placa, modelo, ano);
+                await mod.addVehicleToSupabase(placa, modelo, marca, renavan, ano);
             }
             document.getElementById('vehicle-modal').classList.add('hidden');
         });
