@@ -1,6 +1,10 @@
 // Controle de Estoque da Frota - Lógica Principal com Login
 // Este arquivo contém toda a lógica para gerenciar login, estoques, pedidos e notificações
 
+import { catalogItems, addCatalogItemToSupabase, editCatalogItemInSupabase, deleteCatalogItemFromSupabase } from './catalog.js';
+import { notifications, addNotificationToSupabase, deleteNotificationFromSupabase } from './notifications.js';
+import { vehicles, requests, equipmentRequests, loadData, saveData } from './data.js';
+
 // Credenciais iniciais para login
 const USERNAME = 'admin';
 const PASSWORD = 'admin';
@@ -79,7 +83,7 @@ function renderRequests() {
     const listaPedidos = document.getElementById('lista-pedidos');
     listaPedidos.innerHTML = '';
 
-    requests.forEach(request => {
+    equipmentRequests.forEach(request => {
         const div = document.createElement('div');
         div.className = 'request-item';
         div.innerHTML = `
@@ -182,7 +186,7 @@ function createRequest(placa) {
             quantidade,
             status: 'pendente'
         };
-        requests.push(request);
+        equipmentRequests.push(request);
         saveData();
         renderRequests();
     }
@@ -190,7 +194,7 @@ function createRequest(placa) {
 
 // Aprovar ou rejeitar pedido
 function approveRequest(id, aprovado) {
-    const request = requests.find(r => r.id === id);
+    const request = equipmentRequests.find(r => r.id === id);
     if (!request) return;
 
     if (aprovado) {
@@ -217,7 +221,7 @@ function approveRequest(id, aprovado) {
     }
 
     // Remover pedido da lista
-    requests = requests.filter(r => r.id !== id);
+    equipmentRequests = equipmentRequests.filter(r => r.id !== id);
     saveData();
     renderRequests();
     renderNotifications();
@@ -278,8 +282,7 @@ if (vehicleForm) {
 // Variáveis para controle do modal de itens
 let editingItemIndex = null;
 
-// Array para catálogo global de itens
-let catalogItems = [];
+// Array para catálogo global de itens - agora importado de catalog.js
 
 // Renderizar lista de itens no estoque
 function renderItems() {
@@ -370,7 +373,7 @@ if (closeCatalogItemModalBtn) {
 // Salvar item do catálogo via formulário modal
 const catalogItemForm = document.getElementById('catalog-item-form');
 if (catalogItemForm) {
-    catalogItemForm.addEventListener('submit', (e) => {
+    catalogItemForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const codigo = document.getElementById('catalog-item-codigo').value.trim();
@@ -383,13 +386,13 @@ if (catalogItemForm) {
 
         if (editingCatalogItemIndex !== null) {
             // Editar item existente
-            catalogItems[editingCatalogItemIndex] = { codigo, nomeSale };
+            const item = catalogItems[editingCatalogItemIndex];
+            await editCatalogItemInSupabase(item.id, codigo, nomeSale);
         } else {
             // Adicionar novo item
-            catalogItems.push({ codigo, nomeSale });
+            await addCatalogItemToSupabase(codigo, nomeSale);
         }
 
-        saveData();
         renderCatalogItems();
         document.getElementById('catalog-item-modal').classList.add('hidden');
         populateItemSelectionDropdown();
@@ -409,34 +412,15 @@ function editCatalogItem(index) {
 }
 
 // Excluir item do catálogo
-function deleteCatalogItem(index) {
+async function deleteCatalogItem(index) {
     if (!confirm('Tem certeza que deseja excluir este item do catálogo?')) return;
-    catalogItems.splice(index, 1);
-    saveData();
+    const item = catalogItems[index];
+    await deleteCatalogItemFromSupabase(item.id);
     renderCatalogItems();
     populateItemSelectionDropdown();
 }
 
-// Atualizar localStorage para incluir catálogo
-function saveData() {
-    localStorage.setItem('vehicles', JSON.stringify(vehicles));
-    localStorage.setItem('requests', JSON.stringify(requests));
-    localStorage.setItem('notifications', JSON.stringify(notifications));
-    localStorage.setItem('catalogItems', JSON.stringify(catalogItems));
-}
 
-// Carregar dados do localStorage incluindo catálogo
-function loadData() {
-    const storedVehicles = localStorage.getItem('vehicles');
-    const storedRequests = localStorage.getItem('requests');
-    const storedNotifications = localStorage.getItem('notifications');
-    const storedCatalogItems = localStorage.getItem('catalogItems');
-
-    if (storedVehicles) vehicles = JSON.parse(storedVehicles);
-    if (storedRequests) requests = JSON.parse(storedRequests);
-    if (storedNotifications) notifications = JSON.parse(storedNotifications);
-    if (storedCatalogItems) catalogItems = JSON.parse(storedCatalogItems);
-}
 
 // Popular dropdown do modal de seleção com itens do catálogo
 function populateItemSelectionDropdown() {
@@ -459,8 +443,8 @@ function populateItemSelectionDropdown() {
 
 
 // Inicializar catálogo e dropdown ao carregar a página
-document.addEventListener('DOMContentLoaded', () => {
-    loadData();
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadData();
     renderCatalogItems();
     populateItemSelectionDropdown();
 });
@@ -712,11 +696,11 @@ if (btnBuscarItem) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Inicializar aplicação
     // Verificar se estamos na página do dashboard e inicializar
     if (document.getElementById('app-content')) {
-        loadData();
+        await loadData();
         renderVehicles();
         renderRequests();
         renderNotifications();

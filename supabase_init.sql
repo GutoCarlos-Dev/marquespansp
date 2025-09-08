@@ -36,7 +36,23 @@ CREATE TABLE request_equipments (
     mod VARCHAR(100)
 );
 
+-- Tabela de catálogo de itens
+CREATE TABLE catalog_items (
+    id SERIAL PRIMARY KEY,
+    codigo VARCHAR(50) UNIQUE NOT NULL,
+    nome_sale VARCHAR(100) NOT NULL
+);
+
+-- Tabela de notificações
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    mensagem TEXT NOT NULL,
+    data TIMESTAMP DEFAULT NOW()
+);
+
 -- Índices para melhorar performance
 CREATE INDEX idx_vehicles_placa ON vehicles(placa);
 CREATE INDEX idx_requests_request_id ON equipment_requests(request_id);
 CREATE INDEX idx_request_equipments_request_id ON request_equipments(request_id);
+CREATE INDEX idx_catalog_codigo ON catalog_items(codigo);
+CREATE INDEX idx_notifications_data ON notifications(data);

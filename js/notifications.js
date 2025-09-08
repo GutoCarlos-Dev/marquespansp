@@ -1,16 +1,50 @@
-// notifications.js - renderização de notificações
+// notifications.js - funções para gerenciamento de notificações com Supabase
 
-// Renderizar notificações
-function renderNotifications() {
-    const listaNotificacoes = document.getElementById('lista-notificacoes');
-    if (!listaNotificacoes) return;
+import { supabase } from './supabaseClient.js';
 
-    listaNotificacoes.innerHTML = '';
+let notifications = [];
 
-    notifications.forEach(notif => {
-        const div = document.createElement('div');
-        div.className = 'notification-item';
-        div.innerHTML = `<p>${notif.mensagem} - ${new Date(notif.data).toLocaleString()}</p>`;
-        listaNotificacoes.appendChild(div);
-    });
+// Carregar notificações do Supabase
+async function loadNotificationsFromSupabase() {
+    const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('data', { ascending: false });
+    if (error) {
+        console.error('Erro ao carregar notificações:', error);
+        notifications = [];
+    } else {
+        notifications = data;
+    }
 }
+
+// Adicionar notificação no Supabase
+async function addNotificationToSupabase(mensagem) {
+    const { data, error } = await supabase
+        .from('notifications')
+        .insert([{ mensagem }]);
+    if (error) {
+        console.error('Erro ao adicionar notificação:', error);
+        return false;
+    } else {
+        notifications.unshift(data[0]); // Adicionar no início
+        return true;
+    }
+}
+
+// Excluir notificação no Supabase
+async function deleteNotificationFromSupabase(id) {
+    const { data, error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', id);
+    if (error) {
+        console.error('Erro ao excluir notificação:', error);
+        return false;
+    } else {
+        notifications = notifications.filter(notif => notif.id !== id);
+        return true;
+    }
+}
+
+export { notifications, loadNotificationsFromSupabase, addNotificationToSupabase, deleteNotificationFromSupabase };

@@ -1,27 +1,53 @@
-// data.js - funções para carregar e salvar dados no localStorage
+// data.js - funções para carregar e salvar dados no Supabase
+
+import { supabase } from './supabaseClient.js';
+import { loadCatalogFromSupabase, catalogItems } from './catalog.js';
+import { loadNotificationsFromSupabase, notifications } from './notifications.js';
 
 let vehicles = []; // Array de veículos
-let requests = []; // Array de pedidos pendentes
-let notifications = []; // Array de notificações
+let requests = []; // Array de pedidos pendentes (legacy, agora em equipmentRequests)
 let equipmentRequests = []; // Array de solicitações de equipamento
 
-// Carregar dados do localStorage ao iniciar
-function loadData() {
-    const storedVehicles = localStorage.getItem('vehicles');
-    const storedRequests = localStorage.getItem('requests');
-    const storedNotifications = localStorage.getItem('notifications');
-    const storedEquipmentRequests = localStorage.getItem('equipmentRequests');
+// Carregar dados do Supabase ao iniciar
+async function loadData() {
+    // Carregar veículos
+    const { data: vehiclesData, error: vehiclesError } = await supabase
+        .from('vehicles')
+        .select('*');
+    if (vehiclesError) {
+        console.error('Erro ao carregar veículos:', vehiclesError);
+        vehicles = [];
+    } else {
+        vehicles = vehiclesData;
+    }
 
-    if (storedVehicles) vehicles = JSON.parse(storedVehicles);
-    if (storedRequests) requests = JSON.parse(storedRequests);
-    if (storedNotifications) notifications = JSON.parse(storedNotifications);
-    if (storedEquipmentRequests) equipmentRequests = JSON.parse(storedEquipmentRequests);
+    // Carregar solicitações de equipamento
+    const { data: requestsData, error: requestsError } = await supabase
+        .from('equipment_requests')
+        .select(`
+            *,
+            request_equipments (*)
+        `);
+    if (requestsError) {
+        console.error('Erro ao carregar solicitações:', requestsError);
+        equipmentRequests = [];
+    } else {
+        equipmentRequests = requestsData.map(req => ({
+            ...req,
+            equipamentos: req.request_equipments || []
+        }));
+    }
+
+    // Carregar catálogo e notificações
+    await loadCatalogFromSupabase();
+    await loadNotificationsFromSupabase();
+
+    // Manter requests como array vazio para compatibilidade
+    requests = [];
 }
 
-// Salvar dados no localStorage
+// Salvar dados no Supabase (não mais necessário salvar manualmente, pois operações são síncronas)
 function saveData() {
-    localStorage.setItem('vehicles', JSON.stringify(vehicles));
-    localStorage.setItem('requests', JSON.stringify(requests));
-    localStorage.setItem('notifications', JSON.stringify(notifications));
-    localStorage.setItem('equipmentRequests', JSON.stringify(equipmentRequests));
+    // Dados são salvos diretamente nas operações CRUD
+    console.log('Dados salvos no Supabase');
 }
