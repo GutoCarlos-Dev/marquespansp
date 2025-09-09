@@ -1,0 +1,417 @@
+/* Estilos para a página de Aprovação alinhados com solicitacao.css e melhorias no grid */
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+header nav {
+    background-color: #4CAF50;
+    padding: 1rem 2rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+header nav h1 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+#menu {
+    display: flex;
+    gap: 1rem; /* Adiciona espaçamento entre os botões do menu */
+}
+
+#menu button {
+    background-color: white;
+    color: #4CAF50;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+#menu button:hover {
+    background-color: #388E3C;
+    color: white;
+}
+
+nav #menu .btn-sair {
+    background-color: #388E3C !important;
+    color: white !important;
+}
+
+nav #menu .btn-sair:hover {
+    background-color: #d32f2f !important;
+    color: white !important;
+}
+
+main {
+    max-width: 900px;
+    margin: 2rem auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+h2 {
+    color: #4CAF50;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 2rem;
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+table th, table td {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+
+table th {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+
+table tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Estilo para os botões de ação no grid */
+table .btn-detalhes {
+    background-color: #2196F3; /* Azul para detalhes */
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+}
+
+table .btn-detalhes:hover {
+    background-color: #1976D2;
+}
+
+.botoes-acoes {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.botoes-acoes button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    margin: 0 0.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.botoes-acoes button#btn-rejeitar {
+    background-color: #d32f2f;
+}
+
+.botoes-acoes button#btn-fechar {
+    background-color: #757575;
+}
+
+.botoes-acoes button:hover {
+    filter: brightness(0.9);
+}
+
+/* Responsivo para mobile */
+@media (max-width: 768px) {
+    main {
+        margin: 1rem;
+        padding: 1rem;
+    }
+
+    thead {
+        display: none;
+    }
+
+    tbody tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 0.75rem;
+        background-color: white;
+    }
+
+    tbody td {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border: none;
+        border-bottom: 1px solid #ddd;
+    }
+
+    tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #34495e;
+    }
+
+    .botoes-acoes button {
+        display: block;
+        width: 100%;
+        margin: 0.5rem 0;
+    }
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 2rem;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 700px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+.modal-close {
+    color: #aaa;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.modal-close:hover,
+.modal-close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Estilos para a página de detalhes da solicitação */
+.detalhes-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+.detalhes-section h3 {
+    color: #4CAF50;
+        margin: 0; /* Removido para alinhar com flexbox */
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #495057;
+}
+
+.readonly-field {
+    padding: 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background-color: #e9ecef;
+    color: #495057;
+    font-size: 1rem;
+}
+
+/* #itens-grid {  não tem nada  }
+    /* Estilo base do container do grid */
+
+.total-pecas-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.total-pecas-label strong {
+    color: #4CAF50;
+}
+
+#itens-grid table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+#itens-grid th {
+    background-color: #4CAF50;
+    color: white;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+#itens-grid td {
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+}
+
+#itens-grid div:last-child {
+    border-bottom: none;
+}
+
+#itens-grid p {
+    margin: 0;
+    font-weight: 500;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.action-buttons button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-weight: 600;
+}
+
+.action-buttons button#btn-rejeitar {
+    background-color: #d32f2f;
+}
+
+.action-buttons button#btn-imprimir-pdf {
+    background-color: #0288d1; /* Um tom de azul para diferenciar */
+}
+
+.action-buttons button:hover {
+    filter: brightness(0.9);
+}
+
+/* Estilos específicos para o campo de rota */
+.rota-group {
+    flex: 0 0 30%; /* Campo menor */
+}
+
+.rota-field {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background-color: white;
+    color: #495057;
+    font-size: 1rem;
+}
+
+/* Responsivo para mobile */
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .action-buttons button {
+        width: 100%;
+    }
+
+    .rota-group {
+        flex: 1; /* Em mobile, volta ao tamanho normal */
+    }
+}
+
+.label-destaque {
+    color: #d32f2f; /* Um tom de vermelho */
+    font-weight: bold;
+}
+
+/* Estilo para destacar solicitações rejeitadas no grid */
+.status-rejeitado {
+    background-color: #ffebee !important; /* Fundo vermelho bem claro */
+}
+
+.status-rejeitado td {
+    font-weight: 500;
+    color: #c62828; /* Texto em vermelho escuro para maior especificidade */
+}
+
+.btn-detalhes-rejeitado {
+    background-color: #757575; /* Cinza para o botão de detalhes */
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+}

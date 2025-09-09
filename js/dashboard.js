@@ -1,189 +1,270 @@
-// dashboard.js - renderização do dashboard e navegação do menu
+// Lógica para o Dashboard do Técnico
+// Comentários em português
 
-// Renderizar resumo de estoque
-function renderStockSummary() {
-    const resumoEstoque = document.getElementById('resumo-estoque');
-    if (!resumoEstoque) return; // Elemento não existe nesta página
-
-    resumoEstoque.innerHTML = '';
-
-    const totalItems = {};
-    vehicles.forEach(vehicle => {
-        Object.entries(vehicle.estoque).forEach(([peca, qtd]) => {
-            totalItems[peca] = (totalItems[peca] || 0) + qtd;
-        });
-    });
-
-    if (Object.keys(totalItems).length === 0) {
-        resumoEstoque.innerHTML = '<p>Nenhum item em estoque.</p>';
-    } else {
-        const ul = document.createElement('ul');
-        Object.entries(totalItems).forEach(([peca, qtd]) => {
-            const li = document.createElement('li');
-            li.textContent = `${peca}: ${qtd}`;
-            ul.appendChild(li);
-        });
-        resumoEstoque.appendChild(ul);
+document.addEventListener('DOMContentLoaded', async () => {
+    // Garante que o Chart.js está carregado antes de executar o resto
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js não foi carregado. Verifique a tag script no HTML.');
+        return;
     }
-}
 
-// Função para renderizar os resumos no dashboard
-function renderDashboardSummary() {
-    // Veículos cadastrados
-    const countVeiculos = vehicles.length;
+    const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+    if (!usuarioLogado) {
+        alert('Usuário não logado. Redirecionando para login.');
+        window.location.href = '../index.html';
+        return;
+    }
 
-    // Itens em estoque positivos e negativos
-    let estoquePositivo = 0;
-    let estoqueNegativo = 0;
-    vehicles.forEach(vehicle => {
-        Object.values(vehicle.estoque).forEach(qtd => {
-            if (qtd > 0) estoquePositivo += qtd;
-            else if (qtd < 0) estoqueNegativo += qtd;
-        });
-    });
+    // Mostrar nome do usuário
+    const nomeUsuarioSpan = document.getElementById('nome-usuario');
+    if (nomeUsuarioSpan) {
+        nomeUsuarioSpan.textContent = usuarioLogado.nome;
+    }
 
-    // Pedidos aprovados e pendentes
-    let pedidosAprovados = 0;
-    let pedidosPendentes = 0;
-    requests.forEach(req => {
-        if (req.status && req.status.toLowerCase() === 'aprovado') pedidosAprovados++;
-        else if (req.status && req.status.toLowerCase() === 'pendente') pedidosPendentes++;
-    });
+    // Mostra a seção de migração apenas para o administrador
+    if (usuarioLogado.nivel === 'administrador') {
+        const migrationSection = document.getElementById('migration-section');
+        migrationSection.style.display = 'block';
+        document.getElementById('btn-migrar-usuarios').addEventListener('click', migrarUsuariosParaSupabase);
+        document.getElementById('btn-migrar-pecas').addEventListener('click', migrarPecasParaSupabase);
+        document.getElementById('btn-migrar-veiculos').addEventListener('click', migrarVeiculosParaSupabase);
+    }
 
-    // Total de baixas realizadas (notificações)
-    const totalBaixas = notifications.length;
-
-    // Atualizar o DOM
-    document.getElementById('count-veiculos').textContent = countVeiculos;
-    document.getElementById('count-estoque-positivo').textContent = estoquePositivo;
-    document.getElementById('count-estoque-negativo').textContent = estoqueNegativo;
-    document.getElementById('count-pedidos-aprovados').textContent = pedidosAprovados;
-    document.getElementById('count-pedidos-pendentes').textContent = pedidosPendentes;
-    document.getElementById('count-baixas').textContent = totalBaixas;
-}
-
-// Navegação do menu no dashboard
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Inicializar aplicação
-    // Verificar se estamos na página do dashboard e inicializar
-    if (document.getElementById('app-content')) {
-        loadData();
-        renderVehicles();
-        renderRequests();
-        renderNotifications();
-        renderStockSummary();
-        renderDashboardSummary();
-
-        // Menu navigation
-        const menuButtons = document.querySelectorAll('.menu-btn');
-        menuButtons.forEach(btn => {
-            btn.addEventListener('click', (event) => {
-                event.preventDefault();
-                const target = btn.getAttribute('data-target');
-
-                if (target.endsWith('.html')) {
-                    // Navigate to the page
-                    window.location.href = target;
-                } else {
-                    // Remove active from all
-                    menuButtons.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-
-                    // Hide all sections
-                    const sections = document.querySelectorAll('.content-section');
-                    sections.forEach(s => s.classList.add('hidden'));
-
-                    // Show target section
-                    const targetSection = document.getElementById(target);
-                    if (targetSection) {
-                        targetSection.classList.remove('hidden');
-                    } else {
-                        console.error(`Seção alvo não encontrada: ${target}`);
-                    }
-                }
-            });
-        });
-
-        // Trigger click on the active menu button to show the initial section
-        const activeBtn = document.querySelector('.menu-btn.active');
-        if (activeBtn) {
-            activeBtn.click();
-        }
-
-        // Código para abrir e fechar modais na seção Estoque
-
-        // Botões para abrir modais
-        const btnOpenGerenciarEstoque = document.getElementById('btn-selecione-estoque');
-        const btnOpenCatalogoItens = document.getElementById('btn-abrir-catalogo');
-
-        // Modais
-        const modalGerenciarEstoque = document.getElementById('modal-gerenciar-estoque');
-        const modalCatalogoItens = document.getElementById('modal-catalogo-itens');
-
-        // Botões para fechar modais
-        const btnCloseGerenciarEstoque = document.getElementById('close-modal-gerenciar-estoque');
-        const btnCloseCatalogoItens = document.getElementById('close-modal-catalogo-itens');
-
-        // Abrir modal Gerenciar Estoque
-        if (btnOpenGerenciarEstoque && modalGerenciarEstoque) {
-            btnOpenGerenciarEstoque.addEventListener('click', () => {
-                modalGerenciarEstoque.classList.remove('hidden');
-                updateModalButtonsStyle(modalGerenciarEstoque);
-            });
-        } else {
-            console.error('Botão ou modal Gerenciar Estoque não encontrado');
-        }
-
-        // Abrir modal Catálogo de Itens
-        if (btnOpenCatalogoItens && modalCatalogoItens) {
-            btnOpenCatalogoItens.addEventListener('click', () => {
-                modalCatalogoItens.classList.remove('hidden');
-                updateModalButtonsStyle(modalCatalogoItens);
-            });
-        } else {
-            console.error('Botão ou modal Catálogo de Itens não encontrado');
-        }
-
-        // Fechar modal Gerenciar Estoque
-        if (btnCloseGerenciarEstoque && modalGerenciarEstoque) {
-            btnCloseGerenciarEstoque.addEventListener('click', () => {
-                modalGerenciarEstoque.classList.add('hidden');
-            });
-        } else {
-            console.error('Botão fechar ou modal Gerenciar Estoque não encontrado');
-        }
-
-        // Fechar modal Catálogo de Itens
-        if (btnCloseCatalogoItens && modalCatalogoItens) {
-            btnCloseCatalogoItens.addEventListener('click', () => {
-                modalCatalogoItens.classList.add('hidden');
-            });
-        } else {
-            console.error('Botão fechar ou modal Catálogo de Itens não encontrado');
-        }
+    // Renderiza o dashboard de acordo com o nível do usuário
+    switch (usuarioLogado.nivel) {
+        case 'administrador':
+        case 'matriz':
+            renderDashboardAdminMatriz();
+            break;
+        case 'supervisor':
+            renderDashboardSupervisor(usuarioLogado.nome);
+            break;
+        case 'tecnico':
+            renderDashboardTecnico(usuarioLogado.nome);
+            break;
+        default:
+            document.getElementById('dashboard-container').innerHTML = '<p>Nível de usuário não reconhecido.</p>';
     }
 });
 
-// Função para atualizar o estilo dos botões dentro dos modais
-function updateModalButtonsStyle(modalElement) {
-    if (!modalElement) return;
-    const editButtons = modalElement.querySelectorAll('button.edit-btn, button.btn-primary');
-    const deleteButtons = modalElement.querySelectorAll('button.delete-btn, button.btn-secondary');
+// --- Funções de Renderização de Dashboards ---
 
-    editButtons.forEach(btn => {
-        btn.classList.remove('edit-btn', 'btn-primary');
-        btn.classList.add('btn-primary');
-        btn.style.padding = '';
-        btn.style.fontSize = '';
-        btn.style.backgroundColor = '';
+// Variáveis para armazenar as instâncias dos gráficos e destruí-las antes de recriar
+let statusChartInstance = null;
+let barChartInstance = null;
+
+function renderDashboardAdminMatriz() {
+    const solicitacoes = JSON.parse(localStorage.getItem('solicitacoes')) || [];
+    const usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+
+    // 1. Renderizar Cards de Resumo
+    const totalSolicitacoes = solicitacoes.length;
+    const totalPendente = solicitacoes.filter(s => s.status === 'Pendente').length;
+    const totalAprovado = solicitacoes.filter(s => s.status === 'Aprovado').length;
+    const totalEnviado = solicitacoes.filter(s => s.status === 'Enviado').length;
+    renderSummaryCards([
+        { title: 'Total de Solicitações', value: totalSolicitacoes, className: '' },
+        { title: 'Pendentes', value: totalPendente, className: 'pendente' },
+        { title: 'Aprovadas', value: totalAprovado, className: 'aprovado' },
+        { title: 'Enviadas', value: totalEnviado, className: 'enviado' }
+    ]);
+
+    // 2. Renderizar Gráficos
+    // Gráfico de Pizza: Status das Solicitações
+    const statusData = {
+        'Pendente': totalPendente,
+        'Aprovado': totalAprovado,
+        'Enviado': totalEnviado,
+        'Rejeitado': solicitacoes.filter(s => s.status === 'Rejeitado').length
+    };
+    renderPieChart('status-chart', 'Status das Solicitações', Object.keys(statusData), Object.values(statusData));
+
+    // Gráfico de Barras: Solicitações por Técnico
+    document.getElementById('bar-chart-title').textContent = 'Solicitações por Técnico';
+    const tecnicos = usuarios.filter(u => u.nivel === 'tecnico');
+    const solicitacoesPorTecnico = tecnicos.map(t => {
+        return solicitacoes.filter(s => s.nomeTecnico === t.nome).length;
     });
+    renderBarChart('bar-chart', 'Nº de Solicitações', tecnicos.map(t => t.nome), solicitacoesPorTecnico);
 
-    deleteButtons.forEach(btn => {
-        btn.classList.remove('delete-btn', 'btn-secondary');
-        btn.classList.add('btn-secondary');
-        btn.style.backgroundColor = '#e74c3c';
-        btn.style.padding = '5px 10px';
-        btn.style.fontSize = '0.85rem';
+    // 3. Renderizar Grid de Atividade Recente
+    const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.dataHoraSolicitacao) - new Date(a.dataHoraSolicitacao)).slice(0, 10);
+    renderRecentActivityGrid(solicitacoesRecentes);
+}
+
+function renderDashboardSupervisor(nomeSupervisor) {
+    const todasSolicitacoes = JSON.parse(localStorage.getItem('solicitacoes')) || [];
+    
+    // Filtra solicitações da equipe do supervisor
+    const solicitacoes = todasSolicitacoes.filter(s => s.supervisor === nomeSupervisor);
+
+    // 1. Renderizar Cards de Resumo
+    const totalPendente = solicitacoes.filter(s => s.status === 'Pendente').length;
+    const totalAprovado = solicitacoes.filter(s => s.status === 'Aprovado').length;
+    const totalEnviado = solicitacoes.filter(s => s.status === 'Enviado').length;
+    renderSummaryCards([
+        { title: 'Pendentes (Sua Equipe)', value: totalPendente, className: 'pendente' },
+        { title: 'Aprovadas (Sua Equipe)', value: totalAprovado, className: 'aprovado' },
+        { title: 'Enviadas (Sua Equipe)', value: totalEnviado, className: 'enviado' }
+    ]);
+
+    // 2. Renderizar Gráficos
+    const statusData = {
+        'Pendente': totalPendente,
+        'Aprovado': totalAprovado,
+        'Enviado': totalEnviado,
+        'Rejeitado': solicitacoes.filter(s => s.status === 'Rejeitado').length
+    };
+    renderPieChart('status-chart', 'Status das Solicitações (Sua Equipe)', Object.keys(statusData), Object.values(statusData));
+
+    document.getElementById('bar-chart-title').textContent = 'Solicitações por Técnico (Sua Equipe)';
+    const solicitacoesPorTecnico = {};
+    solicitacoes.forEach(s => {
+        solicitacoesPorTecnico[s.nomeTecnico] = (solicitacoesPorTecnico[s.nomeTecnico] || 0) + 1;
+    });
+    renderBarChart('bar-chart', 'Nº de Solicitações', Object.keys(solicitacoesPorTecnico), Object.values(solicitacoesPorTecnico));
+
+    // 3. Renderizar Grid de Atividade Recente
+    const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.dataHoraSolicitacao) - new Date(a.dataHoraSolicitacao)).slice(0, 10);
+    renderRecentActivityGrid(solicitacoesRecentes);
+}
+
+function renderDashboardTecnico(nomeTecnico) {
+    const todasSolicitacoes = JSON.parse(localStorage.getItem('solicitacoes')) || [];
+    const solicitacoes = todasSolicitacoes.filter(s => s.nomeTecnico === nomeTecnico);
+
+    // 1. Renderizar Cards de Resumo
+    const totalPendente = solicitacoes.filter(s => s.status === 'Pendente').length;
+    const totalAprovado = solicitacoes.filter(s => s.status === 'Aprovado').length;
+    const totalEnviado = solicitacoes.filter(s => s.status === 'Enviado').length;
+    renderSummaryCards([
+        { title: 'Minhas Pendentes', value: totalPendente, className: 'pendente' },
+        { title: 'Minhas Aprovadas', value: totalAprovado, className: 'aprovado' },
+        { title: 'Minhas Enviadas', value: totalEnviado, className: 'enviado' }
+    ]);
+
+    // 2. Renderizar Gráficos
+    // Esconder o gráfico de barras que não faz sentido para o técnico
+    document.getElementById('charts-container').children[1].style.display = 'none';
+    // Ajustar o layout para o gráfico de pizza ocupar mais espaço
+    document.getElementById('charts-container').style.gridTemplateColumns = '1fr';
+
+    const statusData = {
+        'Pendente': totalPendente,
+        'Aprovado': totalAprovado,
+        'Enviado': totalEnviado,
+        'Rejeitado': solicitacoes.filter(s => s.status === 'Rejeitado').length
+    };
+    renderPieChart('status-chart', 'Status das Minhas Solicitações', Object.keys(statusData), Object.values(statusData));
+
+    // 3. Renderizar Grid de Atividade Recente
+    const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.dataHoraSolicitacao) - new Date(a.dataHoraSolicitacao)).slice(0, 10);
+    renderRecentActivityGrid(solicitacoesRecentes);
+}
+
+// --- Funções Auxiliares de Renderização ---
+
+function renderSummaryCards(cardsData) {
+    const container = document.getElementById('summary-cards');
+    container.innerHTML = '';
+    cardsData.forEach(data => {
+        const card = document.createElement('div');
+        card.className = `card ${data.className || ''}`;
+        card.innerHTML = `
+            <h4>${data.title}</h4>
+            <p>${data.value}</p>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function renderPieChart(canvasId, label, labels, data) {
+    // Destrói o gráfico anterior se ele existir, para evitar sobreposição e memory leaks
+    if (statusChartInstance) {
+        statusChartInstance.destroy();
+    }
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    statusChartInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: label,
+                data: data,
+                backgroundColor: ['#ff9800', '#4CAF50', '#2196F3', '#f44336'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+function renderBarChart(canvasId, label, labels, data) {
+    // Destrói o gráfico anterior se ele existir
+    if (barChartInstance) {
+        barChartInstance.destroy();
+    }
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    barChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: label,
+                data: data,
+                backgroundColor: 'rgba(76, 175, 80, 0.6)',
+                borderColor: 'rgba(76, 175, 80, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderRecentActivityGrid(solicitacoes) {
+    const table = document.getElementById('tabela-recente');
+    const thead = table.querySelector('thead');
+    const tbody = table.querySelector('tbody');
+    
+    thead.innerHTML = `
+        <tr>
+            <th>Código</th>
+            <th>Data</th>
+            <th>Técnico</th>
+            <th>Status</th>
+            <th>Total Itens</th>
+        </tr>
+    `;
+    tbody.innerHTML = '';
+
+    if (solicitacoes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhuma atividade recente.</td></tr>';
+        return;
+    }
+
+    solicitacoes.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${s.codigo}</td>
+            <td>${new Date(s.dataHoraSolicitacao).toLocaleString('pt-BR')}</td>
+            <td>${s.nomeTecnico}</td>
+            <td>${s.status}</td>
+            <td>${(s.itens || []).reduce((total, item) => total + item.quantidade, 0)}</td>
+        `;
+        tbody.appendChild(tr);
     });
 }

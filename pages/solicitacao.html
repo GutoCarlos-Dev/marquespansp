@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Solicitação de Peças</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/solicitacao.css" />
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>Nova Solicitação</h1>
+            <div id="menu"><!-- Menu será carregado dinamicamente pelo app.js --></div>
+        </nav>
+    </header>
+    <main>
+        <h2>Nova Solicitação</h2>
+        <form id="form-solicitacao">
+            <fieldset>
+                <legend>Informações da Solicitação</legend>
+                <label for="codigo-solicitacao">Código da Solicitação:</label>
+                <input type="text" id="codigo-solicitacao" readonly class="readonly-field" />
+
+                <label for="data-hora-solicitacao">Data e Hora da Solicitação:</label>
+                <input type="datetime-local" id="data-hora-solicitacao" readonly class="readonly-field" />
+
+                <label for="nome-tecnico">Nome do Técnico:</label>
+                <input type="text" id="nome-tecnico" readonly class="readonly-field" />
+
+                <label for="status">Status:</label>
+                <input type="text" id="status" value="Pendente" readonly class="readonly-field" />
+
+                <label for="placa">Placa:</label>
+                <input type="text" id="placa" readonly class="readonly-field" />
+
+                <label for="supervisor">Supervisor:</label>
+                <input type="text" id="supervisor" readonly class="readonly-field" />
+            </fieldset>
+
+            <fieldset>
+                <legend>Itens</legend>
+                <div id="itens-grid">
+                    <!-- Itens adicionados aparecerão aqui -->
+                </div>
+            </fieldset>
+            
+            <button type="submit">Salvar Solicitação</button>
+            <button type="button" id="btn-cancelar">Cancelar</button>
+        </form>
+    </main>
+    <script src="../js/app.js"></script>
+    <script src="../js/solicitacao.js"></script>
+</body>
+</html>

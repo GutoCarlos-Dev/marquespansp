@@ -1,34 +1,98 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Estoque da Frota</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/login.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sistema de Solicitação de Peças</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+        /* Estilo profissional para tela inicial */
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4CAF50 0%, #81C784 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+        #login-container {
+            background: white;
+            color: #333;
+            padding: 2rem 3rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            width: 320px;
+            text-align: center;
+        }
+        #login-container img {
+            max-width: 180px;
+            margin-bottom: 1rem;
+        }
+        #login-container h2 {
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        label {
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        input[type="text"], input[type="password"] {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #388E3C;
+        }
+        .setup-link {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+        .setup-link a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        .setup-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <!-- Tela de Login Centralizada -->
-    <!-- Esta seção contém o formulário de login para acessar o sistema -->
-    <div id="login-screen" class="login-screen">
-        <!-- Logo da empresa -->
-        <img src="logo.png" alt="Logo da Empresa" id="logo">
+    <div id="login-container">
+        <img src="logo.png" alt="Marquespan Logo" />
         <h2>Login</h2>
         <form id="login-form">
-            <!-- Campo para inserir o nome de usuário -->
-            <label for="username">Usuário:</label>
-            <input type="text" id="username" name="username" required>
-            <!-- Campo para inserir a senha -->
-            <label for="password">Senha:</label>
-            <input type="password" id="password" name="password" required>
-            <!-- Botão para submeter o formulário de login -->
+            <label for="username">Usuário</label>
+            <input type="text" id="username" required />
+            <label for="password">Senha</label>
+            <input type="password" id="password" required />
             <button type="submit">Entrar</button>
         </form>
-        <!-- Área para exibir mensagens de erro de login -->
-        <p id="login-error" class="error-message"></p>
+        <div class="setup-link">
+            <a href="#" id="link-cadastrar-admin">Cadastre o administrador inicial aqui</a>
+        </div>
     </div>
-
-    <!-- Script principal da aplicação -->
-    <script src="js/login.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/app.js"></script>
+    <script src="js/setup.js"></script>
 </body>
 </html>

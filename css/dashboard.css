@@ -1,376 +1,198 @@
-/* Estilos para o grid do dashboard */
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
-    grid-template-areas:
-        "veiculos baixa"
-        "estoque solicitacoes";
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.dashboard-card.veiculos {
-    grid-area: veiculos;
-}
-
-.dashboard-card.estoque {
-    grid-area: estoque;
-}
-
-.dashboard-card.solicitacoes {
-    grid-area: solicitacoes;
-}
-
-.dashboard-card.baixa {
-    grid-area: baixa;
-}
-
-/* Estilos para os cards do dashboard */
-.dashboard-card {
-    background-color: #e6f2e6;
-    border: 2px solid #4caf50;
-    border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    text-align: center;
-}
-
-.dashboard-card h3 {
-    margin-bottom: 0.5rem;
-    color: #2e7d32;
-}
-
-.dashboard-card .count {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #155724;
-    margin-top: 0.25rem;
-}
-
-/* Estilos para o menu superior no dashboard */
-.top-menu {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0;
+/* Estilo para dashboard */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f6;
     margin: 0;
-    list-style: none;
+    padding: 0;
 }
 
-.menu-btn {
-    background-color: #4caf50;
+header nav {
+    background-color: #4CAF50;
     color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+header nav h1 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+nav #menu {
+    display: flex;
+    gap: 1rem;
+}
+
+nav #menu button {
+    background-color: white;
+    color: #4CAF50;
     border: none;
     padding: 0.5rem 1rem;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 0.9rem;
-    transition: background-color 0.3s;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
 }
 
-.menu-btn:hover {
-    background-color: #388e3c;
+nav #menu button:hover {
+    background-color: #388E3C;
+    color: white;
 }
 
-.menu-btn.active {
-    background-color: #2e7d32;
+/* Estilo específico para o botão Sair */
+nav #menu .btn-sair {
+    background-color: #f44336 !important;
+    color: white !important;
 }
 
-/* Estilos para as seções de conteúdo no dashboard */
-#dashboard-section {
-    max-width: 900px;
+nav #menu .btn-sair:hover {
+    background-color: #d32f2f !important;
+    color: white !important;
+}
+
+main {
+    padding: 2rem;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 1rem;
 }
 
-.content-section {
-    display: block;
+.dashboard-header {
+    margin-bottom: 2rem;
 }
 
-.content-section.hidden {
-    display: none;
+.dashboard-header h2 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-size: 2rem;
+    font-weight: 300; /* Deixa o "Bem-vindo" mais leve */
+    color: #333;
 }
 
-/* Estilos para o formulário de veículo */
-#vehicle-form {
+.dashboard-header h2 span {
+    font-weight: 600; /* Mantém o nome do usuário em negrito */
+}
+
+.dashboard-header p {
+    margin: 0;
+    font-size: 1rem;
+    color: #777;
+}
+
+/* Novo Layout do Dashboard */
+#dashboard-container {
     display: grid;
-    grid-template-columns: 120px 1fr;
-    gap: 0.5rem 1rem;
-    max-width: 600px;
-    margin: 0 auto;
-    align-items: center;
+    gap: 2rem;
 }
 
-#vehicle-form label {
-    justify-self: end;
-    font-weight: bold;
-    color: #155724;
+/* Cards de Resumo */
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
 }
 
-#vehicle-form input {
-    justify-self: start;
-    padding: 0.4rem 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-
-.selecioneestoque
-{
-    display: block;
+.card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     text-align: center;
-    justify-self: left;
-    color: #155724;
+    border-left: 5px solid #4CAF50;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
 
-/* Estilos para o formulário de itens */
-#item-form {
+.card h4 {
+    margin: 0 0 0.5rem 0;
+    color: #666;
+    font-size: 1rem;
+    text-transform: uppercase;
+}
+
+.card p {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+}
+
+/* Cores específicas para os cards */
+.card.pendente { border-color: #ff9800; }
+.card.aprovado { border-color: #4CAF50; }
+.card.enviado { border-color: #2196F3; }
+.card.rejeitado { border-color: #f44336; }
+
+/* Gráficos */
+.charts-container {
     display: grid;
-    grid-template-columns: 120px 1fr;
-    gap: 0.5rem 1rem;
-    max-width: 600px;
-    margin: 0 auto;
-    align-items: center;
+    grid-template-columns: 1fr 2fr; /* Pie chart menor, bar chart maior */
+    gap: 2rem;
 }
 
-#item-form label,
-#item-form select {
-    display: block;
+.chart-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.chart-card h3 {
+    margin-top: 0;
+    text-align: center;
+    color: #333;
+    margin-bottom: 1.5rem;
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 300px; /* Define uma altura fixa para o container do gráfico */
+    width: 100%;
+}
+
+/* Grid de Atividade Recente */
+.recent-activity-grid {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.recent-activity-grid h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+#tabela-recente {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#tabela-recente th, #tabela-recente td {
+    padding: 0.75rem 1rem;
     text-align: left;
-    justify-self: end;
-    font-weight: bold;
-    color: #155724;
+    border-bottom: 1px solid #eee;
 }
 
-#item-form input {
-    justify-self: start;
-    padding: 0.4rem 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+#tabela-recente th {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #555;
+    text-transform: uppercase;
 }
 
-/* New styles for catalog items table container to add scrollbar */
-.table-container {
-    max-height: 300px; /* Adjust height as needed */
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+#tabela-recente tbody tr:hover {
+    background-color: #f9f9f9;
 }
 
-/* Organização dos titulos*/
-.titulo {
-    text-align: center; /* ou right, center, conforme desejar */
-    margin-left: 0;   /* opcional, para garantir alinhamento à esquerda */
+/* Responsividade */
+@media (max-width: 900px) {
+    .charts-container {
+        grid-template-columns: 1fr;
+    }
 }
-
-/* Estilos para modais profissionais e organizados */
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal.hidden {
-  display: none;
-}
-
-.modal-content {
-  background-color: #fff;
-  border-radius: 8px;
-  width: 600px;
-  max-width: 90%;
-  padding: 20px 30px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-  position: relative;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.modal-content h3 {
-  margin-top: 0;
-  font-size: 1.5rem;
-  color: #2c3e50;
-  border-bottom: 2px solid #27ae60;
-  padding-bottom: 8px;
-}
-
-.modal-content form {
-  margin-top: 15px;
-}
-
-.modal-content label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: 600;
-  color: #34495e;
-}
-
-.modal-content input[type="text"],
-.modal-content input[type="number"],
-.modal-content select,
-.modal-content textarea {
-  width: 100%;
-  padding: 8px 10px;
-  margin-bottom: 15px;
-  border: 1px solid #bdc3c7;
-  border-radius: 4px;
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
-}
-
-.modal-content input[type="text"]:focus,
-.modal-content input[type="number"]:focus,
-.modal-content select:focus,
-.modal-content textarea:focus {
-  border-color: #27ae60;
-  outline: none;
-}
-
-.modal-content button {
-  background-color: #27ae60;
-  color: white;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 1rem;
-  transition: background-color 0.3s ease;
-}
-
-.modal-content button:hover {
-  background-color: #219150;
-}
-
-.modal-content button#close-modal-gerenciar-estoque,
-.modal-content button#close-modal-catalogo-itens,
-.modal-content button#close-item-modal,
-.modal-content button#close-item-selection-modal,
-.modal-content button#close-catalog-item-modal {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background-color: transparent;
-  color: #7f8c8d;
-  font-size: 1.2rem;
-  padding: 5px 10px;
-  border-radius: 50%;
-  font-weight: normal;
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.modal-content button#close-modal-gerenciar-estoque:hover,
-.modal-content button#close-modal-catalogo-itens:hover,
-.modal-content button#close-item-modal:hover,
-.modal-content button#close-item-selection-modal:hover,
-.modal-content button#close-catalog-item-modal:hover {
-  color: #27ae60;
-}
-
-.table-container {
-  max-height: 300px;
-  overflow-y: auto;
-  margin-top: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95rem;
-}
-
-th, td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
-}
-
-th {
-  background-color: #27ae60;
-  color: white;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-tr:hover {
-  background-color: #f1f8f5;
-}
-
-.btn-primary {
-  background-color: #27ae60;
-  color: white;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 1rem;
-  transition: background-color 0.3s ease;
-}
-
-.btn-primary:hover {
-  background-color: #219150;
-}
-
-/* Estilo para botões de ação dentro do grid (Editar e Excluir) */
-.action-btn {
-  padding: 6px 10px;
-  font-size: 0.85rem;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  margin-right: 5px;
-  font-weight: 600;
-  transition: background-color 0.3s ease;
-}
-
-.action-btn.edit {
-  background-color: #3498db;
-  color: white;
-}
-
-.action-btn.edit:hover {
-  background-color: #2980b9;
-}
-
-.action-btn.delete {
-  background-color: #e74c3c;
-  color: white;
-  padding: 5px 8px;
-  font-size: 0.8rem;
-}
-
-.action-btn.delete:hover {
-  background-color: #c0392b;
-}
-
-.btn-secondary {
-  background-color: #95a5a6;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: background-color 0.3s ease;
-}
-
-.btn-secondary:hover {
-  background-color: #7f8c8d;
-}
-
-

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Solicitações Aprovadas</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/aprovados.css" />
+    <!--link rel="stylesheet" href="../css/dashboard.css" /-->
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>Solicitações Aprovadas</h1>
+            <div id="menu"><!-- Menu será carregado dinamicamente pelo app.js --></div>
+        </nav>
+    </header>
+    <main>
+        <h2>Solicitações Aprovadas</h2>
+
+        <!-- Formulário de Filtros -->
+        <form id="form-filtros">
+            <div class="filtros-container">
+                <div class="filtro-item">
+                    <label for="data-inicio">Data Início:</label>
+                    <input type="date" id="data-inicio">
+                </div>
+                <div class="filtro-item">
+                    <label for="data-fim">Data Fim:</label>
+                    <input type="date" id="data-fim">
+                </div>
+                <div class="filtro-item">
+                    <label for="status">Status:</label>
+                    <select id="status">
+                        <option value="">Todos</option>
+                        <option value="Aprovado">Aprovado</option>
+                        <option value="Rejeitado">Rejeitado</option>
+                        <option value="Enviado">Enviado</option>
+                    </select>
+                </div>
+                <div class="filtro-item">
+                    <label for="placa">Placa:</label>
+                    <select id="placa">
+                        <option value="">Todas</option>
+                        <!-- Opções serão carregadas dinamicamente -->
+                    </select>
+                </div>
+                <div class="filtro-item">
+                    <label for="supervisor">Supervisor:</label>
+                    <select id="supervisor">
+                        <option value="">Todos</option>
+                        <!-- Opções serão carregadas dinamicamente -->
+                    </select>
+                </div>
+                <div class="filtro-item">
+                    <label for="codigo">Código da Solicitação:</label>
+                    <input type="text" id="codigo">
+                </div>
+                <div class="filtro-item botoes-filtro">
+                    <button type="button" id="btn-buscar">Buscar</button>
+                    <button type="button" id="btn-exportar">Gerar XLS</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Grid de Solicitações Aprovadas -->
+        <table id="tabela-aprovados">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Data</th>
+                    <th>Técnico</th>
+                    <th>Placa</th>
+                    <th>Supervisor</th>
+                    <th>Status</th>
+                    <th>Data Envio</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Solicitações serão carregadas aqui -->
+            </tbody>
+        </table>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="../js/app.js"></script>
+    <script src="../js/aprovados.js"></script>
+</body>
+</html>

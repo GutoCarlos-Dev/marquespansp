@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Envio de Solicitação</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/aprovacao.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>Envio de Solicitação</h1>
+            <div id="menu"><!-- O menu será carregado dinamicamente pelo app.js --></div>
+        </nav>
+    </header>
+    <main>
+        <h2>Detalhes da Solicitação</h2>
+        <form id="form-envio">
+            <div class="detalhes-section">
+                <h3>Informações Gerais</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="codigo-solicitacao">Código da Solicitação:</label>
+                        <input type="text" id="codigo-solicitacao" readonly class="readonly-field" />
+                    </div>
+                    <div class="form-group">
+                        <label for="nome-tecnico">Nome do Técnico:</label>
+                        <input type="text" id="nome-tecnico" readonly class="readonly-field" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="placa">Placa do Veículo:</label>
+                        <input type="text" id="placa" readonly class="readonly-field" />
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status Atual:</label>
+                        <input type="text" id="status" readonly class="readonly-field" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="detalhes-section">
+                <h3>Informações Adicionais</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="data-hora">Data e Hora:</label>
+                        <input type="text" id="data-hora" readonly class="readonly-field" />
+                    </div>
+                    <div class="form-group rota-group">
+                        <label for="rota">Rota:</label>
+                        <input type="text" id="rota" readonly class="readonly-field rota-field" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="detalhes-section">
+                <div class="section-header">
+                    <h3>Itens Solicitados</h3>
+                    <!-- Total de peças será inserido aqui pelo JS -->
+                </div>
+                <div id="itens-grid">
+                    <!-- Itens serão carregados dinamicamente -->
+                </div>
+            </div>
+
+            <div class="detalhes-section">
+                <h3>Envio</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="data-envio">Data de Envio:</label>
+                        <input type="date" id="data-envio" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="hora-envio">Hora de Envio:</label>
+                        <input type="time" id="hora-envio" required />
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button type="submit" id="btn-enviar">Marcar como Enviado</button>
+                    <button type="button" id="btn-imprimir">Imprimir PDF</button>
+                </div>
+            </div>
+        </form>
+    </main>
+    <script src="../js/app.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/envio_solicitacao.js"></script>
+</body>
+</html>

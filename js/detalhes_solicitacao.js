@@ -1,0 +1,274 @@
+// Sistema de Solicitação de Peças - Página de Detalhes da Solicitação
+
+document.addEventListener('DOMContentLoaded', function() {
+    carregarDetalhesSolicitacao();
+
+    document.getElementById('btn-aprovar').addEventListener('click', function() {
+        salvarAprovacao('Aprovado');
+    });
+
+    document.getElementById('btn-rejeitar').addEventListener('click', function() {
+        salvarAprovacao('Rejeitado');
+    });
+
+    document.getElementById('btn-imprimir-pdf').addEventListener('click', function() {
+        gerarPDF();
+    });
+});
+
+// Função para carregar os detalhes da solicitação
+function carregarDetalhesSolicitacao() {
+    const id = getQueryParam('id');
+    if (!id) {
+        alert('ID da solicitação não fornecido.');
+        return;
+    }
+
+    const solicitacoes = getSolicitacoes();
+    const solicitacao = solicitacoes.find(s => String(s.id) === String(id));
+
+    if (!solicitacao) {
+        alert('Solicitação não encontrada.');
+        return;
+    }
+
+    // Preencher campos do formulário
+    document.getElementById('codigo-solicitacao').value = solicitacao.codigo;
+    document.getElementById('nome-tecnico').value = solicitacao.nomeTecnico;
+    document.getElementById('placa').value = solicitacao.placa;
+    document.getElementById('status').value = solicitacao.status;
+
+    // Preencher data e hora (usando data atual se não existir)
+    const dataHoraObj = solicitacao.dataHoraSolicitacao ? new Date(solicitacao.dataHoraSolicitacao) : new Date();
+    const dataHoraFormatada = dataHoraObj.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    document.getElementById('data-hora').value = dataHoraFormatada.replace(',', '');
+
+    // Preencher rota (inicia vazio)
+    document.getElementById('rota').value = solicitacao.rota || '';
+
+    // Preencher grid de itens
+    const itensGrid = document.getElementById('itens-grid');
+    itensGrid.innerHTML = '';
+    
+    // Limpa o totalizador antigo para evitar duplicatas em recarregamentos
+    const sectionHeader = itensGrid.parentElement.querySelector('.section-header');
+    const oldTotal = sectionHeader.querySelector('.total-pecas-label');
+    if(oldTotal) oldTotal.remove();
+
+    if (solicitacao.itens && solicitacao.itens.length > 0) {
+        // Calcular total de peças
+        const totalQuantidade = solicitacao.itens.reduce((total, item) => total + item.quantidade, 0);
+
+        // Criar e inserir o totalizador no cabeçalho da seção
+        const totalLabel = document.createElement('div');
+        totalLabel.className = 'total-pecas-label';
+        totalLabel.innerHTML = `Total de Peças: <strong>${totalQuantidade}</strong>`;
+        sectionHeader.appendChild(totalLabel);
+
+        // Criar e preencher a tabela de itens
+        const tabela = document.createElement('table');
+        tabela.innerHTML = `
+            <thead>
+                <tr><th>Código</th><th>Nome da Peça</th><th>Quantidade</th></tr>
+            </thead>
+            <tbody>
+                ${solicitacao.itens.map(item => `<tr><td>${item.codigo}</td><td>${item.nome}</td><td>${item.quantidade}</td></tr>`).join('')}
+            </tbody>
+        `;
+        itensGrid.appendChild(tabela);
+    }
+
+    // Salvar ID da solicitação no formulário para uso posterior
+    const form = document.getElementById('form-aprovacao');
+    form.dataset.solicitacaoId = id;
+
+    // Se a solicitação não estiver 'Pendente', desabilitar edição e botões de ação
+    if (solicitacao.status !== 'Pendente') {
+        document.getElementById('btn-aprovar').style.display = 'none';
+        document.getElementById('btn-rejeitar').style.display = 'none';
+        const rotaInput = document.getElementById('rota');
+        rotaInput.readOnly = true;
+        rotaInput.classList.add('readonly-field');
+    }
+}
+
+// Função para salvar aprovação ou rejeição
+function salvarAprovacao(status) {
+    const form = document.getElementById('form-aprovacao');
+    const id = form.dataset.solicitacaoId;
+
+    if (!id) {
+        alert('Nenhuma solicitação selecionada.');
+        return;
+    }
+
+    const rotaValue = document.getElementById('rota').value;
+
+    // Validar se a rota foi preenchida ao aprovar
+    if (status === 'Aprovado' && !rotaValue.trim()) {
+        alert('Por favor, preencha a ROTA de entrega das peças antes de aprovar.');
+        document.getElementById('rota').focus();
+        return;
+    }
+
+    const solicitacoes = getSolicitacoes();
+    const index = solicitacoes.findIndex(s => String(s.id) === String(id));
+
+    if (index === -1) {
+        alert('Solicitação não encontrada.');
+        return;
+    }
+
+    // Atualizar status da solicitação
+    solicitacoes[index].status = status;
+
+    // Salvar rota se foi preenchida
+    if (rotaValue) {
+        solicitacoes[index].rota = rotaValue;
+    }
+
+    // Adicionar data de aprovação/rejeição para consistência dos dados
+    if (status === 'Aprovado' || status === 'Rejeitado') {
+        solicitacoes[index].dataAprovacao = new Date().toISOString();
+    }
+
+    // Salvar no localStorage
+    saveSolicitacoes(solicitacoes);
+
+    // Mostrar mensagem de sucesso
+    alert(`Solicitação ${status.toLowerCase()} com sucesso!`);
+
+    // Tenta recarregar a página que abriu esta (aprovacao.html)
+    if (window.opener) {
+        window.opener.location.reload();
+    }
+
+    // Fechar a aba após ação
+    window.close();
+}
+
+// Função para gerar PDF
+function gerarPDF() {
+    const form = document.getElementById('form-aprovacao');
+    const id = form.dataset.solicitacaoId;
+
+    if (!id) {
+        alert('Nenhuma solicitação selecionada para gerar PDF.');
+        return;
+    }
+
+    const solicitacoes = getSolicitacoes();
+    const solicitacao = solicitacoes.find(s => String(s.id) === String(id));
+
+    if (!solicitacao) {
+        alert('Solicitação não encontrada.');
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // --- CABEÇALHO ---
+
+    // IMPORTANTE: Para usar seu logo 'logo.png', converta-o para o formato Base64.
+    // 1. Acesse um conversor online como: https://www.base64-image.de/
+    // 2. Envie seu arquivo 'logo.png'.
+    // 3. Copie o texto gerado e cole-o dentro das aspas da variável 'logoBase64' abaixo.
+    const logoBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAABkCAYAAADDhn8LAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABSSURBVHhe7cExAQAAAMKg9U9tCF8gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwZ08AAQAB2ds4AAAAAElFTkSuQmCC'; // Substitua este conteúdo
+    const placeholderLogo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAABkCAYAAADDhn8LAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABSSURBVHhe7cExAQAAAMKg9U9tCF8gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwZ08AAQAB2ds4AAAAAElFTkSuQmCC';
+
+    // Adiciona a logo apenas se não for o placeholder, tratando possíveis erros.
+    if (logoBase64 && logoBase64 !== placeholderLogo) {
+        try {
+            doc.addImage(logoBase64, 'PNG', 150, 8, 45, 20);
+        } catch (e) {
+            console.warn('Não foi possível adicionar o logo ao PDF. Verifique se o código Base64 está correto.', e);
+            alert('Aviso: O logo não pôde ser carregado, mas o PDF foi gerado mesmo assim.');
+        }
+    } else {
+        console.log('Logo placeholder detectado. Pulando a adição do logo no PDF. Substitua o conteúdo da variável "logoBase64" para exibir o logo da sua empresa.');
+    }
+
+    // Título do Documento
+    doc.setFontSize(20);
+    doc.setTextColor('#4CAF50'); // Cor verde do tema
+    doc.setFont('helvetica', 'bold');
+    doc.text('Relatório de Solicitação de Peças', 14, 20);
+
+    // Linha divisória
+    doc.setDrawColor(76, 175, 80); // Cor verde
+    doc.setLineWidth(0.5);
+    doc.line(14, 25, 196, 25);
+
+    // --- INFORMAÇÕES GERAIS ---
+
+    const labelCol1 = 58;
+    const valueCol1 = 60;
+    const labelCol2 = 143;
+    const valueCol2 = 145;
+
+    doc.setFontSize(12);
+    doc.setTextColor(40); // Cor de texto padrão (cinza escuro)
+
+    let startY = 40;
+
+    // Helper para desenhar campos alinhados
+    const drawField = (label, value, y, isSecondColumn = false) => {
+        const labelX = isSecondColumn ? labelCol2 : labelCol1;
+        const valueX = isSecondColumn ? valueCol2 : valueCol1;
+        doc.setFont('helvetica', 'bold');
+        doc.text(label, labelX, y, { align: 'right' });
+        doc.setFont('helvetica', 'normal');
+        doc.text(String(value), valueX, y);
+    };
+
+    const dataHora = solicitacao.dataHoraSolicitacao ? new Date(solicitacao.dataHoraSolicitacao).toLocaleString('pt-BR') : 'N/A';
+    drawField('Código da Solicitação:', solicitacao.codigo, startY);
+    drawField('Data da Solicitação:', dataHora, startY, true);
+
+    startY += 8;
+    drawField('Técnico:', solicitacao.nomeTecnico, startY);
+
+    startY += 8;
+    drawField('Placa do Veículo:', solicitacao.placa, startY);
+    drawField('Supervisor:', solicitacao.supervisor || 'N/A', startY, true);
+
+    startY += 8;
+    drawField('Rota de Entrega:', solicitacao.rota || 'Não definida', startY);
+
+    // --- TABELA DE ITENS ---
+
+    // Adicionar total de peças antes da tabela
+    const totalQuantidadePDF = solicitacao.itens.reduce((total, item) => total + item.quantidade, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Total de Peças: ${totalQuantidadePDF}`, 196, startY + 10, { align: 'right' });
+
+    const tableColumn = ["Código", "Nome da Peça", "Quantidade"];
+    const tableRows = [];
+
+    solicitacao.itens.forEach(item => {
+        tableRows.push([item.codigo, item.nome, item.quantidade]);
+    });
+
+    doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: startY + 15, // Ajustado para dar espaço ao total
+        theme: 'grid',
+        headStyles: { fillColor: [76, 175, 80] },
+        styles: { font: 'helvetica', fontSize: 10 }
+    });
+
+    // --- RODAPÉ ---
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Documento gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 287);
+        doc.text(`Página ${i} de ${pageCount}`, 196, 287, { align: 'right' });
+    }
+
+    // Salvar o PDF
+    doc.save(`solicitacao_${solicitacao.codigo}.pdf`);
+}

@@ -1,838 +1,212 @@
-// Controle de Estoque da Frota - Lógica Principal com Login
-// Este arquivo contém toda a lógica para gerenciar login, estoques, pedidos e notificações
+// Sistema de Solicitação de Peças - Lógica Principal
+// Comentários em português
 
-import { catalogItems, addCatalogItemToSupabase, editCatalogItemInSupabase, deleteCatalogItemFromSupabase } from './catalog.js';
-import { notifications, addNotificationToSupabase, deleteNotificationFromSupabase } from './notifications.js';
-import { vehicles, requests, equipmentRequests, loadData, saveData } from './data.js';
+// --- Configuração do Supabase ---
+const SUPABASE_URL = 'https://tetshxfxrdbzovajmfoz.supabase.co'; // Substitua se for diferente
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRldHNoeGZ4cmRiem92YWptZm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxMDI1NDUsImV4cCI6MjA3MjY3ODU0NX0.dG09yVDrzofmRc7XmVHwgVJKVOG1xjPGkwxJGdYpk4U'; // Substitua se for diferente
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Credenciais iniciais para login
-const USERNAME = 'admin';
-const PASSWORD = 'admin';
+// Variáveis globais
+let usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
 
-// Elementos do DOM para a tela de login
-const loginScreen = document.getElementById('login-screen');
-const appContent = document.getElementById('app-content');
-const loginForm = document.getElementById('login-form');
-const loginError = document.getElementById('login-error');
+if (window.location.pathname.endsWith('index.html') || window.location.pathname === '/' || window.location.pathname === '') {
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
 
-// Inicializar login se estiver na página de login
-if (loginForm) {
-    // Função para mostrar erro de login
-    function showLoginError(message) {
-        loginError.textContent = message;
+            // Login real com Supabase
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (authError) {
+                alert('Usuário ou senha inválidos: ' + authError.message);
+                return;
+            }
+
+            if (authData.user) {
+                // Após o login, buscar o perfil do usuário na tabela 'profiles'
+                const { data: profileData, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', authData.user.id)
+                    .single(); // .single() retorna um objeto em vez de um array
+
+                if (profileError) {
+                    if (profileError.message.includes("violates row-level security policy")) {
+                        alert("Erro de permissão ao buscar perfil. Verifique as políticas de segurança (RLS) da tabela 'profiles'.");
+                    } else {
+                        alert('Erro ao buscar perfil do usuário. Contate o administrador.');
+                    }
+                    console.error('Erro no perfil:', profileError.message);
+                    await supabase.auth.signOut(); // Desloga se não encontrar o perfil
+                    return;
+                }
+
+                // O objeto `usuarioLogado` precisa ter a mesma estrutura que o sistema espera.
+                const usuarioParaSalvar = { ...profileData, email: authData.user.email };
+
+                // Salva o perfil no localStorage para compatibilidade com o resto do sistema
+                localStorage.setItem('usuarioLogado', JSON.stringify(usuarioParaSalvar));
+                
+                // Redirecionar para dashboard após login
+                window.location.href = 'pages/dashboard.html';
+            }
+        });
     }
-
-    // Evento de submissão do formulário de login
-    loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const username = loginForm.username.value.trim();
-        const password = loginForm.password.value.trim();
-
-        if (username === USERNAME && password === PASSWORD) {
-            showAppContent();
-        } else {
-            showLoginError('Usuário ou senha incorretos.');
-        }
-    });
-
-    // Corrigir foco para evitar digitação duplicada
-    loginForm.username.addEventListener('focus', () => {
-        loginForm.username.value = '';
-    });
-    loginForm.password.addEventListener('focus', () => {
-        loginForm.password.value = '';
-    });
 }
 
-// Função para redirecionar para o dashboard após login
-function showAppContent() {
+function atualizarMenu() {
+    const menuContainer = document.getElementById('menu');
+    if (!menuContainer) return;
+    menuContainer.innerHTML = ''; // Limpa o menu
+
+    const criarBotao = (texto, onClick) => {
+        const button = document.createElement('button');
+        button.textContent = texto;
+        button.addEventListener('click', onClick);
+        return button;
+    };
+
+    // Adiciona o botão Dashboard para todos os perfis logados, exceto na própria dashboard
+    if (!window.location.pathname.includes('dashboard.html')) {
+        menuContainer.appendChild(criarBotao('Dashboard', carregarDashboard));
+    }
+
+    if (usuarioLogado.nivel === 'tecnico') {
+        menuContainer.appendChild(criarBotao('Nova Solicitação', carregarSolicitacao));
+    } else if (usuarioLogado.nivel === 'supervisor') {
+        menuContainer.appendChild(criarBotao('Nova Solicitação', carregarSolicitacao));
+        menuContainer.appendChild(criarBotao('Aprovar Solicitações', carregarAprovacao));
+    } else if (usuarioLogado.nivel === 'matriz') {
+        menuContainer.appendChild(criarBotao('Nova Solicitação', carregarSolicitacao));
+        menuContainer.appendChild(criarBotao('Aprovar Solicitações', carregarAprovacao));
+        menuContainer.appendChild(criarBotao('Solicitações Aprovadas', carregarAprovados));
+    } else if (usuarioLogado.nivel === 'administrador') {
+        // Dropdown de Cadastro
+        const dropdown = document.createElement('div');
+        dropdown.className = 'dropdown';
+        const dropBtn = criarBotao('Cadastro', toggleDropdown);
+        dropBtn.className = 'dropbtn';
+        const dropdownContent = document.createElement('div');
+        dropdownContent.className = 'dropdown-content';
+        dropdownContent.id = 'dropdown-content';
+        dropdownContent.style.display = 'none';
+
+        dropdownContent.appendChild(criarBotao('Cadastrar Usuários', () => carregarCadastro('usuarios')));
+        dropdownContent.appendChild(criarBotao('Cadastrar Placas', () => carregarCadastro('veiculos')));
+        dropdownContent.appendChild(criarBotao('Cadastro Peças', () => carregarCadastro('pecas')));
+
+        dropdown.appendChild(dropBtn);
+        dropdown.appendChild(dropdownContent);
+        menuContainer.appendChild(dropdown);
+
+        // Outros botões
+        menuContainer.appendChild(criarBotao('Nova Solicitação', carregarSolicitacao));
+        menuContainer.appendChild(criarBotao('Aprovar Solicitações', carregarAprovacao));
+        menuContainer.appendChild(criarBotao('Solicitações Aprovadas', carregarAprovados));
+    }
+
+    // Botão de Sair para todos
+    const btnSair = criarBotao('Sair', logout);
+    btnSair.classList.add('btn-sair'); // Adiciona uma classe para estilização
+    menuContainer.appendChild(btnSair);
+}
+
+// Carregar página inicial
+function carregarPaginaInicial() {
+    // Como a dashboard.html não tem div com id 'content', removemos essa linha para evitar erro
+    // Se desejar conteúdo dinâmico, pode criar div#content no HTML e descomentar abaixo
+    // const content = document.getElementById('content');
+    // content.innerHTML = `<h2>Bem-vindo, ${usuarioLogado.nome}!</h2><p>Selecione uma opção no menu acima.</p>`;
+
+    // Corrigir mensagem de boas-vindas para refletir o nome real do usuário
+    // Esta lógica foi movida para dashboard.js, que é o local correto para manipular o conteúdo do dashboard.
+    // const main = document.querySelector('main');
+    // if (main && usuarioLogado && usuarioLogado.nome) {
+    //     // A manipulação do conteúdo da dashboard deve ficar em dashboard.js
+    //     // main.innerHTML = `<h2>Bem-vindo, ${usuarioLogado.nome}!</h2><p>Selecione uma opção no menu acima.</p>`;
+    // }
+}
+
+// Função para carregar dashboard
+function carregarDashboard() {
     window.location.href = 'dashboard.html';
 }
 
-// Renderizar lista de veículos na página
-function renderVehicles() {
-    const listaVeiculos = document.getElementById('lista-veiculos');
-    listaVeiculos.innerHTML = '';
-
-    if (vehicles.length === 0) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = '<td colspan="6" style="text-align: center; padding: 2rem;">Nenhum veículo cadastrado</td>';
-        listaVeiculos.appendChild(tr);
-        return;
-    }
-
-    vehicles.forEach((vehicle, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${vehicle.placa || ''}</td>
-            <td>${vehicle.modelo || ''}</td>
-            <td>${vehicle.marca || ''}</td>
-            <td>${vehicle.renavan || ''}</td>
-            <td>${vehicle.ano || ''}</td>
-            <td>
-                <button class="action-btn edit-btn" onclick="editVehicle(${index})">Editar</button>
-                <button class="action-btn delete-btn" onclick="deleteVehicle(${index})">Excluir</button>
-            </td>
-        `;
-        listaVeiculos.appendChild(tr);
-    });
+// Função para carregar solicitação
+function carregarSolicitacao() {
+    window.location.href = 'solicitacao.html';
 }
 
-// Renderizar pedidos pendentes
-function renderRequests() {
-    const listaPedidos = document.getElementById('lista-pedidos');
-    listaPedidos.innerHTML = '';
-
-    equipmentRequests.forEach(request => {
-        const div = document.createElement('div');
-        div.className = 'request-item';
-        div.innerHTML = `
-            <p>Placa: ${request.placa}</p>
-            <p>Técnico: ${request.tecnico}</p>
-            <p>Peça: ${request.peca}</p>
-            <p>Quantidade: ${request.quantidade}</p>
-            <button onclick="approveRequest(${request.id}, true)">Aprovar</button>
-            <button onclick="approveRequest(${request.id}, false)">Rejeitar</button>
-        `;
-        listaPedidos.appendChild(div);
-    });
+// Função para carregar aprovação
+function carregarAprovacao() {
+    window.location.href = 'aprovacao.html';
 }
 
-// Renderizar notificações
-function renderNotifications() {
-    const listaNotificacoes = document.getElementById('lista-notificacoes');
-    listaNotificacoes.innerHTML = '';
-
-    notifications.forEach(notif => {
-        const div = document.createElement('div');
-        div.className = 'notification-item';
-        div.innerHTML = `<p>${notif.mensagem} - ${new Date(notif.data).toLocaleString()}</p>`;
-        listaNotificacoes.appendChild(div);
-    });
+// Função para carregar cadastros
+function carregarCadastro(tipo) {
+    window.location.href = `cadastro_${tipo}.html`;
 }
 
-// Renderizar resumo de estoque
-function renderStockSummary() {
-    const resumoEstoque = document.getElementById('resumo-estoque');
-    resumoEstoque.innerHTML = '';
+// Função para carregar aprovados
+function carregarAprovados() {
+    window.location.href = 'aprovados.html';
+}
 
-    const totalItems = {};
-    vehicles.forEach(vehicle => {
-        Object.entries(vehicle.estoque).forEach(([peca, qtd]) => {
-            totalItems[peca] = (totalItems[peca] || 0) + qtd;
-        });
-    });
-
-    if (Object.keys(totalItems).length === 0) {
-        resumoEstoque.innerHTML = '<p>Nenhum item em estoque.</p>';
+// Função para alternar dropdown no menu cadastro
+function toggleDropdown() {
+    const dropdownContent = document.getElementById('dropdown-content');
+    if (dropdownContent.style.display === 'none' || dropdownContent.style.display === '') {
+        dropdownContent.style.display = 'block';
     } else {
-        const ul = document.createElement('ul');
-        Object.entries(totalItems).forEach(([peca, qtd]) => {
-            const li = document.createElement('li');
-            li.textContent = `${peca}: ${qtd}`;
-            ul.appendChild(li);
-        });
-        resumoEstoque.appendChild(ul);
+        dropdownContent.style.display = 'none';
     }
 }
 
-// Adicionar novo veículo agora é feito via vehicles.js
-// Removido cadastro local
+console.log('Script app.js carregado');
 
-// Variável para controlar o índice do veículo sendo editado
-let editingVehicleIndex = null;
-
-// Editar veículo usando modal
-function editVehicle(index) {
-    editingVehicleIndex = index;
-    const vehicle = vehicles[index];
-
-    // Preencher o formulário do modal com os dados do veículo
-    document.getElementById('placa').value = vehicle.placa || '';
-    document.getElementById('modelo').value = vehicle.modelo || '';
-    document.getElementById('marca').value = vehicle.marca || '';
-    document.getElementById('renavan').value = vehicle.renavan || '';
-    document.getElementById('ano').value = vehicle.ano || '';
-
-    // Atualizar título do modal
-    document.getElementById('modal-title').textContent = 'Editar Veículo';
-
-    // Mostrar modal
-    document.getElementById('vehicle-modal').classList.remove('hidden');
-}
-
-// Excluir veículo
-function deleteVehicle(index) {
-    if (confirm('Tem certeza que deseja excluir este veículo?')) {
-        vehicles.splice(index, 1);
-        saveData();
-        renderVehicles();
-        renderStockSummary();
-    }
-}
-
-// Criar pedido de peça
-function createRequest(placa) {
-    const peca = prompt('Digite a peça solicitada:');
-    const quantidade = parseInt(prompt('Digite a quantidade:'));
-    const tecnico = prompt('Digite o nome do técnico:');
-
-    if (peca && quantidade && tecnico) {
-        const request = {
-            id: Date.now(),
-            placa,
-            tecnico,
-            peca,
-            quantidade,
-            status: 'pendente'
-        };
-        equipmentRequests.push(request);
-        saveData();
-        renderRequests();
-    }
-}
-
-// Aprovar ou rejeitar pedido
-function approveRequest(id, aprovado) {
-    const request = equipmentRequests.find(r => r.id === id);
-    if (!request) return;
-
-    if (aprovado) {
-        const vehicle = vehicles.find(v => v.placa === request.placa);
-        if (vehicle.estoque[request.peca] >= request.quantidade) {
-            vehicle.estoque[request.peca] -= request.quantidade;
-            notifications.push({
-                mensagem: `Peça ${request.peca} retirada do estoque de ${request.placa}`,
-                data: new Date()
-            });
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded disparado');
+    if (window.location.pathname.includes('dashboard.html') || window.location.pathname.includes('cadastro_') || window.location.pathname.includes('solicitacao.html') || window.location.pathname.includes('aprovacao.html') || window.location.pathname.includes('aprovados.html') || window.location.pathname.includes('detalhes_solicitacao.html') || window.location.pathname.includes('envio_solicitacao.html')) {
+        console.log('Estamos em uma página do sistema');
+        usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+        if (!usuarioLogado) {
+            console.log('Usuário não logado, redirecionando para login');
+            window.location.href = '../index.html';
         } else {
-            // Notificar supervisor e encaminhar para matriz
-            notifications.push({
-                mensagem: `Estoque insuficiente para ${request.peca} em ${request.placa}. Pedido encaminhado para matriz.`,
-                data: new Date()
-            });
-            // Simular envio para matriz
-        }
-    } else {
-        notifications.push({
-            mensagem: `Pedido de ${request.peca} rejeitado para ${request.placa}`,
-            data: new Date()
-        });
-    }
-
-    // Remover pedido da lista
-    equipmentRequests = equipmentRequests.filter(r => r.id !== id);
-    saveData();
-    renderRequests();
-    renderNotifications();
-    renderVehicles(); // Atualizar estoques
-    renderStockSummary();
-}
-
-const addVehicleBtn = document.getElementById('adicionar-veiculo');
-if (addVehicleBtn) {
-    addVehicleBtn.addEventListener('click', () => {
-        // Limpar formulário
-        document.getElementById('vehicle-form').reset();
-        editingVehicleIndex = null;
-        document.getElementById('modal-title').textContent = 'Adicionar Veículo';
-        document.getElementById('vehicle-modal').classList.remove('hidden');
-    });
-}
-
-// Fechar modal
-const closeModalBtn = document.getElementById('close-modal');
-if (closeModalBtn) {
-    closeModalBtn.addEventListener('click', () => {
-        document.getElementById('vehicle-modal').classList.add('hidden');
-    });
-}
-
-// Salvar veículo via formulário modal
-const vehicleForm = document.getElementById('vehicle-form');
-if (vehicleForm) {
-    vehicleForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const placa = document.getElementById('placa').value.trim();
-        const modelo = document.getElementById('modelo').value.trim();
-        const marca = document.getElementById('marca').value.trim();
-        const renavan = document.getElementById('renavan').value.trim();
-        const ano = document.getElementById('ano').value.trim();
-
-        if (!placa || !modelo || !marca || !renavan || !ano) {
-            alert('Por favor, preencha todos os campos.');
-            return;
-        }
-
-        // Chamar função do vehicles.js para salvar no Supabase
-        import('./vehicles.js').then(async (mod) => {
-            if (editingVehicleIndex !== null) {
-                // Editar veículo existente
-                await mod.editVehicleInSupabase(editingVehicleIndex, placa, modelo, marca, renavan, ano);
-            } else {
-                // Adicionar novo veículo
-                await mod.addVehicleToSupabase(placa, modelo, marca, renavan, ano);
+            console.log('Usuário logado:', usuarioLogado);
+            atualizarMenu();
+            if (window.location.pathname.includes('dashboard.html')) {
+                // A lógica de preenchimento do dashboard já está em dashboard.js,
+                // então não precisamos chamar carregarPaginaInicial() aqui.
+                // carregarPaginaInicial();
             }
-            document.getElementById('vehicle-modal').classList.add('hidden');
-        });
-    });
-}
-
-// Variáveis para controle do modal de itens
-let editingItemIndex = null;
-
-// Array para catálogo global de itens - agora importado de catalog.js
-
-// Renderizar lista de itens no estoque
-function renderItems() {
-    const listaItens = document.getElementById('lista-itens');
-    listaItens.innerHTML = '';
-
-    let allItems = [];
-    vehicles.forEach(vehicle => {
-        Object.entries(vehicle.estoque).forEach(([item, quantidade]) => {
-            allItems.push({
-                placa: vehicle.placa,
-                item,
-                quantidade
-            });
-        });
-    });
-
-    if (allItems.length === 0) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = '<td colspan="4" style="text-align: center; padding: 2rem;">Nenhum item cadastrado</td>';
-        listaItens.appendChild(tr);
-        return;
-    }
-
-    allItems.forEach((entry, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${entry.placa}</td>
-            <td>${entry.item}</td>
-            <td>${entry.quantidade}</td>
-            <td>
-                <button class="action-btn edit-btn" onclick="editItem(${index})">Editar</button>
-                <button class="action-btn delete-btn" onclick="deleteItem(${index})">Excluir</button>
-            </td>
-        `;
-        listaItens.appendChild(tr);
-    });
-}
-
-// Renderizar catálogo global de itens
-function renderCatalogItems() {
-    const listaCatalogo = document.getElementById('lista-catalogo-itens');
-    listaCatalogo.innerHTML = '';
-
-    if (catalogItems.length === 0) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = '<td colspan="3" style="text-align: center; padding: 2rem;">Nenhum item no catálogo</td>';
-        listaCatalogo.appendChild(tr);
-        return;
-    }
-
-    catalogItems.forEach((item, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${item.codigo}</td>
-            <td>${item.nomeSale}</td>
-            <td>
-                <button class="action-btn edit-btn" onclick="editCatalogItem(${index})">Editar</button>
-                <button class="action-btn delete-btn" onclick="deleteCatalogItem(${index})">Excluir</button>
-            </td>
-        `;
-        listaCatalogo.appendChild(tr);
-    });
-}
-
-// Abrir modal para adicionar novo item ao catálogo
-const btnAddCatalogItem = document.getElementById('btn-add-catalog-item');
-if (btnAddCatalogItem) {
-    btnAddCatalogItem.addEventListener('click', () => {
-        editingCatalogItemIndex = null;
-        document.getElementById('catalog-item-form').reset();
-        document.getElementById('catalog-item-modal-title').textContent = 'Adicionar Item ao Catálogo';
-        document.getElementById('catalog-item-modal').classList.remove('hidden');
-    });
-}
-
-// Variável para controle do modal de catálogo
-let editingCatalogItemIndex = null;
-
-// Fechar modal do catálogo
-const closeCatalogItemModalBtn = document.getElementById('close-catalog-item-modal');
-if (closeCatalogItemModalBtn) {
-    closeCatalogItemModalBtn.addEventListener('click', () => {
-        document.getElementById('catalog-item-modal').classList.add('hidden');
-    });
-}
-
-// Salvar item do catálogo via formulário modal
-const catalogItemForm = document.getElementById('catalog-item-form');
-if (catalogItemForm) {
-    catalogItemForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const codigo = document.getElementById('catalog-item-codigo').value.trim();
-        const nomeSale = document.getElementById('catalog-item-nome-sale').value.trim();
-
-        if (!codigo || !nomeSale) {
-            alert('Por favor, preencha todos os campos do catálogo.');
-            return;
-        }
-
-        if (editingCatalogItemIndex !== null) {
-            // Editar item existente
-            const item = catalogItems[editingCatalogItemIndex];
-            await editCatalogItemInSupabase(item.id, codigo, nomeSale);
-        } else {
-            // Adicionar novo item
-            await addCatalogItemToSupabase(codigo, nomeSale);
-        }
-
-        renderCatalogItems();
-        document.getElementById('catalog-item-modal').classList.add('hidden');
-        populateItemSelectionDropdown();
-    });
-}
-
-// Editar item do catálogo
-function editCatalogItem(index) {
-    editingCatalogItemIndex = index;
-    const item = catalogItems[index];
-    if (!item) return;
-
-    document.getElementById('catalog-item-codigo').value = item.codigo;
-    document.getElementById('catalog-item-nome-sale').value = item.nomeSale;
-    document.getElementById('catalog-item-modal-title').textContent = 'Editar Item do Catálogo';
-    document.getElementById('catalog-item-modal').classList.remove('hidden');
-}
-
-// Excluir item do catálogo
-async function deleteCatalogItem(index) {
-    if (!confirm('Tem certeza que deseja excluir este item do catálogo?')) return;
-    const item = catalogItems[index];
-    await deleteCatalogItemFromSupabase(item.id);
-    renderCatalogItems();
-    populateItemSelectionDropdown();
-}
-
-
-
-// Popular dropdown do modal de seleção com itens do catálogo
-function populateItemSelectionDropdown() {
-    const selectItemCatalog = document.getElementById('select-item-catalog');
-
-    if (!selectItemCatalog) return;
-
-    // Limpar campos
-    selectItemCatalog.innerHTML = '<option value="" disabled selected>Selecione um item</option>';
-
-    // Criar opções para o select
-    catalogItems.forEach((item, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = `${item.codigo} - ${item.nomeSale}`;
-        selectItemCatalog.appendChild(option);
-    });
-}
-
-
-
-// Inicializar catálogo e dropdown ao carregar a página
-document.addEventListener('DOMContentLoaded', async () => {
-    await loadData();
-    renderCatalogItems();
-    populateItemSelectionDropdown();
-});
-
-// Event listeners for main Estoque buttons
-const btnSelecioneEstoque = document.getElementById('btn-selecione-estoque');
-if (btnSelecioneEstoque) {
-    btnSelecioneEstoque.addEventListener('click', () => {
-        document.getElementById('selecione-estoque-section').classList.remove('hidden');
-        document.getElementById('cadastrar-itens-section').classList.add('hidden');
-    });
-}
-
-const btnCadastrarItens = document.getElementById('btn-cadastrar-itens');
-if (btnCadastrarItens) {
-    btnCadastrarItens.addEventListener('click', () => {
-        document.getElementById('cadastrar-itens-section').classList.remove('hidden');
-        document.getElementById('selecione-estoque-section').classList.add('hidden');
-    });
-}
-
-// Abrir modal para adicionar novo item
-const btnAddItem = document.getElementById('btn-add-item');
-if (btnAddItem) {
-    btnAddItem.addEventListener('click', () => {
-        editingItemIndex = null;
-        document.getElementById('item-modal-form').reset();
-        document.getElementById('item-modal-title').textContent = 'Adicionar Item';
-        // Pre-fill placa if selected
-        const selectedPlaca = document.getElementById('item-placa').value;
-        if (selectedPlaca) {
-            document.getElementById('modal-item-placa').value = selectedPlaca;
-        }
-        document.getElementById('item-modal').classList.remove('hidden');
-    });
-}
-
-// Fechar modal de item
-const closeItemModalBtn = document.getElementById('close-item-modal');
-if (closeItemModalBtn) {
-    closeItemModalBtn.addEventListener('click', () => {
-        document.getElementById('item-modal').classList.add('hidden');
-    });
-}
-
-// Abrir modal de seleção de item
-const btnOpenItemSelection = document.getElementById('btn-open-item-selection');
-if (btnOpenItemSelection) {
-    btnOpenItemSelection.addEventListener('click', () => {
-        document.getElementById('item-selection-modal').classList.remove('hidden');
-    });
-}
-
-// Fechar modal de seleção de item
-const closeItemSelectionModalBtn = document.getElementById('close-item-selection-modal');
-if (closeItemSelectionModalBtn) {
-    closeItemSelectionModalBtn.addEventListener('click', () => {
-        document.getElementById('item-selection-modal').classList.add('hidden');
-    });
-}
-
-// Selecionar item no modal de seleção e preencher no modal principal
-const itemSelectionForm = document.getElementById('item-selection-form');
-if (itemSelectionForm) {
-    itemSelectionForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const selectedIndex = document.getElementById('select-item-catalog').value;
-        if (!selectedIndex) {
-            alert('Por favor, selecione um item.');
-            return;
-        }
-
-        const selectedItem = catalogItems[selectedIndex];
-        const modalItemNome = document.getElementById('modal-item-nome');
-        if (modalItemNome) {
-            modalItemNome.value = `${selectedItem.codigo} - ${selectedItem.nomeSale}`;
-        }
-
-        // Fechar modal de seleção
-        document.getElementById('item-selection-modal').classList.add('hidden');
-    });
-}
-
-// Botão para adicionar novo item ao catálogo do modal de seleção
-const btnAddNewCatalogItem = document.getElementById('btn-add-new-catalog-item');
-if (btnAddNewCatalogItem) {
-    btnAddNewCatalogItem.addEventListener('click', () => {
-        document.getElementById('item-selection-modal').classList.add('hidden');
-        editingCatalogItemIndex = null;
-        document.getElementById('catalog-item-form').reset();
-        document.getElementById('catalog-item-modal-title').textContent = 'Adicionar Item ao Catálogo';
-        document.getElementById('catalog-item-modal').classList.remove('hidden');
-    });
-}
-
-// Editar item
-function editItem(index) {
-    const selectedPlaca = document.getElementById('item-placa').value;
-    if (!selectedPlaca) {
-        alert('Selecione uma placa primeiro.');
-        return;
-    }
-
-    const vehicle = vehicles.find(v => v.placa === selectedPlaca);
-    if (!vehicle) {
-        alert('Veículo não encontrado.');
-        return;
-    }
-
-    // Get the item at the local index
-    const items = Object.keys(vehicle.estoque);
-    const itemName = items[index];
-    if (!itemName) return;
-
-    editingItemIndex = index; // Local index within the vehicle's stock
-    document.getElementById('modal-item-placa').value = selectedPlaca;
-    document.getElementById('modal-item-nome').value = itemName;
-    document.getElementById('modal-item-quantidade').value = vehicle.estoque[itemName];
-
-    document.getElementById('item-modal-title').textContent = 'Editar Item';
-    document.getElementById('item-modal').classList.remove('hidden');
-}
-
-// Excluir item
-function deleteItem(index) {
-    if (!confirm('Tem certeza que deseja excluir este item?')) return;
-
-    const selectedPlaca = document.getElementById('item-placa').value;
-    if (!selectedPlaca) {
-        alert('Selecione uma placa primeiro.');
-        return;
-    }
-
-    const vehicle = vehicles.find(v => v.placa === selectedPlaca);
-    if (!vehicle) {
-        alert('Veículo não encontrado.');
-        return;
-    }
-
-    // Get the item at the local index
-    const items = Object.keys(vehicle.estoque);
-    const itemToDelete = items[index];
-    if (itemToDelete) {
-        delete vehicle.estoque[itemToDelete];
-        saveData();
-        renderItems();
-        renderStockSummary();
-
-        // Refresh the filtered list
-        renderItemsByPlaca(selectedPlaca);
-    }
-}
-
-// Salvar item via formulário modal
-const itemModalForm = document.getElementById('item-modal-form');
-if (itemModalForm) {
-    itemModalForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const placa = document.getElementById('modal-item-placa').value.trim();
-        const nome = document.getElementById('modal-item-nome').value.trim();
-        const quantidade = parseInt(document.getElementById('modal-item-quantidade').value.trim());
-
-        if (!placa || !nome || isNaN(quantidade)) {
-            alert('Por favor, preencha todos os campos corretamente.');
-            return;
-        }
-
-        // Encontrar veículo para atualizar ou adicionar item
-        let vehicle = vehicles.find(v => v.placa === placa);
-        if (!vehicle) {
-            alert('Veículo não encontrado para a placa informada.');
-            return;
-        }
-
-        if (editingItemIndex !== null) {
-            // Editar item existente
-            const items = Object.keys(vehicle.estoque);
-            const itemToEdit = items[editingItemIndex];
-            if (itemToEdit) {
-                vehicle.estoque[itemToEdit] = quantidade;
-            }
-        } else {
-            // Adicionar novo item
-            vehicle.estoque[nome] = (vehicle.estoque[nome] || 0) + quantidade;
-        }
-
-        saveData();
-        renderItems();
-        renderStockSummary();
-
-        // Atualizar a lista de itens para a placa selecionada
-        const selectedPlaca = document.getElementById('item-placa').value;
-        if (selectedPlaca) {
-            renderItemsByPlaca(selectedPlaca);
-        }
-
-        document.getElementById('item-modal').classList.add('hidden');
-    });
-}
-
-// Buscar item por placa
-const btnBuscarItem = document.getElementById('btn-buscar-item');
-if (btnBuscarItem) {
-    btnBuscarItem.addEventListener('click', () => {
-        const placaBusca = document.getElementById('buscar-placa').value.trim().toUpperCase();
-        if (!placaBusca) {
-            alert('Por favor, informe a placa para busca.');
-            return;
-        }
-
-        const listaItens = document.getElementById('lista-itens');
-        listaItens.innerHTML = '';
-
-        let foundItems = [];
-        vehicles.forEach(vehicle => {
-            if (vehicle.placa.toUpperCase() === placaBusca) {
-                Object.entries(vehicle.estoque).forEach(([item, quantidade]) => {
-                    foundItems.push({
-                        placa: vehicle.placa,
-                        item,
-                        quantidade
-                    });
-                });
-            }
-        });
-
-        if (foundItems.length === 0) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="4" style="text-align: center; padding: 2rem;">Nenhum item encontrado para a placa informada.</td>';
-            listaItens.appendChild(tr);
-            return;
-        }
-
-        foundItems.forEach((entry, index) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${entry.placa}</td>
-                <td>${entry.item}</td>
-                <td>${entry.quantidade}</td>
-                <td>
-                    <button class="action-btn edit-btn" onclick="editItem(${index})">Editar</button>
-                    <button class="action-btn delete-btn" onclick="deleteItem(${index})">Excluir</button>
-                </td>
-            `;
-            listaItens.appendChild(tr);
-        });
-    });
-}
-
-document.addEventListener('DOMContentLoaded', async () => {
-    // Inicializar aplicação
-    // Verificar se estamos na página do dashboard e inicializar
-    if (document.getElementById('app-content')) {
-        await loadData();
-        renderVehicles();
-        renderRequests();
-        renderNotifications();
-        renderStockSummary();
-        renderDashboardSummary();
-
-        // Popula o select de placas na seção Estoque
-        const placaSelect = document.getElementById('item-placa');
-        if (placaSelect) {
-            placaSelect.innerHTML = '<option value="" disabled selected>Selecione a placa</option>';
-            vehicles.forEach(vehicle => {
-                const option = document.createElement('option');
-                option.value = vehicle.placa;
-                option.textContent = vehicle.placa;
-                placaSelect.appendChild(option);
-            });
-
-            // Adicionar listener para atualizar a lista de itens ao mudar a placa selecionada
-            placaSelect.addEventListener('change', () => {
-                const selectedPlaca = placaSelect.value;
-                renderItemsByPlaca(selectedPlaca);
-            });
-        }
-
-        // Função para renderizar itens filtrados por placa
-        function renderItemsByPlaca(placa) {
-            const listaItens = document.getElementById('lista-itens');
-            listaItens.innerHTML = '';
-
-            if (!placa) {
-                const tr = document.createElement('tr');
-                tr.innerHTML = '<td colspan="4" style="text-align: center; padding: 2rem;">Selecione uma placa para ver os itens.</td>';
-                listaItens.appendChild(tr);
-                return;
-            }
-
-            const vehicle = vehicles.find(v => v.placa === placa);
-            if (!vehicle || !vehicle.estoque || Object.keys(vehicle.estoque).length === 0) {
-                const tr = document.createElement('tr');
-                tr.innerHTML = '<td colspan="4" style="text-align: center; padding: 2rem;">Nenhum item cadastrado para esta placa.</td>';
-                listaItens.appendChild(tr);
-                return;
-            }
-
-            let index = 0;
-            for (const [item, quantidade] of Object.entries(vehicle.estoque)) {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${placa}</td>
-                    <td>${item}</td>
-                    <td>${quantidade}</td>
-                    <td>
-                        <button class="action-btn edit-btn" onclick="editItem(${index})">Editar</button>
-                        <button class="action-btn delete-btn" onclick="deleteItem(${index})">Excluir</button>
-                    </td>
-                `;
-                listaItens.appendChild(tr);
-                index++;
-            }
-        }
-
-
-
-        // Menu navigation
-        const menuButtons = document.querySelectorAll('.menu-btn');
-        menuButtons.forEach(btn => {
-            btn.addEventListener('click', (event) => {
-                event.preventDefault();
-                const target = btn.getAttribute('data-target');
-
-                if (target.endsWith('.html')) {
-                    // Navigate to the page
-                    window.location.href = target;
-                } else {
-                    // Remove active from all
-                    menuButtons.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-
-                    // Hide all sections
-                    const sections = document.querySelectorAll('.content-section');
-                    sections.forEach(s => s.classList.add('hidden'));
-
-                    // Show target section
-                    const targetSection = document.getElementById(target);
-                    if (targetSection) {
-                        targetSection.classList.remove('hidden');
-                    } else {
-                        console.error(`Seção alvo não encontrada: ${target}`);
-                    }
-                }
-            });
-        });
-
-        // Trigger click on the active menu button to show the initial section
-        const activeBtn = document.querySelector('.menu-btn.active');
-        if (activeBtn) {
-            activeBtn.click();
         }
     }
 });
 
-// Função para renderizar os resumos no dashboard
-function renderDashboardSummary() {
-    // Veículos cadastrados
-    const countVeiculos = vehicles.length;
+// Função de logout
+async function logout() {
+    // Limpar dados do usuário logado do localStorage
+    localStorage.removeItem('usuarioLogado');
+    
+    // Fazer logout do Supabase
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+        console.error('Erro ao fazer logout do Supabase:', error.message);
+    }
 
-    // Itens em estoque positivos e negativos
-    let estoquePositivo = 0;
-    let estoqueNegativo = 0;
-    vehicles.forEach(vehicle => {
-        Object.values(vehicle.estoque).forEach(qtd => {
-            if (qtd > 0) estoquePositivo += qtd;
-            else if (qtd < 0) estoqueNegativo += qtd;
-        });
-    });
-
-    // Pedidos aprovados e pendentes
-    let pedidosAprovados = 0;
-    let pedidosPendentes = 0;
-    requests.forEach(req => {
-        if (req.status && req.status.toLowerCase() === 'aprovado') pedidosAprovados++;
-        else if (req.status && req.status.toLowerCase() === 'pendente') pedidosPendentes++;
-    });
-
-    // Total de baixas realizadas (notificações)
-    const totalBaixas = notifications.length;
-
-    // Atualizar o DOM
-    document.getElementById('count-veiculos').textContent = countVeiculos;
-    document.getElementById('count-estoque-positivo').textContent = estoquePositivo;
-    document.getElementById('count-estoque-negativo').textContent = estoqueNegativo;
-    document.getElementById('count-pedidos-aprovados').textContent = pedidosAprovados;
-    document.getElementById('count-pedidos-pendentes').textContent = pedidosPendentes;
-    document.getElementById('count-baixas').textContent = totalBaixas;
+    // Redirecionar para a página de login
+    // Ajuste para funcionar tanto localmente quanto no GitHub Pages
+    if (window.location.hostname.includes('github.io')) {
+        // No GitHub Pages, o caminho precisa ser relativo ao nome do repositório
+        window.location.href = '/sistema-solicitacao-pecas/index.html'; 
+    } else {
+        window.location.href = '../index.html';
+    }
 }
