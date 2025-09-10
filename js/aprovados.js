@@ -1,65 +1,117 @@
 // Solicitações Aprovadas - Lógica
 // Para Matriz
 
-let solicitacaoAtual = null;
+let todosVeiculos = [];
+let todosSupervisores = [];
 
 // Carregar opções de filtros
-function carregarOpcoesFiltros() {
+async function carregarOpcoesFiltros() {
     // Carregar placas
-    const veiculos = JSON.parse(localStorage.getItem('veiculos')) || [];
-    const selectPlaca = document.getElementById('placa');
-    veiculos.forEach(veiculo => {
-        const option = document.createElement('option');
-        option.value = veiculo.placa;
-        option.textContent = veiculo.placa;
-        selectPlaca.appendChild(option);
-    });
+    const { data: veiculosData, error: veiculosError } = await supabase
+        .from('veiculos')
+        .select('id, placa')
+        .order('placa');
+
+    if (veiculosError) {
+        console.error('Erro ao carregar veículos:', veiculosError);
+    } else {
+        todosVeiculos = veiculosData;
+        const selectPlaca = document.getElementById('placa');
+        todosVeiculos.forEach(veiculo => {
+            const option = document.createElement('option');
+            option.value = veiculo.placa;
+            option.textContent = veiculo.placa;
+            selectPlaca.appendChild(option);
+        });
+    }
 
     // Carregar supervisores
-    const usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
-    const supervisores = usuarios.filter(u => u.nivel === 'supervisor');
-    const selectSupervisor = document.getElementById('supervisor');
-    supervisores.forEach(sup => {
-        const option = document.createElement('option');
-        option.value = sup.nome;
-        option.textContent = sup.nome;
-        selectSupervisor.appendChild(option);
-    });
+    const { data: supervisoresData, error: supervisoresError } = await supabase
+        .from('usuarios')
+        .select('id, nome')
+        .eq('nivel', 'supervisor')
+        .order('nome');
+
+    if (supervisoresError) {
+        console.error('Erro ao carregar supervisores:', supervisoresError);
+    } else {
+        todosSupervisores = supervisoresData;
+        const selectSupervisor = document.getElementById('supervisor');
+        todosSupervisores.forEach(sup => {
+            const option = document.createElement('option');
+            option.value = sup.nome;
+            option.textContent = sup.nome;
+            selectSupervisor.appendChild(option);
+        });
+    }
 }
 
-function buscarSolicitacoes() {
+async function buscarSolicitacoes() {
     const dataInicio = document.getElementById('data-inicio').value;
     const dataFim = document.getElementById('data-fim').value;
     const status = document.getElementById('status').value;
     const placa = document.getElementById('placa').value;
     const supervisor = document.getElementById('supervisor').value;
     const codigo = document.getElementById('codigo').value;
+    const tbody = document.querySelector('#tabela-aprovados tbody');
+    tbody.innerHTML = '<tr><td colspan="8">Buscando...</td></tr>';
 
-    const solicitacoes = JSON.parse(localStorage.getItem('solicitacoes')) || [];
-    // Mostrar também as solicitações com status 'Enviado' para aparecer no grid
-    let filtradas = solicitacoes.filter(s => s.status === 'Aprovado' || s.status === 'Rejeitado' || s.status === 'Enviado');
+    let query = supabase
+        .from('solicitacoes')
+        .select(`
+            id, data_aprovacao, status, data_envio,
+            usuario:usuario_id ( nome ),
+            veiculo:veiculo_id ( placa, supervisor:supervisor_id ( nome ) )
+        `)
+        .in('status', ['aprovado', 'rejeitado', 'enviado']);
 
-    // Aplicar filtros
+    // Aplicar filtros dinamicamente
     if (dataInicio) {
-        filtradas = filtradas.filter(s => new Date(s.dataAprovacao) >= new Date(dataInicio));
+        query = query.gte('data_aprovacao', dataInicio);
     }
     if (dataFim) {
-        filtradas = filtradas.filter(s => new Date(s.dataAprovacao) <= new Date(dataFim));
+        // Adiciona 1 dia para incluir o dia final na busca
+        const dataFimObj = new Date(dataFim);
+        dataFimObj.setDate(dataFimObj.getDate() + 1);
+        query = query.lte('data_aprovacao', dataFimObj.toISOString().split('T')[0]);
     }
     if (status) {
-        filtradas = filtradas.filter(s => s.status === status);
+        query = query.eq('status', status.toLowerCase());
     }
     if (placa) {
-        filtradas = filtradas.filter(s => s.placa === placa);
+        const veiculoFiltrado = todosVeiculos.find(v => v.placa === placa);
+        if (veiculoFiltrado) {
+            query = query.eq('veiculo_id', veiculoFiltrado.id);
+        }
     }
     if (supervisor) {
-        filtradas = filtradas.filter(s => s.supervisor === supervisor);
+        const supervisorFiltrado = todosSupervisores.find(s => s.nome === supervisor);
+        if (supervisorFiltrado) {
+            // Busca veículos daquele supervisor
+            const { data: veiculosDoSupervisor } = await supabase.from('veiculos').select('id').eq('supervisor_id', supervisorFiltrado.id);
+            const veiculoIds = veiculosDoSupervisor.map(v => v.id);
+            if (veiculoIds.length > 0) {
+                query = query.in('veiculo_id', veiculoIds);
+            } else {
+                // Se o supervisor não tem veículos, nenhuma solicitação será encontrada
+                exibirSolicitacoes([]);
+                return;
+            }
+        }
     }
     if (codigo) {
-        filtradas = filtradas.filter(s => s.codigo.includes(codigo));
+        query = query.eq('id', codigo);
     }
 
-    exibirSolicitacoes(filtradas);
+    const { data: solicitacoes, error } = await query.order('created_at', { ascending: false });
+
+    if (error) {
+        console.error("Erro ao buscar solicitações:", error);
+        tbody.innerHTML = '<tr><td colspan="8">Erro ao carregar dados.</td></tr>';
+        return;
+    }
+
+    exibirSolicitacoes(solicitacoes);
 }
 
 // Exibir solicitações na tabela
@@ -67,38 +119,43 @@ function exibirSolicitacoes(solicitacoes) {
     const tbody = document.querySelector('#tabela-aprovados tbody');
     tbody.innerHTML = '';
 
+    if (solicitacoes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8">Nenhuma solicitação encontrada.</td></tr>';
+        return;
+    }
+
     // Pega o usuário logado para verificar o nível de acesso
     const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
 
     solicitacoes.forEach(solicitacao => {
         const tr = document.createElement('tr');
-        if (solicitacao.status === 'Rejeitado') {
+        if (solicitacao.status === 'rejeitado') {
             tr.classList.add('status-rejeitado');
         }
 
-        const dataFormatada = solicitacao.dataAprovacao ? new Date(solicitacao.dataAprovacao).toLocaleDateString('pt-BR') : '';
-        const dataEnvioFormatada = solicitacao.dataEnvio ? new Date(solicitacao.dataEnvio).toLocaleDateString('pt-BR') : '';
+        const dataFormatada = solicitacao.data_aprovacao ? new Date(solicitacao.data_aprovacao).toLocaleDateString('pt-BR') : '';
+        const dataEnvioFormatada = solicitacao.data_envio ? new Date(solicitacao.data_envio).toLocaleString('pt-BR') : '';
 
         let acaoBotao = '';
-        if (solicitacao.status === 'Enviado') {
+        if (solicitacao.status === 'enviado') {
             acaoBotao = `<button onclick="enviarSolicitacao('${solicitacao.id}')" class="btn-pdf">Baixar PDF</button>`;
-        } else if (solicitacao.status === 'Rejeitado') {
+        } else if (solicitacao.status === 'rejeitado') {
             acaoBotao = `<button onclick="verDetalhes('${solicitacao.id}')" class="btn-detalhes-rejeitado">Detalhes</button>`;
-        } else { // Aprovado
+        } else { // 'aprovado'
             acaoBotao = `<button onclick="enviarSolicitacao('${solicitacao.id}')" class="btn-enviar">Enviar Solicitação</button>`;
         }
 
         // Adiciona o botão de excluir apenas para o administrador
         if (usuarioLogado && usuarioLogado.nivel === 'administrador') {
-            acaoBotao += ` <button onclick="excluirSolicitacao('${solicitacao.id}')" class="btn-excluir-grid">Excluir</button>`;
+            acaoBotao += ` <button onclick="excluirSolicitacao(${solicitacao.id})" class="btn-excluir-grid">Excluir</button>`;
         }
 
         tr.innerHTML = `
-            <td>${solicitacao.codigo}</td>
+            <td>${String(solicitacao.id).padStart(5, '0')}</td>
             <td>${dataFormatada}</td>
-            <td>${solicitacao.nomeTecnico}</td>
-            <td>${solicitacao.placa}</td>
-            <td>${solicitacao.supervisor}</td>
+            <td>${solicitacao.usuario?.nome || 'N/A'}</td>
+            <td>${solicitacao.veiculo?.placa || 'N/A'}</td>
+            <td>${solicitacao.veiculo?.supervisor?.nome || 'N/A'}</td>
             <td>${solicitacao.status}</td>
             <td>${dataEnvioFormatada}</td>
             <td>${acaoBotao}</td>
@@ -118,12 +175,20 @@ function verDetalhes(id) {
 }
 
 // Função para excluir uma solicitação (apenas para admin)
-function excluirSolicitacao(id) {
+async function excluirSolicitacao(id) {
     if (confirm('Deseja realmente excluir este lançamento?')) {
-        let solicitacoes = JSON.parse(localStorage.getItem('solicitacoes')) || [];
-        solicitacoes = solicitacoes.filter(s => String(s.id) !== String(id));
-        localStorage.setItem('solicitacoes', JSON.stringify(solicitacoes));
-        buscarSolicitacoes(); // Recarrega o grid para refletir a exclusão
+        const { error } = await supabase
+            .from('solicitacoes')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Erro ao excluir solicitação:', error);
+            alert('Erro ao excluir a solicitação.');
+        } else {
+            alert('Solicitação excluída com sucesso!');
+            buscarSolicitacoes(); // Recarrega o grid para refletir a exclusão
+        }
     }
 }
 

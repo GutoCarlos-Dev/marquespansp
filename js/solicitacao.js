@@ -359,7 +359,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const novaSolicitacao = {
             usuario_id: usuarioLogado.id,
             veiculo_id: parseInt(veiculo_id),
-            itens: itensSelecionados
+            itens: itensSelecionados,
+            rota: '' // Adiciona o campo rota como uma string vazia
         };
 
         const { error } = await supabase

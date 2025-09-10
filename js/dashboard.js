@@ -25,13 +25,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     switch (usuarioLogado.nivel) {
         case 'administrador':
         case 'matriz':
-            renderDashboardAdminMatriz();
+            await renderDashboardAdminMatriz();
             break;
         case 'supervisor':
-            renderDashboardSupervisor(usuarioLogado.nome);
+            await renderDashboardSupervisor(usuarioLogado);
             break;
         case 'tecnico':
-            renderDashboardTecnico(usuarioLogado.nome);
+            await renderDashboardTecnico(usuarioLogado);
             break;
         default:
             document.getElementById('dashboard-container').innerHTML = '<p>Nível de usuário não reconhecido.</p>';
@@ -44,15 +44,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 let statusChartInstance = null;
 let barChartInstance = null;
 
-function renderDashboardAdminMatriz() {
-    const solicitacoes = JSON.parse(localStorage.getItem('solicitacoes')) || [];
-    const usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+async function renderDashboardAdminMatriz() {
+    // Busca todas as solicitações com os dados do usuário associado
+    const { data: solicitacoes, error: solicitacoesError } = await supabase
+        .from('solicitacoes')
+        .select('id, created_at, status, itens, usuario:usuario_id(nome, nivel)');
+
+    if (solicitacoesError) {
+        console.error('Erro ao buscar solicitações:', solicitacoesError);
+        return;
+    }
 
     // 1. Renderizar Cards de Resumo
     const totalSolicitacoes = solicitacoes.length;
-    const totalPendente = solicitacoes.filter(s => s.status === 'Pendente').length;
-    const totalAprovado = solicitacoes.filter(s => s.status === 'Aprovado').length;
-    const totalEnviado = solicitacoes.filter(s => s.status === 'Enviado').length;
+    const totalPendente = solicitacoes.filter(s => s.status === 'pendente').length;
+    const totalAprovado = solicitacoes.filter(s => s.status === 'aprovado').length;
+    const totalEnviado = solicitacoes.filter(s => s.status === 'enviado').length;
     renderSummaryCards([
         { title: 'Total de Solicitações', value: totalSolicitacoes, className: '' },
         { title: 'Pendentes', value: totalPendente, className: 'pendente' },
@@ -63,36 +70,59 @@ function renderDashboardAdminMatriz() {
     // 2. Renderizar Gráficos
     // Gráfico de Pizza: Status das Solicitações
     const statusData = {
-        'Pendente': totalPendente,
-        'Aprovado': totalAprovado,
-        'Enviado': totalEnviado,
-        'Rejeitado': solicitacoes.filter(s => s.status === 'Rejeitado').length
+        'Pendente': solicitacoes.filter(s => s.status === 'pendente').length,
+        'Aprovado': solicitacoes.filter(s => s.status === 'aprovado').length,
+        'Enviado': solicitacoes.filter(s => s.status === 'enviado').length,
+        'Rejeitado': solicitacoes.filter(s => s.status === 'rejeitado').length
     };
     renderPieChart('status-chart', 'Status das Solicitações', Object.keys(statusData), Object.values(statusData));
 
     // Gráfico de Barras: Solicitações por Técnico
-    document.getElementById('bar-chart-title').textContent = 'Solicitações por Técnico';
-    const tecnicos = usuarios.filter(u => u.nivel === 'tecnico');
-    const solicitacoesPorTecnico = tecnicos.map(t => {
-        return solicitacoes.filter(s => s.nomeTecnico === t.nome).length;
+    const solicitacoesPorTecnico = {};
+    solicitacoes.forEach(s => {
+        if (s.usuario && s.usuario.nivel === 'tecnico') {
+            const nomeTecnico = s.usuario.nome;
+            solicitacoesPorTecnico[nomeTecnico] = (solicitacoesPorTecnico[nomeTecnico] || 0) + 1;
+        }
     });
-    renderBarChart('bar-chart', 'Nº de Solicitações', tecnicos.map(t => t.nome), solicitacoesPorTecnico);
+    renderBarChart('bar-chart', 'Nº de Solicitações', Object.keys(solicitacoesPorTecnico), Object.values(solicitacoesPorTecnico));
 
     // 3. Renderizar Grid de Atividade Recente
-    const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.dataHoraSolicitacao) - new Date(a.dataHoraSolicitacao)).slice(0, 10);
+    const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
     renderRecentActivityGrid(solicitacoesRecentes);
 }
 
-function renderDashboardSupervisor(nomeSupervisor) {
-    const todasSolicitacoes = JSON.parse(localStorage.getItem('solicitacoes')) || [];
-    
-    // Filtra solicitações da equipe do supervisor
-    const solicitacoes = todasSolicitacoes.filter(s => s.supervisor === nomeSupervisor);
+async function renderDashboardSupervisor(usuarioSupervisor) {
+    // 1. Encontrar os veículos que este supervisor gerencia
+    const { data: veiculosSupervisor, error: veiculosError } = await supabase
+        .from('veiculos')
+        .select('id')
+        .eq('supervisor_id', usuarioSupervisor.id);
+
+    if (veiculosError) {
+        console.error('Erro ao buscar veículos do supervisor:', veiculosError);
+        return;
+    }
+    const veiculosIds = veiculosSupervisor.map(v => v.id);
+
+    // 2. Buscar as solicitações apenas desses veículos
+    let solicitacoes = [];
+    if (veiculosIds.length > 0) {
+        const { data, error } = await supabase
+            .from('solicitacoes')
+            .select('id, created_at, status, itens, usuario:usuario_id(nome, nivel)')
+            .in('veiculo_id', veiculosIds);
+        if (error) {
+            console.error('Erro ao buscar solicitações da equipe:', error);
+        } else {
+            solicitacoes = data;
+        }
+    }
 
     // 1. Renderizar Cards de Resumo
-    const totalPendente = solicitacoes.filter(s => s.status === 'Pendente').length;
-    const totalAprovado = solicitacoes.filter(s => s.status === 'Aprovado').length;
-    const totalEnviado = solicitacoes.filter(s => s.status === 'Enviado').length;
+    const totalPendente = solicitacoes.filter(s => s.status === 'pendente').length;
+    const totalAprovado = solicitacoes.filter(s => s.status === 'aprovado').length;
+    const totalEnviado = solicitacoes.filter(s => s.status === 'enviado').length;
     renderSummaryCards([
         { title: 'Pendentes (Sua Equipe)', value: totalPendente, className: 'pendente' },
         { title: 'Aprovadas (Sua Equipe)', value: totalAprovado, className: 'aprovado' },
@@ -101,33 +131,42 @@ function renderDashboardSupervisor(nomeSupervisor) {
 
     // 2. Renderizar Gráficos
     const statusData = {
-        'Pendente': totalPendente,
-        'Aprovado': totalAprovado,
-        'Enviado': totalEnviado,
-        'Rejeitado': solicitacoes.filter(s => s.status === 'Rejeitado').length
+        'Pendente': solicitacoes.filter(s => s.status === 'pendente').length,
+        'Aprovado': solicitacoes.filter(s => s.status === 'aprovado').length,
+        'Enviado': solicitacoes.filter(s => s.status === 'enviado').length,
+        'Rejeitado': solicitacoes.filter(s => s.status === 'rejeitado').length
     };
     renderPieChart('status-chart', 'Status das Solicitações (Sua Equipe)', Object.keys(statusData), Object.values(statusData));
 
     document.getElementById('bar-chart-title').textContent = 'Solicitações por Técnico (Sua Equipe)';
     const solicitacoesPorTecnico = {};
     solicitacoes.forEach(s => {
-        solicitacoesPorTecnico[s.nomeTecnico] = (solicitacoesPorTecnico[s.nomeTecnico] || 0) + 1;
+        if (s.usuario) {
+            solicitacoesPorTecnico[s.usuario.nome] = (solicitacoesPorTecnico[s.usuario.nome] || 0) + 1;
+        }
     });
     renderBarChart('bar-chart', 'Nº de Solicitações', Object.keys(solicitacoesPorTecnico), Object.values(solicitacoesPorTecnico));
 
     // 3. Renderizar Grid de Atividade Recente
-    const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.dataHoraSolicitacao) - new Date(a.dataHoraSolicitacao)).slice(0, 10);
+    const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
     renderRecentActivityGrid(solicitacoesRecentes);
 }
 
-function renderDashboardTecnico(nomeTecnico) {
-    const todasSolicitacoes = JSON.parse(localStorage.getItem('solicitacoes')) || [];
-    const solicitacoes = todasSolicitacoes.filter(s => s.nomeTecnico === nomeTecnico);
+async function renderDashboardTecnico(usuarioTecnico) {
+    const { data: solicitacoes, error } = await supabase
+        .from('solicitacoes')
+        .select('id, created_at, status, itens, usuario:usuario_id(nome)')
+        .eq('usuario_id', usuarioTecnico.id);
+
+    if (error) {
+        console.error('Erro ao buscar suas solicitações:', error);
+        return;
+    }
 
     // 1. Renderizar Cards de Resumo
-    const totalPendente = solicitacoes.filter(s => s.status === 'Pendente').length;
-    const totalAprovado = solicitacoes.filter(s => s.status === 'Aprovado').length;
-    const totalEnviado = solicitacoes.filter(s => s.status === 'Enviado').length;
+    const totalPendente = solicitacoes.filter(s => s.status === 'pendente').length;
+    const totalAprovado = solicitacoes.filter(s => s.status === 'aprovado').length;
+    const totalEnviado = solicitacoes.filter(s => s.status === 'enviado').length;
     renderSummaryCards([
         { title: 'Minhas Pendentes', value: totalPendente, className: 'pendente' },
         { title: 'Minhas Aprovadas', value: totalAprovado, className: 'aprovado' },
@@ -136,20 +175,21 @@ function renderDashboardTecnico(nomeTecnico) {
 
     // 2. Renderizar Gráficos
     // Esconder o gráfico de barras que não faz sentido para o técnico
-    document.getElementById('charts-container').children[1].style.display = 'none';
+    const barChartContainer = document.getElementById('bar-chart-container');
+    if (barChartContainer) barChartContainer.style.display = 'none';
     // Ajustar o layout para o gráfico de pizza ocupar mais espaço
     document.getElementById('charts-container').style.gridTemplateColumns = '1fr';
 
     const statusData = {
-        'Pendente': totalPendente,
-        'Aprovado': totalAprovado,
-        'Enviado': totalEnviado,
-        'Rejeitado': solicitacoes.filter(s => s.status === 'Rejeitado').length
+        'Pendente': solicitacoes.filter(s => s.status === 'pendente').length,
+        'Aprovado': solicitacoes.filter(s => s.status === 'aprovado').length,
+        'Enviado': solicitacoes.filter(s => s.status === 'enviado').length,
+        'Rejeitado': solicitacoes.filter(s => s.status === 'rejeitado').length
     };
     renderPieChart('status-chart', 'Status das Minhas Solicitações', Object.keys(statusData), Object.values(statusData));
 
     // 3. Renderizar Grid de Atividade Recente
-    const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.dataHoraSolicitacao) - new Date(a.dataHoraSolicitacao)).slice(0, 10);
+    const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
     renderRecentActivityGrid(solicitacoesRecentes);
 }
 
@@ -250,9 +290,9 @@ function renderRecentActivityGrid(solicitacoes) {
     solicitacoes.forEach(s => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${s.codigo}</td>
-            <td>${new Date(s.dataHoraSolicitacao).toLocaleString('pt-BR')}</td>
-            <td>${s.nomeTecnico}</td>
+            <td>${String(s.id).padStart(5, '0')}</td>
+            <td>${new Date(s.created_at).toLocaleString('pt-BR')}</td>
+            <td>${s.usuario?.nome || 'N/A'}</td>
             <td>${s.status}</td>
             <td>${(s.itens || []).reduce((total, item) => total + item.quantidade, 0)}</td>
         `;

@@ -44,8 +44,8 @@ async function carregarDetalhesSolicitacao() {
         .from('solicitacoes')
         .select(`
             id, created_at, status, itens, rota,
-            usuario:usuario_id(nome),
-            veiculo:veiculo_id(placa, supervisor:supervisor_id(nome))
+            usuario:usuario_id ( nome ), 
+            veiculo:veiculo_id ( placa, supervisor:supervisor_id ( nome ) )
         `)
         .eq('id', id)
         .single();
@@ -58,8 +58,9 @@ async function carregarDetalhesSolicitacao() {
     }
 
     // Preencher campos do formulário
-    document.getElementById('codigo-solicitacao').value = String(solicitacao.id).padStart(1, '');
+    document.getElementById('codigo-solicitacao').value = String(solicitacao.id).padStart(5, '0');
     document.getElementById('nome-tecnico').value = solicitacao.usuario ? solicitacao.usuario.nome : 'N/A';
+    // O nome do supervisor não é exibido nesta tela, mas a consulta agora está correta para futuras utilizações.
     document.getElementById('placa').value = solicitacao.veiculo ? solicitacao.veiculo.placa : 'N/A';
     document.getElementById('status').value = solicitacao.status.toLowerCase();
 
@@ -145,7 +146,8 @@ async function salvarAprovacao(novoStatus) {
     const dadosAtualizacao = {
         status: novoStatus,
         rota: rotaValue,
-        data_aprovacao: novoStatus === 'aprovado' ? new Date().toISOString() : null
+        data_aprovacao: novoStatus === 'aprovado' ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString() // Garante que a data de atualização seja sempre enviada
     };
 
     const { error } = await supabase

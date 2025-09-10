@@ -1,10 +1,11 @@
 // Sistema de Solicitação de Peças - Página de Envio da Solicitação
 
 document.addEventListener('DOMContentLoaded', function() {
+    // O app.js já verifica o login, então podemos carregar os detalhes diretamente.
     carregarDetalhesSolicitacao();
 
     document.getElementById('form-envio').addEventListener('submit', function(e) {
-        e.preventDefault(); // Impede o recarregamento da página ao enviar
+        e.preventDefault();
         salvarEnvio();
     });
 
@@ -14,34 +15,44 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Função para carregar os detalhes da solicitação
-function carregarDetalhesSolicitacao() {
+async function carregarDetalhesSolicitacao() {
     const id = getQueryParam('id');
     if (!id) {
         alert('ID da solicitação não fornecido.');
+        window.close();
         return;
     }
 
-    const solicitacoes = getSolicitacoes();
-    const solicitacao = solicitacoes.find(s => String(s.id) === String(id));
+    const { data: solicitacao, error } = await supabase
+        .from('solicitacoes')
+        .select(`
+            id, created_at, status, itens, rota, data_envio,
+            usuario:usuario_id ( nome ),
+            veiculo:veiculo_id ( placa, supervisor:supervisor_id(nome) )
+        `)
+        .eq('id', id)
+        .single();
 
-    if (!solicitacao) {
-        alert('Solicitação não encontrada.');
+    if (error || !solicitacao) {
+        console.error('Erro ao buscar solicitação para envio:', error);
+        alert(`Solicitação com ID ${id} não encontrada.`);
+        window.close();
         return;
     }
 
     // Preencher campos do formulário
-    document.getElementById('codigo-solicitacao').value = solicitacao.codigo;
-    document.getElementById('nome-tecnico').value = solicitacao.nomeTecnico;
-    document.getElementById('placa').value = solicitacao.placa;
+    document.getElementById('codigo-solicitacao').value = String(solicitacao.id).padStart(5, '0');
+    document.getElementById('nome-tecnico').value = solicitacao.usuario?.nome || 'N/A';
+    document.getElementById('placa').value = solicitacao.veiculo?.placa || 'N/A';
     document.getElementById('status').value = solicitacao.status;
 
     // Preencher data e hora (usando data atual se não existir)
-    const dataHoraObj = solicitacao.dataHoraSolicitacao ? new Date(solicitacao.dataHoraSolicitacao) : new Date();
+    const dataHoraObj = new Date(solicitacao.created_at);
     const dataHoraFormatada = dataHoraObj.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     document.getElementById('data-hora').value = dataHoraFormatada.replace(',', '');
 
     // Preencher rota (usando valor padrão se não existir)
-    const rota = solicitacao.rota || 'Rota Padrão';
+    const rota = solicitacao.rota || 'Não definida';
     document.getElementById('rota').value = rota;
 
     // Preencher data e hora de envio com os valores atuais do computador
@@ -49,8 +60,15 @@ function carregarDetalhesSolicitacao() {
     const dataAtual = agora.toISOString().split('T')[0]; // Formato YYYY-MM-DD
     const horaAtual = agora.toTimeString().slice(0, 5); // Formato HH:MM
 
-    document.getElementById('data-envio').value = dataAtual;
-    document.getElementById('hora-envio').value = horaAtual;
+    // Se já foi enviado, preenche com os dados salvos e desabilita os campos
+    if (solicitacao.data_envio) {
+        const dataEnvioObj = new Date(solicitacao.data_envio);
+        document.getElementById('data-envio').value = dataEnvioObj.toISOString().split('T')[0];
+        document.getElementById('hora-envio').value = dataEnvioObj.toTimeString().slice(0, 5);
+    } else {
+        document.getElementById('data-envio').value = dataAtual;
+        document.getElementById('hora-envio').value = horaAtual;
+    }
 
     // Preencher grid de itens
     const itensGrid = document.getElementById('itens-grid');
@@ -85,10 +103,18 @@ function carregarDetalhesSolicitacao() {
     // Salvar ID da solicitação no formulário para uso posterior
     const form = document.getElementById('form-envio');
     form.dataset.solicitacaoId = id;
+
+    // Se a solicitação já foi enviada, desabilitar o botão de salvar
+    if (solicitacao.status === 'enviado') {
+        document.getElementById('btn-enviar').disabled = true;
+        document.getElementById('btn-enviar').textContent = 'Já Enviado';
+        document.getElementById('data-envio').readOnly = true;
+        document.getElementById('hora-envio').readOnly = true;
+    }
 }
 
 // Função para salvar o envio
-function salvarEnvio() {
+async function salvarEnvio() {
     const form = document.getElementById('form-envio');
     const id = form.dataset.solicitacaoId;
 
@@ -97,31 +123,23 @@ function salvarEnvio() {
         return;
     }
 
-    const dataEnvio = document.getElementById('data-envio').value;
-    const horaEnvio = document.getElementById('hora-envio').value;
+    // Pega a data e hora exatas do momento do clique, ignorando os campos do formulário.
+    const dataHoraEnvio = new Date();
 
-    if (!dataEnvio || !horaEnvio) {
-        alert('Por favor, preencha a data e hora de envio.');
+    const { error } = await supabase
+        .from('solicitacoes')
+        .update({
+            status: 'enviado',
+            data_envio: dataHoraEnvio.toISOString(),
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+    if (error) {
+        console.error('Erro ao marcar como enviado:', error);
+        alert('Erro ao salvar o envio da solicitação.');
         return;
     }
-
-    const solicitacoes = getSolicitacoes();
-    const index = solicitacoes.findIndex(s => String(s.id) === String(id));
-
-    if (index === -1) {
-        alert('Solicitação não encontrada.');
-        return;
-    }
-
-    // Atualizar status da solicitação
-    solicitacoes[index].status = 'Enviado';
-    solicitacoes[index].dataEnvio = `${dataEnvio} ${horaEnvio}`;
-    solicitacoes[index].dataHoraEnvio = new Date().toISOString();
-
-    // Salvar no localStorage
-    saveSolicitacoes(solicitacoes);
-
-    // Mostrar mensagem de sucesso
     alert('Solicitação marcada como enviada com sucesso!');
 
     // Tenta recarregar a página que abriu esta (aprovados.html)
@@ -134,7 +152,7 @@ function salvarEnvio() {
 }
 
 // Função para gerar PDF
-function gerarPDF() {
+async function gerarPDF() {
     const form = document.getElementById('form-envio');
     const id = form.dataset.solicitacaoId;
 
@@ -143,11 +161,14 @@ function gerarPDF() {
         return;
     }
 
-    const solicitacoes = getSolicitacoes();
-    const solicitacao = solicitacoes.find(s => String(s.id) === String(id));
+    const { data: solicitacao, error } = await supabase
+        .from('solicitacoes')
+        .select(`*, usuario:usuario_id(nome), veiculo:veiculo_id(placa, supervisor:supervisor_id(nome))`)
+        .eq('id', id)
+        .single();
 
-    if (!solicitacao) {
-        alert('Solicitação não encontrada.');
+    if (error || !solicitacao) {
+        alert('Não foi possível carregar os dados para gerar o PDF.');
         return;
     }
 
@@ -207,25 +228,23 @@ function gerarPDF() {
         doc.text(String(value), valueX, y);
     };
 
-    const dataHora = solicitacao.dataHoraSolicitacao ? new Date(solicitacao.dataHoraSolicitacao).toLocaleString('pt-BR') : 'N/A';
-    drawField('Código da Solicitação:', solicitacao.codigo, startY);
+    const dataHora = new Date(solicitacao.created_at).toLocaleString('pt-BR');
+    drawField('Código da Solicitação:', String(solicitacao.id).padStart(5, '0'), startY);
     drawField('Data da Solicitação:', dataHora, startY, true);
 
     startY += 8;
-    drawField('Técnico:', solicitacao.nomeTecnico, startY);
+    drawField('Técnico:', solicitacao.usuario?.nome || 'N/A', startY);
 
     startY += 8;
-    drawField('Placa do Veículo:', solicitacao.placa, startY);
-    drawField('Supervisor:', solicitacao.supervisor || 'N/A', startY, true);
+    drawField('Placa do Veículo:', solicitacao.veiculo?.placa || 'N/A', startY);
+    drawField('Supervisor:', solicitacao.veiculo?.supervisor?.nome || 'N/A', startY, true);
 
     startY += 8;
     drawField('Rota de Entrega:', solicitacao.rota || 'Não definida', startY);
 
     startY += 8;
-    const dataEnvio = document.getElementById('data-envio').value;
-    const horaEnvio = document.getElementById('hora-envio').value;
-    const dataFormatada = dataEnvio ? new Date(dataEnvio + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
-    drawField('Data de Envio:', `${dataFormatada} ${horaEnvio}`, startY);
+    const dataEnvio = solicitacao.data_envio ? new Date(solicitacao.data_envio).toLocaleString('pt-BR') : 'Aguardando envio';
+    drawField('Data de Envio:', dataEnvio, startY);
 
     // --- TABELA DE ITENS ---
 
@@ -260,5 +279,5 @@ function gerarPDF() {
     }
 
     // Salvar o PDF
-    doc.save(`solicitacao_${solicitacao.codigo}.pdf`);
+    doc.save(`solicitacao_${String(solicitacao.id).padStart(5, '0')}.pdf`);
 }
