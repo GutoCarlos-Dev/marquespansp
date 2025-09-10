@@ -39,7 +39,7 @@ async function carregarSolicitacoes() {
             usuario:usuario_id ( nome ),
             veiculo:veiculo_id ( placa, supervisor_id )
         `)
-        .eq('status', 'Pendente');
+        .eq('status', 'pendente');
 
     // Se for supervisor, filtra pelas solicitações dos veículos que ele supervisiona
     if (usuarioLogado && usuarioLogado.nivel === 'supervisor') {

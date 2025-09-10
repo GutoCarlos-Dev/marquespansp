@@ -23,9 +23,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Função para carregar os detalhes da solicitação
 async function carregarDetalhesSolicitacao() {
-    const id = getQueryParam('id');
-    if (!id) {
+    const idParam = getQueryParam('id');
+    if (!idParam) {
         alert('ID da solicitação não fornecido.');
+        window.close();
+        return;
+    }
+    const id = parseInt(idParam, 10);
+    if (isNaN(id)) {
+        alert('ID da solicitação inválido.');
         window.close();
         return;
     }
@@ -46,7 +52,7 @@ async function carregarDetalhesSolicitacao() {
             usuario:usuario_id ( nome ),
             veiculo:veiculo_id ( placa, supervisor:supervisor_id(nome) )
         `)
-        .eq('id', id)
+        .eq('id', id.toString())
         .single();
 
     if (error || !solicitacao) {
@@ -58,8 +64,8 @@ async function carregarDetalhesSolicitacao() {
 
     // Preencher campos do formulário
     document.getElementById('codigo-solicitacao').value = String(solicitacao.id).padStart(5, '0');
-    document.getElementById('nome-tecnico').value = solicitacao.usuario.nome;
-    document.getElementById('placa').value = solicitacao.veiculo.placa;
+    document.getElementById('nome-tecnico').value = solicitacao.usuario ? solicitacao.usuario.nome : 'N/A';
+    document.getElementById('placa').value = solicitacao.veiculo ? solicitacao.veiculo.placa : 'N/A';
     document.getElementById('status').value = solicitacao.status;
 
     // Preencher data e hora (usando data atual se não existir)
@@ -106,8 +112,8 @@ async function carregarDetalhesSolicitacao() {
     const form = document.getElementById('form-aprovacao');
     form.dataset.solicitacaoId = id;
 
-    // Se a solicitação não estiver 'Pendente', desabilitar edição e botões de ação
-    if (solicitacao.status !== 'Pendente') {
+    // Se a solicitação não estiver 'pendente', desabilitar edição e botões de ação
+    if (solicitacao.status !== 'pendente') {
         document.getElementById('btn-aprovar').style.display = 'none';
         document.getElementById('btn-rejeitar').style.display = 'none';
         const rotaInput = document.getElementById('rota');
@@ -119,7 +125,7 @@ async function carregarDetalhesSolicitacao() {
 // Função para salvar aprovação ou rejeição
 async function salvarAprovacao(novoStatus) {
     const form = document.getElementById('form-aprovacao');
-    const id = form.dataset.solicitacaoId;
+    const id = parseInt(form.dataset.solicitacaoId, 10);
 
     if (!id) {
         alert('Nenhuma solicitação selecionada.');
@@ -144,7 +150,7 @@ async function salvarAprovacao(novoStatus) {
     const { error } = await supabase
         .from('solicitacoes')
         .update(dadosAtualizacao)
-        .eq('id', id);
+        .eq('id', id.toString());
 
     if (error) {
         console.error('Erro ao atualizar solicitação:', error);
@@ -167,7 +173,7 @@ async function salvarAprovacao(novoStatus) {
 // Função para gerar PDF
 async function gerarPDF() {
     const form = document.getElementById('form-aprovacao');
-    const id = form.dataset.solicitacaoId;
+    const id = parseInt(form.dataset.solicitacaoId, 10);
 
     if (!id) {
         alert('Nenhuma solicitação selecionada para gerar PDF.');
@@ -181,7 +187,7 @@ async function gerarPDF() {
             usuario:usuario_id ( nome ),
             veiculo:veiculo_id ( placa, supervisor:supervisor_id(nome) )
         `)
-        .eq('id', id)
+        .eq('id', id.toString())
         .single();
 
     if (fetchError || !solicitacao) {
@@ -252,11 +258,11 @@ async function gerarPDF() {
     drawField('Data da Solicitação:', dataHora, startY, true);
 
     startY += 8;
-    drawField('Técnico:', solicitacao.usuario.nome, startY);
+    drawField('Técnico:', solicitacao.usuario ? solicitacao.usuario.nome : 'N/A', startY);
 
     startY += 8;
-    drawField('Placa do Veículo:', solicitacao.veiculo.placa, startY);
-    drawField('Supervisor:', solicitacao.veiculo.supervisor?.nome || 'N/A', startY, true);
+    drawField('Placa do Veículo:', solicitacao.veiculo ? solicitacao.veiculo.placa : 'N/A', startY);
+    drawField('Supervisor:', solicitacao.veiculo?.supervisor?.nome || 'N/A', startY, true);
 
     startY += 8;
     drawField('Rota de Entrega:', solicitacao.rota || 'Não definida', startY);
