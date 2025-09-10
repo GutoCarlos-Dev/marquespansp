@@ -36,8 +36,9 @@ CREATE TABLE IF NOT EXISTS pecas (
 CREATE TABLE IF NOT EXISTS veiculos (
     id BIGINT PRIMARY KEY,
     placa TEXT UNIQUE NOT NULL,
-    modelo TEXT NOT NULL,
-    ano INTEGER,
+    qtd_equipe INTEGER,
+    supervisor_id BIGINT REFERENCES usuarios(id) ON DELETE SET NULL,
+    tecnico_id BIGINT REFERENCES usuarios(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -65,9 +66,9 @@ FOR ALL USING (true);
 CREATE POLICY "Permitir leitura de peças" ON pecas
 FOR SELECT USING (true);
 
--- Políticas para veículos (leitura pública)
-CREATE POLICY "Permitir leitura de veículos" ON veiculos
-FOR SELECT USING (true);
+-- Políticas para veículos (acesso público)
+CREATE POLICY "Permitir acesso público a veiculos" ON veiculos
+FOR ALL USING (true);
 
 -- Exemplo de INSERT de usuário (substitua pelos dados reais)
 -- INSERT INTO usuarios (id, nome, email, senha, nivel) VALUES

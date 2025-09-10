@@ -1,15 +1,27 @@
-// Cadastro de Veículos - Lógica
-// Cada veículo (placa) tem um supervisor associado
+// js/cadastro_veiculos.js
+// Lógica do cadastro de veículos, agora com SupaBase
 
-let veiculos = JSON.parse(localStorage.getItem('veiculos')) || [];
+let veiculos = []; // Cache local dos veículos para edição e preenchimento de formulário
+let editandoId = null;
 
 // Função para carregar supervisores no select
-function carregarSupervisores() {
-    const supervisores = JSON.parse(localStorage.getItem('usuarios')) || [];
+async function carregarSupervisores() {
+    if (!supabase) return;
     const select = document.getElementById('supervisor');
-    select.innerHTML = '<option value="">Selecione</option>';
+    select.innerHTML = '<option value="">Selecione um supervisor</option>';
 
-    supervisores.filter(u => u.nivel === 'supervisor').forEach(sup => {
+    const { data, error } = await supabase
+        .from('usuarios')
+        .select('id, nome')
+        .eq('nivel', 'supervisor')
+        .order('nome');
+
+    if (error) {
+        console.error('Erro ao carregar supervisores:', error);
+        return;
+    }
+
+    data.forEach(sup => {
         const option = document.createElement('option');
         option.value = sup.id;
         option.textContent = sup.nome;
@@ -18,12 +30,23 @@ function carregarSupervisores() {
 }
 
 // Função para carregar técnicos no select
-function carregarTecnicos() {
-    const usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+async function carregarTecnicos() {
+    if (!supabase) return;
     const select = document.getElementById('tecnico');
-    select.innerHTML = '<option value="">Selecione</option>';
+    select.innerHTML = '<option value="">Selecione um técnico</option>';
 
-    usuarios.filter(u => u.nivel === 'tecnico').forEach(tec => {
+    const { data, error } = await supabase
+        .from('usuarios')
+        .select('id, nome')
+        .eq('nivel', 'tecnico')
+        .order('nome');
+
+    if (error) {
+        console.error('Erro ao carregar técnicos:', error);
+        return;
+    }
+
+    data.forEach(tec => {
         const option = document.createElement('option');
         option.value = tec.id;
         option.textContent = tec.nome;
@@ -31,49 +54,99 @@ function carregarTecnicos() {
     });
 }
 
-// Função para salvar veículo
-document.getElementById('form-veiculo').addEventListener('submit', function(e) {
+// Função para salvar veículo (adicionar ou editar)
+document.getElementById('form-veiculo').addEventListener('submit', async function(e) {
     e.preventDefault();
+    if (!supabase) {
+        alert('Erro: A conexão com o Supabase não foi inicializada.');
+        return;
+    }
 
     const placa = document.getElementById('placa').value;
-    const qtdEquipe = document.getElementById('qtd_equipe').value;
-    const supervisorId = document.getElementById('supervisor').value;
-    const tecnicoId = document.getElementById('tecnico').value;
+    const qtd_equipe = document.getElementById('qtd_equipe').value;
+    const supervisor_id = document.getElementById('supervisor').value;
+    const tecnico_id = document.getElementById('tecnico').value;
 
-    const novoVeiculo = {
-        id: Date.now(),
+    const veiculoData = {
         placa,
-        qtdEquipe: parseInt(qtdEquipe),
-        supervisorId: parseInt(supervisorId),
-        tecnicoId: parseInt(tecnicoId)
+        qtd_equipe: parseInt(qtd_equipe) || null,
+        supervisor_id: parseInt(supervisor_id) || null,
+        tecnico_id: parseInt(tecnico_id) || null,
     };
 
-    veiculos.push(novoVeiculo);
-    localStorage.setItem('veiculos', JSON.stringify(veiculos));
+    let error;
 
-    // Limpar formulário
-    this.reset();
+    if (editandoId) {
+        // Editando
+        const { error: updateError } = await supabase
+            .from('veiculos')
+            .update(veiculoData)
+            .eq('id', editandoId);
+        error = updateError;
+        editandoId = null;
+        document.querySelector('form button[type="submit"]').textContent = 'Salvar Veículo';
+    } else {
+        // Adicionando
+        const { error: insertError } = await supabase
+            .from('veiculos')
+            .insert([{ ...veiculoData, id: Date.now() }]);
+        error = insertError;
+    }
 
-    // Atualizar tabela
-    atualizarTabela();
+    if (error) {
+        console.error('Erro ao salvar veículo:', error);
+        alert('Erro ao salvar veículo. Verifique se a placa já existe.');
+    } else {
+        alert('Veículo salvo com sucesso!');
+        this.reset();
+        await atualizarTabela();
+    }
 });
 
 // Função para atualizar tabela
-function atualizarTabela() {
+async function atualizarTabela() {
     const tbody = document.querySelector('#tabela-veiculos tbody');
+    if (!tbody || !supabase) {
+        tbody.innerHTML = '<tr><td colspan="5">Erro: Conexão com o Supabase não inicializada.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
+
+    const { data, error } = await supabase
+        .from('veiculos')
+        .select(`
+            id,
+            placa,
+            qtd_equipe,
+            supervisor_id,
+            tecnico_id,
+            supervisor:supervisor_id ( nome ),
+            tecnico:tecnico_id ( nome )
+        `)
+        .order('placa');
+
+    if (error) {
+        console.error('Erro ao buscar veículos:', error);
+        tbody.innerHTML = '<tr><td colspan="5">Erro ao carregar veículos.</td></tr>';
+        return;
+    }
+
+    veiculos = data; // Atualiza o cache local
     tbody.innerHTML = '';
 
-    const usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+    if (veiculos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5">Nenhum veículo cadastrado.</td></tr>';
+        return;
+    }
 
     veiculos.forEach(veiculo => {
-        const supervisor = usuarios.find(s => s.id === veiculo.supervisorId);
-        const tecnico = usuarios.find(t => t.id === veiculo.tecnicoId);
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${veiculo.placa}</td>
-            <td>${veiculo.qtdEquipe || 0}</td>
-            <td>${supervisor ? supervisor.nome : '-'}</td>
-            <td>${tecnico ? tecnico.nome : '-'}</td>
+            <td>${veiculo.qtd_equipe || 0}</td>
+            <td>${veiculo.supervisor ? veiculo.supervisor.nome : '-'}</td>
+            <td>${veiculo.tecnico ? veiculo.tecnico.nome : '-'}</td>
             <td>
                 <button onclick="editarVeiculo(${veiculo.id})" class="btn-editar">Editar</button>
                 <button onclick="excluirVeiculo(${veiculo.id})" class="btn-excluir">Excluir</button>
@@ -83,31 +156,51 @@ function atualizarTabela() {
     });
 }
 
-// Função para editar veículo
+// Função para preencher formulário para edição
 function editarVeiculo(id) {
     const veiculo = veiculos.find(v => v.id === id);
     if (veiculo) {
         document.getElementById('placa').value = veiculo.placa;
-        document.getElementById('qtd_equipe').value = veiculo.qtdEquipe;
-        document.getElementById('supervisor').value = veiculo.supervisorId;
-        document.getElementById('tecnico').value = veiculo.tecnicoId;
+        document.getElementById('qtd_equipe').value = veiculo.qtd_equipe;
+        document.getElementById('supervisor').value = veiculo.supervisor_id;
+        document.getElementById('tecnico').value = veiculo.tecnico_id;
 
-        // Remover da lista para edição
-        veiculos = veiculos.filter(v => v.id !== id);
-        localStorage.setItem('veiculos', JSON.stringify(veiculos));
-        atualizarTabela();
+        editandoId = id;
+        document.querySelector('form button[type="submit"]').textContent = 'Atualizar Veículo';
+        window.scrollTo(0, 0); // Rola a página para o topo para ver o formulário
     }
 }
 
 // Função para excluir veículo
-function excluirVeiculo(id) {
-    veiculos = veiculos.filter(v => v.id !== id);
-    localStorage.setItem('veiculos', JSON.stringify(veiculos));
-    atualizarTabela();
+async function excluirVeiculo(id) {
+    if (confirm('Tem certeza que deseja excluir este veículo?')) {
+        if (!supabase) {
+            alert('Erro: A conexão com o Supabase não foi inicializada.');
+            return;
+        }
+
+        const { error } = await supabase
+            .from('veiculos')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Erro ao excluir veículo:', error);
+            alert('Erro ao excluir veículo.');
+        } else {
+            alert('Veículo excluído com sucesso!');
+            await atualizarTabela();
+        }
+    }
 }
 
 // Inicializar ao carregar página
 document.addEventListener('DOMContentLoaded', function() {
+    // Verifica se usuário está logado antes de carregar a página
+    if (!JSON.parse(localStorage.getItem('usuarioLogado'))) {
+        window.location.href = '../index.html';
+        return;
+    }
     carregarSupervisores();
     carregarTecnicos();
     atualizarTabela();
