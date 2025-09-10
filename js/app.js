@@ -47,6 +47,14 @@ if (window.location.pathname.endsWith('index.html') || window.location.pathname 
                     return;
                 }
 
+                // Adiciona uma verificação crucial: o perfil foi realmente encontrado?
+                if (!profileData) {
+                    alert('Falha no login: Perfil de usuário não encontrado. O cadastro pode não ter sido concluído corretamente. Contate o administrador.');
+                    console.error('Login bem-sucedido para o e-mail, mas nenhum perfil correspondente encontrado na tabela "profiles" para o ID:', authData.user.id);
+                    await supabase.auth.signOut(); // Desloga o usuário para evitar estado inconsistente
+                    return;
+                }
+
                 // O objeto `usuarioLogado` precisa ter a mesma estrutura que o sistema espera.
                 const usuarioParaSalvar = { ...profileData, email: authData.user.email };
 
@@ -201,12 +209,7 @@ async function logout() {
         console.error('Erro ao fazer logout do Supabase:', error.message);
     }
 
-    // Redirecionar para a página de login
-    // Ajuste para funcionar tanto localmente quanto no GitHub Pages
-    if (window.location.hostname.includes('github.io')) {
-        // No GitHub Pages, o caminho precisa ser relativo ao nome do repositório
-        window.location.href = '/sistema-solicitacao-pecas/index.html'; 
-    } else {
-        window.location.href = '../index.html';
-    }
+    // Redireciona para a página de login. O caminho relativo funciona
+    // tanto localmente quanto no GitHub Pages, independentemente do nome do repositório.
+    window.location.href = '../index.html';
 }
