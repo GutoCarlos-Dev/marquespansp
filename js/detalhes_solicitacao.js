@@ -52,7 +52,7 @@ async function carregarDetalhesSolicitacao() {
             usuario:usuario_id ( nome ),
             veiculo:veiculo_id ( placa, supervisor:supervisor_id(nome) )
         `)
-        .eq('id', id.toString())
+        .eq('id', id)
         .single();
 
     if (error || !solicitacao) {
@@ -150,7 +150,7 @@ async function salvarAprovacao(novoStatus) {
     const { error } = await supabase
         .from('solicitacoes')
         .update(dadosAtualizacao)
-        .eq('id', id.toString());
+        .eq('id', id);
 
     if (error) {
         console.error('Erro ao atualizar solicitação:', error);
@@ -187,7 +187,7 @@ async function gerarPDF() {
             usuario:usuario_id ( nome ),
             veiculo:veiculo_id ( placa, supervisor:supervisor_id(nome) )
         `)
-        .eq('id', id.toString())
+        .eq('id', id)
         .single();
 
     if (fetchError || !solicitacao) {

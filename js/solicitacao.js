@@ -304,7 +304,7 @@ async function gerarCodigoSolicitacao() {
     }
 
     const proximoNumero = (count || 0) + 1;
-    codigoInput.value = proximoNumero.toString().padStart(5, '0');
+    codigoInput.value = proximoNumero.toString().padStart(1, '');
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
