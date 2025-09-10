@@ -15,7 +15,8 @@ async function cadastrarAdminInicial() {
 
     // Gera um e-mail "falso" para o sistema de autenticação, usando o nome de usuário.
     // O usuário final nunca verá ou usará este e-mail.
-    const adminEmail = `${adminName.toLowerCase().replace(/\s+/g, '.')}@marquespansp.local`;
+    // Usamos .app que é um TLD válido para passar na validação do Supabase e removemos caracteres especiais.
+    const adminEmail = `${adminName.toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '')}@marquespansp.app`;
     console.log(`E-mail gerado para autenticação: ${adminEmail}`);
     
     const adminPassword = prompt("Digite a senha para o administrador (mínimo 6 caracteres):");
