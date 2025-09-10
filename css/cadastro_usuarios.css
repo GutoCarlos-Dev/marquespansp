@@ -160,6 +160,22 @@ table .btn-excluir:hover {
     background-color: #d32f2f;
 }
 
+/* Estilos para o contêiner da tabela com rolagem */
+.table-container {
+    max-height: 400px; /* Altura máxima antes da rolagem aparecer */
+    overflow-y: auto;  /* Adiciona a barra de rolagem vertical */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+/* Deixa o cabeçalho da tabela (th) fixo no topo durante a rolagem */
+.table-container th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
 /* Responsivo para mobile */
 @media (max-width: 768px) {
     main {
