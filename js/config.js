@@ -1,8 +1,8 @@
 // js/config.js - Configurações do SupaBase
 
 // Substitua pelas suas credenciais do SupaBase
-const SUPABASE_URL = 'https://seu-projeto.supabase.co'; // Substitua pela URL do seu projeto
-const SUPABASE_ANON_KEY = 'sua-chave-anonima'; // Substitua pela chave anônima
+const SUPABASE_URL = 'https://tetshxfxrdbzovajmfoz.supabase.co'; // Substitua pela URL do seu projeto
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRldHNoeGZ4cmRiem92YWptZm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxMDI1NDUsImV4cCI6MjA3MjY3ODU0NX0.dG09yVDrzofmRc7XmVHwgVJKVOG1xjPGkwxJGdYpk4U'; // Substitua pela chave anônima
 
 // Inicializar cliente SupaBase
 let supabase = null;

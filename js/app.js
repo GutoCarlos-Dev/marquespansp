@@ -7,27 +7,44 @@ let usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
 if (window.location.pathname.endsWith('index.html') || window.location.pathname === '/' || window.location.pathname === '') {
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
-            // Simulação de login - em produção, conectar com SupaBase
             if (username && password) {
-                // Buscar usuário no localStorage
-                const usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
-                const usuario = usuarios.find(u => (u.email === username || u.nome === username) && u.senha === password);
+                try {
+                    // Buscar usuário no SupaBase
+                    const supabase = getSupabaseClient();
+                    if (!supabase) {
+                        alert('Erro: SupaBase não está configurado. Verifique as credenciais.');
+                        return;
+                    }
 
-                if (usuario) { // Se encontrou usuário com a senha correta
-                    usuarioLogado = usuario;
-                } else {
-                    alert('Usuário ou senha inválidos.');
-                    return; // Interrompe a execução se o login falhar
+                    const { data: usuarios, error } = await supabase
+                        .from('usuarios')
+                        .select('*')
+                        .or(`email.eq.${username},nome.eq.${username}`)
+                        .eq('senha', password);
+
+                    if (error) {
+                        console.error('Erro ao buscar usuário:', error);
+                        alert('Erro ao fazer login. Tente novamente.');
+                        return;
+                    }
+
+                    if (usuarios && usuarios.length > 0) {
+                        usuarioLogado = usuarios[0];
+                        localStorage.setItem('usuarioLogado', JSON.stringify(usuarioLogado));
+                        // Redirecionar para dashboard após login
+                        window.location.href = 'pages/dashboard.html';
+                    } else {
+                        alert('Usuário ou senha inválidos.');
+                    }
+                } catch (error) {
+                    console.error('Erro no login:', error);
+                    alert('Erro ao fazer login. Verifique sua conexão e tente novamente.');
                 }
-
-                localStorage.setItem('usuarioLogado', JSON.stringify(usuarioLogado));
-                // Redirecionar para dashboard após login
-                window.location.href = 'pages/dashboard.html';
             }
         });
     }

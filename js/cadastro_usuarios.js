@@ -1,11 +1,11 @@
 // js/cadastro_usuarios.js
 
-// Simulação de armazenamento local, em produção conectar com SupaBase
-let usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+// Usando SupaBase para armazenamento
+let usuarios = [];
 let editandoId = null; // Variável para controlar o ID do usuário em edição
 
 // Função para salvar usuário (adicionar ou editar)
-document.getElementById('form-usuario').addEventListener('submit', function(e) {
+document.getElementById('form-usuario').addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const nome = document.getElementById('nome').value;
@@ -13,60 +13,120 @@ document.getElementById('form-usuario').addEventListener('submit', function(e) {
     const senha = document.getElementById('senha').value;
     const nivel = document.getElementById('nivel').value;
 
-    if (editandoId) {
-        // Editando usuário existente
-        const index = usuarios.findIndex(u => u.id === editandoId);
-        if (index !== -1) {
-            usuarios[index].nome = nome;
-            usuarios[index].email = email;
-            if (senha) { // Só atualiza a senha se uma nova for digitada
-                usuarios[index].senha = senha;
-            }
-            usuarios[index].nivel = nivel;
+    try {
+        const supabase = getSupabaseClient();
+        if (!supabase) {
+            alert('Erro: SupaBase não está configurado. Verifique as credenciais.');
+            return;
         }
-        editandoId = null; // Reseta o modo de edição
-        document.querySelector('form button[type="submit"]').textContent = 'Salvar Usuário';
-    } else {
-        // Adicionando novo usuário
-        const novoUsuario = {
-            id: Date.now(),
-            nome,
-            email,
-            senha,
-            nivel
-        };
-        usuarios.push(novoUsuario);
+
+        if (editandoId) {
+            // Editando usuário existente
+            const updateData = {
+                nome,
+                email,
+                nivel
+            };
+            if (senha) { // Só atualiza a senha se uma nova for digitada
+                updateData.senha = senha;
+            }
+
+            const { error } = await supabase
+                .from('usuarios')
+                .update(updateData)
+                .eq('id', editandoId);
+
+            if (error) {
+                console.error('Erro ao atualizar usuário:', error);
+                alert('Erro ao atualizar usuário. Tente novamente.');
+                return;
+            }
+
+            editandoId = null; // Reseta o modo de edição
+            document.querySelector('form button[type="submit"]').textContent = 'Salvar Usuário';
+        } else {
+            // Adicionando novo usuário
+            const novoUsuario = {
+                id: Date.now(),
+                nome,
+                email,
+                senha,
+                nivel
+            };
+
+            const { error } = await supabase
+                .from('usuarios')
+                .insert([novoUsuario]);
+
+            if (error) {
+                console.error('Erro ao inserir usuário:', error);
+                alert('Erro ao cadastrar usuário. Verifique se o email já existe.');
+                return;
+            }
+        }
+
+        // Limpar formulário
+        this.reset();
+        document.getElementById('senha').placeholder = 'Deixe em branco para não alterar';
+
+        // Atualizar tabela
+        await atualizarTabela();
+
+        alert('Usuário salvo com sucesso!');
+    } catch (error) {
+        console.error('Erro ao salvar usuário:', error);
+        alert('Erro ao salvar usuário. Verifique sua conexão e tente novamente.');
     }
-
-    localStorage.setItem('usuarios', JSON.stringify(usuarios));
-
-    // Limpar formulário
-    this.reset();
-    document.getElementById('senha').placeholder = 'Deixe em branco para não alterar';
-
-    // Atualizar tabela
-    atualizarTabela();
 });
 
 // Função para atualizar tabela
-function atualizarTabela() {
+async function atualizarTabela() {
     const tbody = document.querySelector('#tabela-usuarios tbody');
     if (!tbody) return;
-    tbody.innerHTML = '';
 
-    usuarios.forEach(usuario => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${usuario.nome}</td>
-            <td>${usuario.email}</td>
-            <td>${usuario.nivel}</td>
-            <td>
-                <button onclick="editarUsuario(${usuario.id})" class="btn-editar">Editar</button>
-                <button onclick="excluirUsuario(${usuario.id})" class="btn-excluir">Excluir</button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
+    try {
+        const supabase = getSupabaseClient();
+        if (!supabase) {
+            tbody.innerHTML = '<tr><td colspan="4">Erro: SupaBase não configurado</td></tr>';
+            return;
+        }
+
+        const { data: usuariosData, error } = await supabase
+            .from('usuarios')
+            .select('*')
+            .order('nome');
+
+        if (error) {
+            console.error('Erro ao buscar usuários:', error);
+            tbody.innerHTML = '<tr><td colspan="4">Erro ao carregar usuários</td></tr>';
+            return;
+        }
+
+        usuarios = usuariosData || [];
+        tbody.innerHTML = '';
+
+        if (usuarios.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4">Nenhum usuário cadastrado</td></tr>';
+            return;
+        }
+
+        usuarios.forEach(usuario => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${usuario.nome}</td>
+                <td>${usuario.email}</td>
+                <td>${usuario.nivel}</td>
+                <td>
+                    <button onclick="editarUsuario(${usuario.id})" class="btn-editar">Editar</button>
+                    <button onclick="excluirUsuario(${usuario.id})" class="btn-excluir">Excluir</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error('Erro ao atualizar tabela:', error);
+        tbody.innerHTML = '<tr><td colspan="4">Erro ao carregar usuários</td></tr>';
+    }
 }
 
 // Função para preencher formulário para edição
