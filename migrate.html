@@ -6,15 +6,14 @@
     <title>Migração de Usuários para SupaBase</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        textarea { width: 100%; height: 300px; margin: 10px 0; }
+        textarea { width: 100%; height: 400px; margin: 10px 0; }
         button { padding: 10px 20px; background: #4CAF50; color: white; border: none; cursor: pointer; }
         button:hover { background: #45a049; }
     </style>
 </head>
 <body>
     <h1>Migração de Usuários do localStorage para SupaBase</h1>
-    <p>Esta página gera um script SQL para migrar os usuários cadastrados no localStorage para o SupaBase.</p>
-
+    <p>Clique no botão abaixo para gerar o script SQL com todos os usuários cadastrados no localStorage.</p>
     <button onclick="gerarSQL()">Gerar Script SQL</button>
     <textarea id="sql-output" placeholder="O script SQL será gerado aqui..."></textarea>
 
@@ -24,7 +23,7 @@
             const usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
 
             if (usuarios.length === 0) {
-                alert('Nenhum usuário encontrado no localStorage. Certifique-se de ter usuários cadastrados.');
+                alert('Nenhum usuário encontrado no localStorage!');
                 return;
             }
 
@@ -46,20 +45,18 @@ CREATE TABLE IF NOT EXISTS usuarios (
 `;
 
             usuarios.forEach(usuario => {
-                sql += `INSERT INTO usuarios (id, nome, email, senha, nivel) VALUES
-(${usuario.id}, '${usuario.nome.replace(/'/g, "''")}', '${usuario.email.replace(/'/g, "''")}', '${usuario.senha.replace(/'/g, "''")}', '${usuario.nivel}')
-ON CONFLICT (email) DO UPDATE SET
-    nome = EXCLUDED.nome,
-    senha = EXCLUDED.senha,
-    nivel = EXCLUDED.nivel;
-`;
+                sql += `INSERT INTO usuarios (id, nome, email, senha, nivel) VALUES\n`;
+                sql += `(${usuario.id}, '${usuario.nome.replace(/'/g, "''")}', '${usuario.email.replace(/'/g, "''")}', '${usuario.senha.replace(/'/g, "''")}', '${usuario.nivel}')\n`;
+                sql += `ON CONFLICT (email) DO UPDATE SET\n`;
+                sql += `    nome = EXCLUDED.nome,\n`;
+                sql += `    senha = EXCLUDED.senha,\n`;
+                sql += `    nivel = EXCLUDED.nivel;\n\n`;
             });
 
             // Exibir no textarea
             document.getElementById('sql-output').value = sql;
 
             console.log('Script SQL gerado:', sql);
-            alert(`Script SQL gerado com sucesso! ${usuarios.length} usuários encontrados.`);
         }
     </script>
 </body>

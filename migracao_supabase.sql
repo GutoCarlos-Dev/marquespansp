@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
 CREATE TABLE IF NOT EXISTS solicitacoes (
     id BIGINT PRIMARY KEY,
     usuario_id BIGINT REFERENCES usuarios(id),
-    veiculo TEXT,
-    pecas JSONB,
+    veiculo_id BIGINT,
+    itens JSONB,
     status TEXT DEFAULT 'pendente',
     observacoes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -37,17 +37,42 @@ CREATE TABLE IF NOT EXISTS veiculos (
     id BIGINT PRIMARY KEY,
     placa TEXT UNIQUE NOT NULL,
     modelo TEXT NOT NULL,
+    ano INTEGER,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Políticas RLS (Row Level Security) - permitir acesso público para desenvolvimento
+-- Políticas RLS (Row Level Security) - permitir acesso público para leitura/escrita
 ALTER TABLE usuarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE solicitacoes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pecas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE veiculos ENABLE ROW LEVEL SECURITY;
 
--- Políticas para usuários (permitir tudo para desenvolvimento)
-CREATE POLICY "Permitir tudo para usuarios" ON usuarios FOR ALL USING (true);
-CREATE POLICY "Permitir tudo para solicitacoes" ON solicitacoes FOR ALL USING (true);
-CREATE POLICY "Permitir tudo para pecas" ON pecas FOR ALL USING (true);
-CREATE POLICY "Permitir tudo para veiculos" ON veiculos FOR ALL USING (true);
+-- Políticas para usuários (permitir tudo para usuários autenticados)
+CREATE POLICY "Permitir tudo para usuários autenticados" ON usuarios
+FOR ALL USING (auth.role() = 'authenticated');
+
+-- Políticas para solicitações
+CREATE POLICY "Usuários podem ver suas próprias solicitações" ON solicitacoes
+FOR SELECT USING (auth.uid()::text = usuario_id::text);
+
+CREATE POLICY "Técnicos podem criar solicitações" ON solicitacoes
+FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Supervisores podem atualizar solicitações" ON solicitacoes
+FOR UPDATE USING (auth.role() = 'authenticated');
+
+-- Políticas para peças (leitura pública)
+CREATE POLICY "Permitir leitura de peças" ON pecas
+FOR SELECT USING (true);
+
+-- Políticas para veículos (leitura pública)
+CREATE POLICY "Permitir leitura de veículos" ON veiculos
+FOR SELECT USING (true);
+
+-- Exemplo de INSERT de usuário (substitua pelos dados reais)
+-- INSERT INTO usuarios (id, nome, email, senha, nivel) VALUES
+-- (123456789, 'João Silva', 'joao@email.com', 'senha123', 'tecnico')
+-- ON CONFLICT (email) DO UPDATE SET
+--     nome = EXCLUDED.nome,
+--     senha = EXCLUDED.senha,
+--     nivel = EXCLUDED.nivel;

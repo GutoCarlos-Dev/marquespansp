@@ -1,47 +1,44 @@
 # TODO - Integração SupaBase para Marquespan
 
-## Problema Identificado
-- Aplicação usa localStorage para dados de usuários
-- localStorage não persiste entre domínios (localhost vs GitHub Pages)
-- Usuários cadastrados localmente não aparecem no GitHub
+## ✅ Concluído
+1. **Configurar SupaBase**
+   - ✅ Criar projeto no SupaBase
+   - ✅ Obter URL e chave anônima
+   - ✅ Criar tabelas: usuarios, solicitacoes, pecas, veiculos
 
-## Solução: Integrar SupaBase
-1. **✅ Configurar SupaBase**
-   - Criar projeto no SupaBase
-   - Obter URL e chave anônima
-   - ✅ Criar tabelas: usuarios, solicitacoes, pecas, veiculos (migracao_supabase.sql)
-
-2. **✅ Instalar SupaBase Client**
+2. **Instalar SupaBase Client**
    - ✅ Adicionar CDN do SupaBase no index.html
-   - ✅ Inicializar cliente SupaBase (js/config.js)
+   - ✅ Inicializar cliente SupaBase em js/config.js
 
-3. **✅ Gerar Script de Migração**
-   - ✅ Criar migrate.html para gerar SQL dos usuários do localStorage
-   - ✅ Criar migracao_supabase.sql com estrutura das tabelas
-
-4. **✅ Modificar cadastro_usuarios.js**
+3. **Modificar cadastro_usuarios.js**
    - ✅ Substituir localStorage por SupaBase
    - ✅ Funções: salvar, editar, excluir, listar usuários
-   - ✅ Corrigido erro getSupabaseClient is not defined
 
-5. **✅ Modificar app.js**
+4. **Modificar app.js**
    - ✅ Login buscar usuários do SupaBase
    - ✅ Atualizar lógica de autenticação
-   - ✅ Corrigido erro getSupabaseClient is not defined
 
+5. **Ferramentas de Migração**
+   - ✅ migrate.html - Gera SQL para usuários do localStorage
+   - ✅ migracao_supabase.sql - Schema completo do banco
+   - ✅ README_SUPABASE.md - Instruções completas
+
+## 🔄 Próximos Passos
 6. **Migrar outros dados**
-   - Solicitações para SupaBase
-   - Peças para SupaBase
-   - Veículos para SupaBase
+   - [ ] Solicitações para SupaBase
+   - [ ] Peças para SupaBase
+   - [ ] Veículos para SupaBase
 
 7. **Testar**
-   - Testar cadastro e login no GitHub Pages
-   - Verificar sincronização de dados
+   - [ ] Configurar projeto no SupaBase
+   - [ ] Executar migração de usuários
+   - [ ] Testar cadastro e login no GitHub Pages
+   - [ ] Verificar sincronização de dados
 
-## Próximos Passos
-- ✅ Removido botão temporário de migração da tela de login
-- Execute o script migracao_supabase.sql no SupaBase
-- Abra migrate.html localmente para gerar SQL dos usuários
-- Execute o SQL gerado no SupaBase
-- Atualize as credenciais em js/config.js
-- Teste o login no GitHub Pages
+## 📋 Instruções para Usuário
+1. Criar projeto no SupaBase
+2. Executar `migracao_supabase.sql` no SQL Editor
+3. Abrir `migrate.html` localmente e gerar SQL dos usuários
+4. Executar SQL gerado no SupaBase
+5. Atualizar `js/config.js` com URL e chave do SupaBase
+6. Testar login no GitHub Pages
