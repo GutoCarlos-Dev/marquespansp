@@ -21,15 +21,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         nomeUsuarioSpan.textContent = usuarioLogado.nome;
     }
 
-    // Mostra a seção de migração apenas para o administrador
-    if (usuarioLogado.nivel === 'administrador') {
-        const migrationSection = document.getElementById('migration-section');
-        migrationSection.style.display = 'block';
-        document.getElementById('btn-migrar-usuarios').addEventListener('click', migrarUsuariosParaSupabase);
-        document.getElementById('btn-migrar-pecas').addEventListener('click', migrarPecasParaSupabase);
-        document.getElementById('btn-migrar-veiculos').addEventListener('click', migrarVeiculosParaSupabase);
-    }
-
     // Renderiza o dashboard de acordo com o nível do usuário
     switch (usuarioLogado.nivel) {
         case 'administrador':
