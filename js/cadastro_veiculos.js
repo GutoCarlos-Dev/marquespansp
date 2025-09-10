@@ -89,7 +89,9 @@ document.getElementById('form-veiculo').addEventListener('submit', async functio
         // Adicionando
         const { error: insertError } = await supabase
             .from('veiculos')
-            .insert([{ ...veiculoData, id: Date.now() }]);
+            // O ID não é mais enviado, o banco de dados irá gerá-lo automaticamente.
+            .insert([veiculoData]) 
+            .select(); 
         error = insertError;
     }
 

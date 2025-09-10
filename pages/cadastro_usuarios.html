@@ -6,6 +6,22 @@
     <title>Cadastro de Usuários</title>
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/cadastro_usuarios.css" />
+    <style>
+        .table-container {
+            max-height: 400px; /* Defina a altura máxima que desejar */
+            overflow-y: auto;  /* Adiciona a barra de rolagem vertical quando necessário */
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        /* Deixa o cabeçalho da tabela fixo no topo durante a rolagem */
+        .table-container thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background-color: #4CAF50; /* Garante que o fundo não seja transparente ao rolar */
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -49,19 +65,21 @@
             </button>
         </div>
         -->
-        <table id="tabela-usuarios">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Email</th>
-                    <th>Nível</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Dados serão carregados dinamicamente -->
-            </tbody>
-        </table>
+        <div class="table-container">
+            <table id="tabela-usuarios">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Nível</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dados serão carregados dinamicamente -->
+                </tbody>
+            </table>
+        </div>
     </main>
     <!-- Adicionar CDN do SupaBase antes dos scripts JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
