@@ -76,7 +76,23 @@
             <input type="password" id="password" required />
             <button type="submit">Entrar</button>
         </form>
+        <!-- Botão temporário para migração - REMOVER APÓS MIGRAÇÃO -->
+        <button id="btn-migrate" style="margin-top: 1rem; background: #ff9800; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">Gerar SQL Migração</button>
     </div>
+    <!-- SupaBase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
     <script src="js/app.js"></script>
+    <!-- Script temporário para migração - REMOVER APÓS MIGRAÇÃO -->
+    <script>
+        document.getElementById('btn-migrate').addEventListener('click', async () => {
+            try {
+                await import('./js/migrate.js');
+            } catch (error) {
+                console.error('Erro ao carregar script de migração:', error);
+                alert('Erro ao executar migração. Verifique o console para detalhes.');
+            }
+        });
+    </script>
 </body>
 </html>

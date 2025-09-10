@@ -1,50 +1,41 @@
-# TODO - Sistema de Solicitação de Peças
+# TODO - Integração SupaBase para Marquespan
 
-## Concluído ✅
-- [x] Criar estrutura do projeto (HTML, CSS, JS)
-- [x] Implementar login simulado com níveis de usuário
-- [x] Criar página de cadastro de usuários
-- [x] Criar página de cadastro de peças
-- [x] Criar página de cadastro de veículos (com vínculo supervisor)
-- [x] Implementar página de solicitação para técnicos (com grid de itens usando itens cadastrados)
-- [x] Implementar página de aprovação para supervisores
-- [x] Implementar página de solicitações aprovadas para matriz
-- [x] Aplicar tema verde e branco profissional
-- [x] Adicionar botão "Sair" no menu dinâmico (removido botão "Voltar")
-- [x] Tornar responsivo para mobile
-- [x] Salvar dados no localStorage (simulação)
-- [x] Navegação entre páginas
-- [x] Comentários em português
+## Problema Identificado
+- Aplicação usa localStorage para dados de usuários
+- localStorage não persiste entre domínios (localhost vs GitHub Pages)
+- Usuários cadastrados localmente não aparecem no GitHub
 
-## Próximos Passos 🚧
-- [ ] Integrar com SupaBase
-  - [ ] Configurar projeto no SupaBase
-  - [ ] Criar tabelas no banco
-  - [ ] Substituir localStorage por chamadas API
-- [ ] Melhorar autenticação
-  - [ ] Implementar autenticação real
-  - [ ] Validação de senha
-  - [ ] Logout funcional
-- [ ] Validações e Segurança
-  - [ ] Validação de formulários
-  - [ ] Controle de acesso por nível
-  - [ ] Sanitização de dados
-- [ ] Funcionalidades Avançadas
-  - [ ] Geração de PDF real (usar jsPDF)
-  - [ ] Relatórios e dashboards
-  - [ ] Notificações push
-- [ ] UI/UX Melhorias
-  - [ ] Animações e transições
-  - [ ] Modais para confirmações
-  - [ ] Paginação em tabelas
-- [ ] Testes
-  - [ ] Testar em diferentes navegadores
-  - [ ] Testar responsividade
-  - [ ] Testar fluxo completo
+## Solução: Integrar SupaBase
+1. **✅ Criar script de migração**
+   - Criado js/migrate.js para gerar SQL dos usuários do localStorage
+   - Criado js/migrate_console.js como alternativa sem problemas de CORS
+   - Criado migrate.html - arquivo HTML dedicado sem problemas de CORS (recomendado)
+   - Adicionado botão temporário no index.html para facilitar execução
+   - Corrigido problema de inicialização do SupaBase em js/config.js
 
-## Notas Técnicas
-- O sistema está funcional para demonstração
-- Dados são persistidos no localStorage
-- Estrutura preparada para integração com SupaBase
-- Código comentado em português
-- Tema verde e branco aplicado
+2. **✅ Configurar SupaBase**
+   - Criado README_SUPABASE.md com instruções detalhadas
+   - Criado js/migrate.js para gerar SQL dos usuários locais
+   - Instruções para criar projeto no SupaBase e executar SQL
+   - Após configurar, atualizar js/config.js com credenciais
+
+3. **✅ Instalar SupaBase Client**
+   - Adicionado CDN do SupaBase no index.html
+   - Cliente inicializado em js/config.js
+
+4. **Modificar cadastro_usuarios.js**
+   - Substituir localStorage por SupaBase
+   - Funções: salvar, editar, excluir, listar usuários
+
+5. **Modificar app.js**
+   - Login buscar usuários do SupaBase
+   - Atualizar lógica de autenticação
+
+6. **Migrar outros dados**
+   - Solicitações para SupaBase
+   - Peças para SupaBase
+   - Veículos para SupaBase
+
+7. **Testar**
+   - Testar cadastro e login no GitHub Pages
+   - Verificar sincronização de dados

@@ -95,10 +95,70 @@ function excluirUsuario(id) {
     }
 }
 
-// Inicializar página
+// Função para exportar usuários para SQL do SupaBase
+function exportarUsuariosSQL() {
+    if (usuarios.length === 0) {
+        alert('❌ Nenhum usuário cadastrado para exportar.');
+        return;
+    }
+
+    let sql = '-- Script SQL para importar usuários no SupaBase\n';
+    sql += '-- Gerado em: ' + new Date().toLocaleString('pt-BR') + '\n\n';
+
+    // Criar tabela
+    sql += '-- Criar tabela usuarios\n';
+    sql += 'CREATE TABLE IF NOT EXISTS usuarios (\n';
+    sql += '    id BIGINT PRIMARY KEY,\n';
+    sql += '    nome TEXT NOT NULL,\n';
+    sql += '    email TEXT UNIQUE NOT NULL,\n';
+    sql += '    senha TEXT NOT NULL,\n';
+    sql += '    nivel TEXT NOT NULL\n';
+    sql += ');\n\n';
+
+    // Inserir usuários
+    sql += '-- Inserir usuários\n';
+    usuarios.forEach((usuario, index) => {
+        try {
+            const nome = usuario.nome ? usuario.nome.replace(/'/g, "''") : '';
+            const email = usuario.email ? usuario.email.replace(/'/g, "''") : '';
+            const senha = usuario.senha ? usuario.senha.replace(/'/g, "''") : '';
+            const nivel = usuario.nivel || 'tecnico';
+
+            sql += `INSERT INTO usuarios (id, nome, email, senha, nivel) VALUES (${usuario.id}, '${nome}', '${email}', '${senha}', '${nivel}');\n`;
+        } catch (error) {
+            console.error(`Erro ao processar usuário ${index + 1}:`, error);
+        }
+    });
+
+    // Verificar inserção
+    sql += '\n-- Verificar inserção\n';
+    sql += 'SELECT * FROM usuarios ORDER BY id;\n';
+
+    // Criar um blob com o SQL e fazer download
+    const blob = new Blob([sql], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `usuarios_supabase_${new Date().toISOString().split('T')[0]}.sql`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    alert(`✅ SQL exportado com sucesso!\n\n📁 Arquivo: usuarios_supabase_${new Date().toISOString().split('T')[0]}.sql\n\n📋 Copie o conteúdo do arquivo e cole no SQL Editor do SupaBase.`);
+}
+
+// Event listener para o botão de exportar
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('form-usuario');
     if (form) {
         atualizarTabela();
+    }
+
+    // Adicionar event listener para o botão de exportar
+    const btnExportar = document.getElementById('btn-exportar-sql');
+    if (btnExportar) {
+        btnExportar.addEventListener('click', exportarUsuariosSQL);
     }
 });
