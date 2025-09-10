@@ -47,19 +47,19 @@ ALTER TABLE solicitacoes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pecas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE veiculos ENABLE ROW LEVEL SECURITY;
 
--- Políticas para usuários (permitir tudo para usuários autenticados)
-CREATE POLICY "Permitir tudo para usuários autenticados" ON usuarios
-FOR ALL USING (auth.role() = 'authenticated');
+-- Políticas para usuários (permitir acesso público, pois a app controla o acesso)
+CREATE POLICY "Permitir acesso público à tabela de usuários" ON usuarios
+FOR ALL USING (true);
 
 -- Políticas para solicitações
-CREATE POLICY "Usuários podem ver suas próprias solicitações" ON solicitacoes
-FOR SELECT USING (auth.uid()::text = usuario_id::text);
+-- CREATE POLICY "Usuários podem ver suas próprias solicitações" ON solicitacoes
+-- FOR SELECT USING (auth.uid()::text = usuario_id::text);
 
-CREATE POLICY "Técnicos podem criar solicitações" ON solicitacoes
-FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+-- CREATE POLICY "Técnicos podem criar solicitações" ON solicitacoes
+-- FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
-CREATE POLICY "Supervisores podem atualizar solicitações" ON solicitacoes
-FOR UPDATE USING (auth.role() = 'authenticated');
+CREATE POLICY "Permitir acesso público a solicitações" ON solicitacoes
+FOR ALL USING (true);
 
 -- Políticas para peças (leitura pública)
 CREATE POLICY "Permitir leitura de peças" ON pecas

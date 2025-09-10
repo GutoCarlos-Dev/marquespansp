@@ -15,8 +15,8 @@ if (window.location.pathname.endsWith('index.html') || window.location.pathname 
             if (username && password) {
                 try {
                     // Buscar usuário no SupaBase
-                    if (typeof supabase === 'undefined') {
-                        alert('Erro: SupaBase não está configurado. Verifique as credenciais.');
+                    if (!supabase) {
+                        alert('Erro: A conexão com o Supabase não foi inicializada. Verifique o config.js e a conexão com a internet.');
                         return;
                     }
 

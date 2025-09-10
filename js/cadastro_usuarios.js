@@ -15,8 +15,8 @@ document.getElementById('form-usuario').addEventListener('submit', async functio
 
     try {
         // Importar supabase do config.js
-        if (typeof supabase === 'undefined') {
-            alert('Erro: SupaBase não está configurado. Verifique as credenciais.');
+        if (!supabase) {
+            alert('Erro: A conexão com o Supabase não foi inicializada. Verifique o config.js e a conexão com a internet.');
             return;
         }
 
@@ -85,8 +85,8 @@ async function atualizarTabela() {
     if (!tbody) return;
 
     try {
-        if (typeof supabase === 'undefined') {
-            tbody.innerHTML = '<tr><td colspan="4">Erro: SupaBase não configurado</td></tr>';
+        if (!supabase) {
+            tbody.innerHTML = '<tr><td colspan="4">Erro: Conexão com o Supabase não inicializada.</td></tr>';
             return;
         }
 
@@ -149,8 +149,8 @@ function editarUsuario(id) {
 async function excluirUsuario(id) {
     if (confirm('Tem certeza que deseja excluir este usuário?')) {
         try {
-            if (typeof supabase === 'undefined') {
-                alert('Erro: SupaBase não está configurado.');
+            if (!supabase) {
+                alert('Erro: A conexão com o Supabase não foi inicializada.');
                 return;
             }
 
