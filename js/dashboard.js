@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
     if (!usuarioLogado) {
         alert('Usuário não logado. Redirecionando para login.');
         window.location.href = '../index.html';
