@@ -183,10 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.location.pathname.includes('dashboard.html') || window.location.pathname.includes('cadastro_') || window.location.pathname.includes('solicitacao.html') || window.location.pathname.includes('aprovacao.html') || window.location.pathname.includes('aprovados.html') || window.location.pathname.includes('detalhes_solicitacao.html') || window.location.pathname.includes('envio_solicitacao.html')) {
         console.log('Estamos em uma página do sistema');
         usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
-        if (!usuarioLogado) {
-            console.log('Usuário não logado, redirecionando para login');
-            window.location.href = '../index.html';
-        } else {
+        if (usuarioLogado) {
             console.log('Usuário logado:', usuarioLogado);
             atualizarMenu();
             if (window.location.pathname.includes('dashboard.html')) {
@@ -194,6 +191,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 // então não precisamos chamar carregarPaginaInicial() aqui.
                 // carregarPaginaInicial();
             }
+        } else {
+            console.log('Usuário não logado, redirecionando para login');
+            window.location.href = '../index.html';
         }
     }
 });
