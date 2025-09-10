@@ -13,12 +13,11 @@ async function cadastrarAdminInicial() {
         return;
     }
 
-    const adminEmail = prompt("Digite o e-mail do administrador:");
-    if (!adminEmail) {
-        alert("Cadastro cancelado.");
-        return;
-    }
-
+    // Gera um e-mail "falso" para o sistema de autenticação, usando o nome de usuário.
+    // O usuário final nunca verá ou usará este e-mail.
+    const adminEmail = `${adminName.toLowerCase().replace(/\s+/g, '.')}@marquespansp.local`;
+    console.log(`E-mail gerado para autenticação: ${adminEmail}`);
+    
     const adminPassword = prompt("Digite a senha para o administrador (mínimo 6 caracteres):");
     if (!adminPassword || adminPassword.length < 6) {
         alert("Senha inválida ou muito curta. Cadastro cancelado.");
@@ -31,6 +30,11 @@ async function cadastrarAdminInicial() {
     const { data: authData, error: authError } = await supabase.auth.signUp({
         email: adminEmail,
         password: adminPassword,
+        options: {
+            // Esta opção garante que, com a confirmação de e-mail desativada no painel do Supabase,
+            // o usuário seja marcado como confirmado e receba uma sessão imediatamente.
+            email_confirm: true,
+        }
     });
 
     if (authError) {
@@ -52,7 +56,8 @@ async function cadastrarAdminInicial() {
             .insert({ 
                 id: authData.user.id, 
                 nome: adminName, 
-                nivel: 'administrador' 
+                nivel: 'administrador',
+                email: adminEmail // Salva o e-mail gerado também no perfil
             });
 
         if (profileError) {
