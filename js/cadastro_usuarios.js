@@ -55,7 +55,8 @@ document.getElementById('form-usuario').addEventListener('submit', async functio
 
         // Gera um e-mail interno para o sistema de autenticação
         // Usamos .app que é um TLD válido para passar na validação do Supabase.
-        const email = `${nome.toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '')}@marquespansp.app`;
+        // Usamos @example.com que é um domínio padrão para testes e garantido para passar na validação.
+        const email = `${nome.toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '')}@example.com`;
 
         // 1. Cria o usuário no sistema de autenticação do Supabase
         const { data: authData, error: authError } = await supabase.auth.signUp({
