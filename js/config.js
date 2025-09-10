@@ -8,8 +8,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 let supabase = null;
 
 try {
-    if (typeof window !== 'undefined' && window.supabase) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    if (typeof window !== 'undefined' && typeof supabaseJs !== 'undefined') {
+        supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         console.log('✅ SupaBase inicializado com sucesso');
     } else {
         console.warn('⚠️ SupaBase não está carregado. Certifique-se de que o CDN está incluído no HTML.');

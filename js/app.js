@@ -15,8 +15,7 @@ if (window.location.pathname.endsWith('index.html') || window.location.pathname 
             if (username && password) {
                 try {
                     // Buscar usuário no SupaBase
-                    const supabase = getSupabaseClient();
-                    if (!supabase) {
+                    if (typeof supabase === 'undefined') {
                         alert('Erro: SupaBase não está configurado. Verifique as credenciais.');
                         return;
                     }

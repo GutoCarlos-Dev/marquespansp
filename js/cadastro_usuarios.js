@@ -14,8 +14,8 @@ document.getElementById('form-usuario').addEventListener('submit', async functio
     const nivel = document.getElementById('nivel').value;
 
     try {
-        const supabase = getSupabaseClient();
-        if (!supabase) {
+        // Importar supabase do config.js
+        if (typeof supabase === 'undefined') {
             alert('Erro: SupaBase não está configurado. Verifique as credenciais.');
             return;
         }
@@ -85,8 +85,7 @@ async function atualizarTabela() {
     if (!tbody) return;
 
     try {
-        const supabase = getSupabaseClient();
-        if (!supabase) {
+        if (typeof supabase === 'undefined') {
             tbody.innerHTML = '<tr><td colspan="4">Erro: SupaBase não configurado</td></tr>';
             return;
         }
@@ -147,11 +146,31 @@ function editarUsuario(id) {
 }
 
 // Função para excluir usuário
-function excluirUsuario(id) {
+async function excluirUsuario(id) {
     if (confirm('Tem certeza que deseja excluir este usuário?')) {
-        usuarios = usuarios.filter(u => u.id !== id);
-        localStorage.setItem('usuarios', JSON.stringify(usuarios));
-        atualizarTabela();
+        try {
+            if (typeof supabase === 'undefined') {
+                alert('Erro: SupaBase não está configurado.');
+                return;
+            }
+
+            const { error } = await supabase
+                .from('usuarios')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                console.error('Erro ao excluir usuário:', error);
+                alert('Erro ao excluir usuário. Tente novamente.');
+                return;
+            }
+
+            alert('Usuário excluído com sucesso!');
+            await atualizarTabela();
+        } catch (error) {
+            console.error('Erro ao excluir usuário:', error);
+            alert('Erro ao excluir usuário. Verifique sua conexão e tente novamente.');
+        }
     }
 }
 
@@ -212,6 +231,12 @@ function exportarUsuariosSQL() {
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('form-usuario');
     if (form) {
+        // Verifica se usuário está logado antes de atualizar tabela
+        const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+        if (!usuarioLogado) {
+            window.location.href = '../index.html';
+            return;
+        }
         atualizarTabela();
     }
 
