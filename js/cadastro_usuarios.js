@@ -47,14 +47,13 @@ document.getElementById('form-usuario').addEventListener('submit', async functio
         } else {
             // Adicionando novo usuário
             const novoUsuario = {
-                id: Date.now(),
                 nome,
                 email,
                 senha,
                 nivel
             };
 
-            const { error } = await supabase
+            const { error } = await supabase // O ID será gerado pelo banco de dados.
                 .from('usuarios')
                 .insert([novoUsuario]);
 

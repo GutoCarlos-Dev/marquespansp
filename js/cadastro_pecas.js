@@ -4,6 +4,31 @@
 let pecas = []; // Cache local das peças para edição
 let editandoId = null;
 
+// Função para sugerir o próximo código disponível
+function sugerirProximoCodigo() {
+    const codigoInput = document.getElementById('codigo');
+    if (!codigoInput) return;
+
+    // Se não estiver editando, sugere um novo código
+    if (!editandoId) {
+        if (pecas && pecas.length > 0) {
+            // Pega todos os códigos, converte para número e filtra os que não são numéricos
+            const codigosNumericos = pecas
+                .map(p => parseInt(p.codigo, 10))
+                .filter(n => !isNaN(n));
+            
+            if (codigosNumericos.length > 0) {
+                const maxCodigo = Math.max(...codigosNumericos);
+                codigoInput.value = maxCodigo + 1;
+            } else {
+                codigoInput.value = 1; // Caso não haja códigos numéricos na base
+            }
+        } else {
+            codigoInput.value = 1; // Caso a tabela esteja completamente vazia
+        }
+    }
+}
+
 // Função para salvar peça (adicionar ou editar)
 document.getElementById('form-peca').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -49,6 +74,7 @@ document.getElementById('form-peca').addEventListener('submit', async function(e
         editandoId = null;
         document.querySelector('form button[type="submit"]').textContent = 'Salvar Peça';
         await atualizarTabela();
+        sugerirProximoCodigo(); // Sugere o próximo código após salvar
     }
 });
 
@@ -134,10 +160,11 @@ async function excluirPeca(id) {
 }
 
 // Inicializar ao carregar página
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() { // Tornou-se async
     if (!JSON.parse(localStorage.getItem('usuarioLogado'))) {
         window.location.href = '../index.html';
         return;
     }
-    atualizarTabela();
+    await atualizarTabela(); // Aguarda a tabela (e o cache 'pecas') ser carregada
+    sugerirProximoCodigo(); // Sugere o código com base nos dados carregados
 });
