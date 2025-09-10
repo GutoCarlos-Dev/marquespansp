@@ -209,7 +209,6 @@ function exportarUsuariosSQL() {
     alert(`✅ SQL exportado com sucesso!\n\n📁 Arquivo: usuarios_supabase_${new Date().toISOString().split('T')[0]}.sql\n\n📋 Copie o conteúdo do arquivo e cole no SQL Editor do SupaBase.`);
 }
 
-// Event listener para o botão de exportar
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('form-usuario');
     if (form) {
