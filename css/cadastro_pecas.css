@@ -73,12 +73,16 @@ form label {
 }
 
 form input, form select, form textarea {
-    width: 50%;
+    width: 30%;
     padding: 0.5rem;
     margin-top: 0.25rem;
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
+}
+
+#descricao {
+    resize: none;
 }
 
 
