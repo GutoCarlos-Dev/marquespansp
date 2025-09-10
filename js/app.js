@@ -1,16 +1,21 @@
 // Sistema de Solicitação de Peças - Lógica Principal
 // Comentários em português
 
-// --- Configuração do Supabase ---
-const SUPABASE_URL = 'https://tetshxfxrdbzovajmfoz.supabase.co'; // Substitua se for diferente
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRldHNoeGZ4cmRiem92YWptZm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxMDI1NDUsImV4cCI6MjA3MjY3ODU0NX0.dG09yVDrzofmRc7XmVHwgVJKVOG1xjPGkwxJGdYpk4U'; // Substitua se for diferente
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Login simples local sem banco de dados
+
+// Lista fixa de usuários para login local
+const usuariosValidos = [
+    { nome: 'admin', senha: 'admin123', nivel: 'administrador' },
+    { nome: 'tecnico', senha: 'tec123', nivel: 'tecnico' },
+    { nome: 'supervisor', senha: 'sup123', nivel: 'supervisor' },
+    { nome: 'matriz', senha: 'matriz123', nivel: 'matriz' }
+];
 
 // Variáveis globais
-let usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+let usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
 
 // Lógica de Login - Executa apenas se o formulário de login existir na página
-const handleLogin = async (event) => {
+const handleLogin = (event) => {
     event.preventDefault();
     const nomeUsuario = document.getElementById('username').value;
     const password = document.getElementById('password').value;
@@ -20,54 +25,18 @@ const handleLogin = async (event) => {
     loginButton.disabled = true;
     loginButton.textContent = 'Entrando...';
 
-    try {
-        // Passo 1: Buscar o e-mail do usuário a partir do nome.
-        // Esta é a maneira mais direta de permitir o login por nome de usuário,
-        // pois o Supabase Auth precisa do e-mail para autenticar.
-        const { data: profile, error: lookupError } = await supabase
-            .from('profiles')
-            .select('email')
-            .eq('nome', nomeUsuario)
-            .single();
+    // Verifica se o usuário e senha estão na lista fixa
+    const usuario = usuariosValidos.find(u => u.nome === nomeUsuario && u.senha === password);
 
-        if (lookupError || !profile) {
-            throw new Error('Nome de usuário não encontrado.');
-        }
+    if (usuario) {
+        // Salva o usuário no sessionStorage para manter o login até fechar a aba
+        sessionStorage.setItem('usuarioLogado', JSON.stringify(usuario));
+        usuarioLogado = usuario;
 
-        // Passo 2: Autenticar com o e-mail encontrado e a senha.
-        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-            email: profile.email,
-            password: password,
-        });
-
-        if (authError) {
-            // O erro aqui é geralmente "Invalid login credentials"
-            throw new Error('Nome de usuário ou senha inválidos.');
-        }
-
-        // Passo 3: Buscar o perfil completo do usuário já autenticado.
-        // Isso garante que só buscamos dados completos após o login bem-sucedido.
-        const { data: fullProfile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', authData.user.id)
-            .single();
-
-        if (profileError || !fullProfile) {
-            // Se o login funcionou mas o perfil não foi encontrado, é um estado inconsistente.
-            await supabase.auth.signOut();
-            throw new Error('Falha no login: Perfil de usuário não encontrado.');
-        }
-
-        // Salva o perfil no localStorage para uso nas outras páginas
-        localStorage.setItem('usuarioLogado', JSON.stringify(fullProfile));
-        
         // Redireciona para o dashboard
         window.location.href = 'pages/dashboard.html';
-
-    } catch (error) {
-        alert(error.message);
-        console.error('Erro de login:', error.message);
+    } else {
+        alert('Nome de usuário ou senha inválidos.');
         loginButton.disabled = false;
         loginButton.textContent = originalButtonText;
     }
@@ -153,27 +122,27 @@ function carregarPaginaInicial() {
 
 // Função para carregar dashboard
 function carregarDashboard() {
-    window.location.href = 'dashboard.html';
+    window.location.href = 'pages/dashboard.html';
 }
 
 // Função para carregar solicitação
 function carregarSolicitacao() {
-    window.location.href = 'solicitacao.html';
+    window.location.href = 'pages/solicitacao.html';
 }
 
 // Função para carregar aprovação
 function carregarAprovacao() {
-    window.location.href = 'aprovacao.html';
+    window.location.href = 'pages/aprovacao.html';
 }
 
 // Função para carregar cadastros
 function carregarCadastro(tipo) {
-    window.location.href = `cadastro_${tipo}.html`;
+    window.location.href = `pages/cadastro_${tipo}.html`;
 }
 
 // Função para carregar aprovados
 function carregarAprovados() {
-    window.location.href = 'aprovados.html';
+    window.location.href = 'pages/aprovados.html';
 }
 
 // Função para alternar dropdown no menu cadastro
@@ -192,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('DOMContentLoaded disparado');
     if (window.location.pathname.includes('dashboard.html') || window.location.pathname.includes('cadastro_') || window.location.pathname.includes('solicitacao.html') || window.location.pathname.includes('aprovacao.html') || window.location.pathname.includes('aprovados.html') || window.location.pathname.includes('detalhes_solicitacao.html') || window.location.pathname.includes('envio_solicitacao.html')) {
         console.log('Estamos em uma página do sistema');
-        usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+        usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
         if (usuarioLogado) {
             console.log('Usuário logado:', usuarioLogado);
             atualizarMenu();
@@ -209,17 +178,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Função de logout
-async function logout() {
-    // Limpar dados do usuário logado do localStorage
-    localStorage.removeItem('usuarioLogado');
+function logout() {
+    // Limpar dados do usuário logado do sessionStorage
+    sessionStorage.removeItem('usuarioLogado');
     
-    // Fazer logout do Supabase
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-        console.error('Erro ao fazer logout do Supabase:', error.message);
-    }
-
-    // Redireciona para a página de login. O caminho relativo funciona
-    // tanto localmente quanto no GitHub Pages, independentemente do nome do repositório.
+    // Redireciona para a página de login
     window.location.href = '../index.html';
 }
