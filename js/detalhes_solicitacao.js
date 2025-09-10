@@ -1,6 +1,11 @@
 // Sistema de Solicitação de Peças - Página de Detalhes da Solicitação
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Verifica se o usuário está logado antes de carregar
+    if (!JSON.parse(localStorage.getItem('usuarioLogado'))) {
+        window.location.href = '../index.html';
+        return;
+    }
     carregarDetalhesSolicitacao();
 
     document.getElementById('btn-aprovar').addEventListener('click', function() {
@@ -17,29 +22,48 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Função para carregar os detalhes da solicitação
-function carregarDetalhesSolicitacao() {
+async function carregarDetalhesSolicitacao() {
     const id = getQueryParam('id');
     if (!id) {
         alert('ID da solicitação não fornecido.');
+        window.close();
         return;
     }
 
-    const solicitacoes = getSolicitacoes();
-    const solicitacao = solicitacoes.find(s => String(s.id) === String(id));
+    if (!supabase) {
+        alert('Erro de conexão com o banco de dados.');
+        return;
+    }
 
-    if (!solicitacao) {
+    const { data: solicitacao, error } = await supabase
+        .from('solicitacoes')
+        .select(`
+            id,
+            created_at,
+            status,
+            itens,
+            rota,
+            usuario:usuario_id ( nome ),
+            veiculo:veiculo_id ( placa, supervisor:supervisor_id(nome) )
+        `)
+        .eq('id', id)
+        .single();
+
+    if (error || !solicitacao) {
+        console.error('Erro ao buscar solicitação:', error);
         alert('Solicitação não encontrada.');
+        window.close();
         return;
     }
 
     // Preencher campos do formulário
-    document.getElementById('codigo-solicitacao').value = solicitacao.codigo;
-    document.getElementById('nome-tecnico').value = solicitacao.nomeTecnico;
-    document.getElementById('placa').value = solicitacao.placa;
+    document.getElementById('codigo-solicitacao').value = String(solicitacao.id).padStart(5, '0');
+    document.getElementById('nome-tecnico').value = solicitacao.usuario.nome;
+    document.getElementById('placa').value = solicitacao.veiculo.placa;
     document.getElementById('status').value = solicitacao.status;
 
     // Preencher data e hora (usando data atual se não existir)
-    const dataHoraObj = solicitacao.dataHoraSolicitacao ? new Date(solicitacao.dataHoraSolicitacao) : new Date();
+    const dataHoraObj = new Date(solicitacao.created_at);
     const dataHoraFormatada = dataHoraObj.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     document.getElementById('data-hora').value = dataHoraFormatada.replace(',', '');
 
@@ -93,7 +117,7 @@ function carregarDetalhesSolicitacao() {
 }
 
 // Função para salvar aprovação ou rejeição
-function salvarAprovacao(status) {
+async function salvarAprovacao(novoStatus) {
     const form = document.getElementById('form-aprovacao');
     const id = form.dataset.solicitacaoId;
 
@@ -105,38 +129,31 @@ function salvarAprovacao(status) {
     const rotaValue = document.getElementById('rota').value;
 
     // Validar se a rota foi preenchida ao aprovar
-    if (status === 'Aprovado' && !rotaValue.trim()) {
+    if (novoStatus === 'Aprovado' && !rotaValue.trim()) {
         alert('Por favor, preencha a ROTA de entrega das peças antes de aprovar.');
         document.getElementById('rota').focus();
         return;
     }
 
-    const solicitacoes = getSolicitacoes();
-    const index = solicitacoes.findIndex(s => String(s.id) === String(id));
+    const dadosAtualizacao = {
+        status: novoStatus,
+        rota: rotaValue,
+        data_aprovacao: new Date().toISOString()
+    };
 
-    if (index === -1) {
-        alert('Solicitação não encontrada.');
+    const { error } = await supabase
+        .from('solicitacoes')
+        .update(dadosAtualizacao)
+        .eq('id', id);
+
+    if (error) {
+        console.error('Erro ao atualizar solicitação:', error);
+        alert(`Erro ao ${novoStatus.toLowerCase()} a solicitação.`);
         return;
     }
 
-    // Atualizar status da solicitação
-    solicitacoes[index].status = status;
-
-    // Salvar rota se foi preenchida
-    if (rotaValue) {
-        solicitacoes[index].rota = rotaValue;
-    }
-
-    // Adicionar data de aprovação/rejeição para consistência dos dados
-    if (status === 'Aprovado' || status === 'Rejeitado') {
-        solicitacoes[index].dataAprovacao = new Date().toISOString();
-    }
-
-    // Salvar no localStorage
-    saveSolicitacoes(solicitacoes);
-
     // Mostrar mensagem de sucesso
-    alert(`Solicitação ${status.toLowerCase()} com sucesso!`);
+    alert(`Solicitação ${novoStatus.toLowerCase()} com sucesso!`);
 
     // Tenta recarregar a página que abriu esta (aprovacao.html)
     if (window.opener) {
@@ -148,7 +165,7 @@ function salvarAprovacao(status) {
 }
 
 // Função para gerar PDF
-function gerarPDF() {
+async function gerarPDF() {
     const form = document.getElementById('form-aprovacao');
     const id = form.dataset.solicitacaoId;
 
@@ -157,10 +174,18 @@ function gerarPDF() {
         return;
     }
 
-    const solicitacoes = getSolicitacoes();
-    const solicitacao = solicitacoes.find(s => String(s.id) === String(id));
+    const { data: solicitacao, error: fetchError } = await supabase
+        .from('solicitacoes')
+        .select(`
+            id, created_at, status, itens, rota,
+            usuario:usuario_id ( nome ),
+            veiculo:veiculo_id ( placa, supervisor:supervisor_id(nome) )
+        `)
+        .eq('id', id)
+        .single();
 
-    if (!solicitacao) {
+    if (fetchError || !solicitacao) {
+        console.error('Erro ao buscar dados para o PDF:', fetchError);
         alert('Solicitação não encontrada.');
         return;
     }
@@ -222,16 +247,16 @@ function gerarPDF() {
         doc.text(String(value), valueX, y);
     };
 
-    const dataHora = solicitacao.dataHoraSolicitacao ? new Date(solicitacao.dataHoraSolicitacao).toLocaleString('pt-BR') : 'N/A';
-    drawField('Código da Solicitação:', solicitacao.codigo, startY);
+    const dataHora = new Date(solicitacao.created_at).toLocaleString('pt-BR');
+    drawField('Código da Solicitação:', String(solicitacao.id).padStart(5, '0'), startY);
     drawField('Data da Solicitação:', dataHora, startY, true);
 
     startY += 8;
-    drawField('Técnico:', solicitacao.nomeTecnico, startY);
+    drawField('Técnico:', solicitacao.usuario.nome, startY);
 
     startY += 8;
-    drawField('Placa do Veículo:', solicitacao.placa, startY);
-    drawField('Supervisor:', solicitacao.supervisor || 'N/A', startY, true);
+    drawField('Placa do Veículo:', solicitacao.veiculo.placa, startY);
+    drawField('Supervisor:', solicitacao.veiculo.supervisor?.nome || 'N/A', startY, true);
 
     startY += 8;
     drawField('Rota de Entrega:', solicitacao.rota || 'Não definida', startY);
@@ -270,5 +295,5 @@ function gerarPDF() {
     }
 
     // Salvar o PDF
-    doc.save(`solicitacao_${solicitacao.codigo}.pdf`);
+    doc.save(`solicitacao_${String(solicitacao.id).padStart(5, '0')}.pdf`);
 }

@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS solicitacoes (
     veiculo_id BIGINT REFERENCES veiculos(id) ON DELETE SET NULL,
     itens JSONB,
     status TEXT DEFAULT 'pendente',
+    rota TEXT,
+    data_aprovacao TIMESTAMP WITH TIME ZONE,
     observacoes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

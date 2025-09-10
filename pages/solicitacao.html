@@ -32,7 +32,10 @@
                 <input type="text" id="status" value="Pendente" readonly class="readonly-field" />
 
                 <label for="placa">Placa:</label>
-                <input type="text" id="placa" readonly class="readonly-field" />
+                <!-- Alterado para um dropdown que será populado dinamicamente -->
+                <select id="placa" required>
+                    <option value="">Selecione um veículo</option>
+                </select>
 
                 <label for="supervisor">Supervisor:</label>
                 <input type="text" id="supervisor" readonly class="readonly-field" />
@@ -45,10 +48,15 @@
                 </div>
             </fieldset>
             
-            <button type="submit">Salvar Solicitação</button>
-            <button type="button" id="btn-cancelar">Cancelar</button>
+            <div class="form-actions">
+                <button type="submit">Salvar Solicitação</button>
+                <button type="button" id="btn-cancelar">Cancelar</button>
+            </div>
         </form>
     </main>
+    <!-- Scripts necessários para a integração com o Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
     <script src="../js/solicitacao.js"></script>
 </body>

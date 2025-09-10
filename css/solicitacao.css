@@ -193,8 +193,12 @@ form input {
     background-color: #d32f2f;
 }
 
-form > button {
-    margin-top: 1rem;
+.form-actions {
+    margin-top: 2rem;
+    text-align: right; /* Alinha os botões à direita */
+}
+
+.form-actions button {
     background-color: #4CAF50;
     color: white;
     border: none;
@@ -203,19 +207,19 @@ form > button {
     cursor: pointer;
     font-size: 1rem;
     font-weight: 600;
-    margin-right: 0.5rem;
+    margin-left: 0.5rem; /* Espaço entre os botões */
     transition: background-color 0.3s ease;
 }
 
-form > button:hover {
+.form-actions button:hover {
     background-color: #388E3C;
 }
 
-#btn-cancelar {
+.form-actions #btn-cancelar {
     background-color: #757575; /* Cinza para ação secundária */
 }
 
-#btn-cancelar:hover {
+.form-actions #btn-cancelar:hover {
     background-color: #616161;
 }
 

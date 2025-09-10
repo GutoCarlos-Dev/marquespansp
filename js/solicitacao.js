@@ -1,6 +1,7 @@
 // Lógica para a página de Solicitação do Técnico
 // Comentários em português
 
+let todosVeiculos = []; // Cache para os dados dos veículos
 let itensSelecionados = [];
 
 // Função para carregar grid de itens vazia com botão adicionar
@@ -147,21 +148,27 @@ function abrirModalAdicionar() {
     inputBusca.focus();
 
     // Evento de busca ao digitar
-    inputBusca.addEventListener('input', () => {
+    inputBusca.addEventListener('input', async () => {
         const termo = inputBusca.value.toLowerCase().trim();
         searchResults.innerHTML = '';
         pecaSelecionada = null; // Limpa seleção anterior
 
-        if (termo.length < 2) {
+        if (termo.length < 1) {
             searchResults.style.display = 'none';
             return;
         }
 
-        const pecas = JSON.parse(localStorage.getItem('pecas')) || [];
-        const resultadosFiltrados = pecas.filter(p => 
-            p.nome.toLowerCase().includes(termo) || 
-            p.codigo.toLowerCase().includes(termo)
-        );
+        // Busca peças no Supabase
+        const { data: resultadosFiltrados, error } = await supabase
+            .from('pecas')
+            .select('id, codigo, nome')
+            .or(`nome.ilike.%${termo}%,codigo.ilike.%${termo}%`) // ilike é case-insensitive
+            .limit(10);
+
+        if (error) {
+            console.error('Erro ao buscar peças:', error);
+            return;
+        }
 
         if (resultadosFiltrados.length > 0) {
             searchResults.style.display = 'block';
@@ -169,12 +176,12 @@ function abrirModalAdicionar() {
                 const itemResultado = document.createElement('div');
                 itemResultado.className = 'search-result-item';
                 itemResultado.textContent = `${p.codigo} - ${p.nome}`;
-                itemResultado.addEventListener('click', () => {
+                itemResultado.onclick = () => {
                     inputBusca.value = p.nome;
                     pecaSelecionada = p; // Guarda a peça inteira
                     searchResults.innerHTML = '';
                     searchResults.style.display = 'none';
-                });
+                }; // Correção: O fechamento de uma atribuição de função é com '};' e não '});'
                 searchResults.appendChild(itemResultado);
             });
         } else {
@@ -199,6 +206,7 @@ function abrirModalAdicionar() {
         // Adicionar ou atualizar item na lista
         const itemExistenteIndex = itensSelecionados.findIndex(i => i.codigo === pecaSelecionada.codigo);
         if (itemExistenteIndex !== -1) {
+            // Se o item já existe, apenas soma a quantidade
             itensSelecionados[itemExistenteIndex].quantidade += quantidade;
         } else {
             itensSelecionados.push({
@@ -224,7 +232,86 @@ function abrirModalAdicionar() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+// Função para carregar os veículos no dropdown
+async function carregarVeiculos(usuario) { // Passa o objeto do usuário logado
+    const selectPlaca = document.getElementById('placa');
+    if (!selectPlaca || !supabase) return;
+
+    let query = supabase
+        .from('veiculos')
+        .select('id, placa, supervisor:supervisor_id(nome)');
+
+    // Filtra os veículos de acordo com o nível do usuário
+    if (usuario.nivel === 'tecnico') {
+        query = query.eq('tecnico_id', usuario.id);
+    } else if (usuario.nivel === 'supervisor') {
+        // Um supervisor pode solicitar para qualquer veículo que ele supervisiona
+        query = query.eq('supervisor_id', usuario.id);
+    }
+    // Para 'administrador' e 'matriz', não aplica filtro, buscando todos os veículos.
+
+    const { data, error } = await query.order('placa');
+
+    if (error) {
+        console.error('Erro ao carregar veículos:', error);
+        selectPlaca.innerHTML = '<option value="">Erro ao carregar</option>';
+        return;
+    }
+
+    todosVeiculos = data || []; // Salva no cache
+    selectPlaca.innerHTML = '<option value="">Selecione um veículo</option>';
+    todosVeiculos.forEach(veiculo => {
+        const option = document.createElement('option');
+        option.value = veiculo.id;
+        option.textContent = veiculo.placa;
+        selectPlaca.appendChild(option);
+    });
+
+    if (todosVeiculos.length === 0 && (usuario.nivel === 'tecnico' || usuario.nivel === 'supervisor')) {
+        selectPlaca.innerHTML = '<option value="">Nenhum veículo associado a você</option>';
+        selectPlaca.disabled = true;
+    } else {
+        selectPlaca.disabled = false;
+    }
+
+    // Adiciona evento para atualizar o supervisor quando a placa muda
+    selectPlaca.addEventListener('change', (e) => {
+        const veiculoId = e.target.value;
+        const supervisorInput = document.getElementById('supervisor');
+        if (veiculoId) {
+            const veiculoSelecionado = todosVeiculos.find(v => v.id == veiculoId);
+            supervisorInput.value = veiculoSelecionado?.supervisor?.nome || 'Sem supervisor';
+        } else {
+            supervisorInput.value = '';
+        }
+    });
+}
+
+// Função para gerar o próximo código de solicitação
+async function gerarCodigoSolicitacao() {
+    const codigoInput = document.getElementById('codigo-solicitacao');
+    if (!codigoInput || !supabase) return;
+
+    // Pega a contagem total de solicitações para gerar o próximo número
+    const { count, error } = await supabase
+        .from('solicitacoes')
+        .select('*', { count: 'exact', head: true });
+
+    if (error) {
+        console.error('Erro ao gerar código da solicitação:', error);
+        codigoInput.value = 'ERRO';
+        return;
+    }
+
+    const proximoNumero = (count || 0) + 1;
+    codigoInput.value = proximoNumero.toString().padStart(5, '0');
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    if (!supabase) {
+        alert('Erro: A conexão com o Supabase não foi inicializada.');
+        return;
+    }
     // Carregar dados do usuário logado
     const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
     if (!usuarioLogado) {
@@ -238,32 +325,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const dataHoraFormatada = agora.toISOString().slice(0, 16); // Formato YYYY-MM-DDTHH:MM
     document.getElementById('data-hora-solicitacao').value = dataHoraFormatada;
 
-    // Gerar código incremental da solicitação
-    const solicitacoes = JSON.parse(localStorage.getItem('solicitacoes')) || [];
-    const numeroSolicitacao = solicitacoes.length + 1;
-    const codigoSolicitacao = `${numeroSolicitacao.toString().padStart(3, '0')}`;
-    document.getElementById('codigo-solicitacao').value = codigoSolicitacao;
-
     // Preencher nome do técnico
     document.getElementById('nome-tecnico').value = usuarioLogado.nome;
 
-    // Preencher placa (se for técnico)
-    if (usuarioLogado.placa) {
-        document.getElementById('placa').value = usuarioLogado.placa;
-    }
-
-    // Preencher supervisor (buscar supervisor no localStorage)
-    const usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
-    const supervisor = usuarios.find(u => u.nivel === 'supervisor');
-    if (supervisor) {
-        document.getElementById('supervisor').value = supervisor.nome;
-    }
-
+    // Carregar dados dinâmicos do Supabase
+    await gerarCodigoSolicitacao();
+    await carregarVeiculos(usuarioLogado); // Passa o objeto do usuário logado
     carregarGridItens();
 
-    // Aqui você pode adicionar lógica para salvar a solicitação com os itens selecionados
-    document.getElementById('form-solicitacao').addEventListener('submit', function(e) {
+    // Lógica para salvar a solicitação
+    document.getElementById('form-solicitacao').addEventListener('submit', async function(e) {
         e.preventDefault();
+        const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
 
         // Verificar se modal está aberto, impedir salvar enquanto modal aberto
         if (document.getElementById('modal-adicionar')) {
@@ -271,39 +344,39 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Exemplo simples de salvar no localStorage
-        const codigo = document.getElementById('codigo-solicitacao').value;
-        const dataHoraSolicitacao = document.getElementById('data-hora-solicitacao').value;
-        const nomeTecnico = document.getElementById('nome-tecnico').value;
-        const status = document.getElementById('status').value;
-        const placa = document.getElementById('placa').value;
-        const supervisor = document.getElementById('supervisor').value;
-
         if (itensSelecionados.length === 0) {
+            alert('Adicione pelo menos uma peça à solicitação.');
             abrirModalAdicionar();
             return;
         }
 
-        const solicitacoes = JSON.parse(localStorage.getItem('solicitacoes')) || [];
+        const veiculo_id = document.getElementById('placa').value;
+        if (!veiculo_id) {
+            alert('Selecione um veículo.');
+            return;
+        }
+
         const novaSolicitacao = {
-            id: Date.now(),
-            codigo,
-            dataHoraSolicitacao,
-            nomeTecnico,
-            status,
-            placa,
-            supervisor,
+            usuario_id: usuarioLogado.id,
+            veiculo_id: parseInt(veiculo_id),
             itens: itensSelecionados
         };
 
-        solicitacoes.push(novaSolicitacao);
-        localStorage.setItem('solicitacoes', JSON.stringify(solicitacoes));
-        alert('Solicitação salva com sucesso!');
-        // Redirecionar para dashboard após salvar
-        window.location.href = 'dashboard.html';
+        const { error } = await supabase
+            .from('solicitacoes')
+            .insert([novaSolicitacao]);
+
+        if (error) {
+            console.error('Erro ao salvar solicitação:', error);
+            alert('Ocorreu um erro ao salvar a solicitação. Tente novamente.');
+        } else {
+            alert('Solicitação salva com sucesso!');
+            // Redirecionar para dashboard após salvar
+            window.location.href = 'dashboard.html';
+        }
     });
 
-    // Adicionar evento para botão cancelar
+    // Evento para botão cancelar
     const btnCancelar = document.getElementById('btn-cancelar');
     if (btnCancelar) {
         btnCancelar.addEventListener('click', () => {

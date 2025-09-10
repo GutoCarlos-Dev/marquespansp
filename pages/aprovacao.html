@@ -1,37 +1,43 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aprovação de Solicitações</title>
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/aprovacao.css" />
-    
 </head>
 <body>
     <header>
         <nav>
             <h1>Aprovação de Solicitações</h1>
-            <div id="menu"><!-- Menu será carregado dinamicamente pelo app.js --></div>
+            <div id="menu"></div>
         </nav>
     </header>
     <main>
-        <h2>Solicitações Pendentes para Aprovação</h2>
-        <table id="tabela-solicitacoes">
-            <thead>
-                <tr>
-                    <th>Código</th>
-                    <th>Técnico</th>
-                    <th>Placa</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Solicitações serão carregadas dinamicamente -->
-            </tbody>
-        </table>
+        <h2>Solicitações Pendentes</h2>
+        <div class="table-container">
+            <table id="tabela-solicitacoes">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Data</th>
+                        <th>Técnico</th>
+                        <th>Placa</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dados serão carregados dinamicamente -->
+                </tbody>
+            </table>
+        </div>
     </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
     <script src="../js/aprovacao.js"></script>
 </body>
