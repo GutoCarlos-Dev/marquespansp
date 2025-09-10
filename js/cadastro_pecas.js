@@ -50,12 +50,31 @@ document.getElementById('form-peca').addEventListener('submit', async function(e
     let error;
 
     if (editandoId) {
-        // Editando (lógica padronizada com a de veículos)
-        const { error: updateError } = await supabase
-            .from('pecas')
-            .update(pecaData)
-            .eq('id', editandoId);
-        error = updateError;
+        // MODO EDIÇÃO: Lógica robusta para evitar erro de chave única.
+        // 1. Encontra a peça original no cache para comparar as mudanças.
+        const pecaOriginal = pecas.find(p => p.id === editandoId);
+        const dadosParaAtualizar = {};
+
+        // 2. Compara cada campo e adiciona ao objeto de atualização apenas o que mudou.
+        if (pecaOriginal && pecaOriginal.codigo !== pecaData.codigo) {
+            dadosParaAtualizar.codigo = pecaData.codigo;
+        }
+        if (pecaOriginal && pecaOriginal.nome !== pecaData.nome) {
+            dadosParaAtualizar.nome = pecaData.nome;
+        }
+        if (pecaOriginal && (pecaOriginal.descricao || '') !== (pecaData.descricao || '')) {
+            dadosParaAtualizar.descricao = pecaData.descricao;
+        }
+
+        // 3. Só executa a atualização se algum campo realmente foi alterado.
+        if (Object.keys(dadosParaAtualizar).length > 0) {
+            const { error: updateError } = await supabase
+                .from('pecas')
+                .update(dadosParaAtualizar)
+                .eq('id', editandoId);
+            error = updateError;
+        }
+        // Se nada mudou, 'error' continua undefined (considerado sucesso).
     } else {
         // Adicionando
         const { error: insertError } = await supabase
@@ -115,8 +134,8 @@ async function atualizarTabela() {
             <td>${peca.nome}</td>
             <td>${peca.descricao || '-'}</td>
             <td>
-                <button onclick="editarPeca(${peca.id})" class="btn-editar">Editar</button>
-                <button onclick="excluirPeca(${peca.id})" class="btn-excluir">Excluir</button>
+                <button onclick="editarPeca('${peca.id}')" class="btn-editar">Editar</button>
+                <button onclick="excluirPeca('${peca.id}')" class="btn-excluir">Excluir</button>
             </td>
         `;
         tbody.appendChild(tr);
