@@ -9,63 +9,78 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Variáveis globais
 let usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
 
-if (window.location.pathname.endsWith('index.html') || window.location.pathname === '/' || window.location.pathname === '') {
-    const loginForm = document.getElementById('login-form');
-    if (loginForm) {
-        loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const email = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+// Lógica de Login - Executa apenas se o formulário de login existir na página
+const loginForm = document.getElementById('login-form');
+if (loginForm) {
+    loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const nomeUsuario = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
 
-            // Login real com Supabase
-            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-                email: email,
-                password: password,
-            });
+        // Passo 1: Buscar o e-mail do usuário a partir do nome fornecido.
+        // Isso requer uma política RLS que permita leitura anônima na tabela 'profiles'.
+        const { data: profile, error: profileLookupError } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('nome', nomeUsuario)
+            .single();
 
-            if (authError) {
-                alert('Usuário ou senha inválidos: ' + authError.message);
+        if (profileLookupError || !profile) {
+            alert('Usuário não encontrado. Verifique o nome de usuário.');
+            console.error('Erro ao buscar usuário pelo nome:', profileLookupError?.message);
+            return;
+        }
+
+        const email = profile.email;
+
+        // Passo 2: Fazer o login real com Supabase usando o e-mail encontrado.
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+        });
+
+        if (authError) {
+            alert('Nome de usuário ou senha inválidos.');
+            return;
+        }
+
+        if (authData.user) {
+            // Passo 3: Após o login, buscar o perfil COMPLETO do usuário na tabela 'profiles'
+            const { data: profileData, error: profileError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', authData.user.id)
+                .single(); // .single() retorna um objeto em vez de um array
+
+            if (profileError) {
+                if (profileError.message.includes("violates row-level security policy")) {
+                    alert("Erro de permissão ao buscar perfil. Verifique as políticas de segurança (RLS) da tabela 'profiles'.");
+                } else {
+                    alert('Erro ao buscar perfil do usuário. Contate o administrador.');
+                }
+                console.error('Erro no perfil:', profileError.message);
+                await supabase.auth.signOut(); // Desloga se não encontrar o perfil
                 return;
             }
 
-            if (authData.user) {
-                // Após o login, buscar o perfil do usuário na tabela 'profiles'
-                const { data: profileData, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', authData.user.id)
-                    .single(); // .single() retorna um objeto em vez de um array
-
-                if (profileError) {
-                    if (profileError.message.includes("violates row-level security policy")) {
-                        alert("Erro de permissão ao buscar perfil. Verifique as políticas de segurança (RLS) da tabela 'profiles'.");
-                    } else {
-                        alert('Erro ao buscar perfil do usuário. Contate o administrador.');
-                    }
-                    console.error('Erro no perfil:', profileError.message);
-                    await supabase.auth.signOut(); // Desloga se não encontrar o perfil
-                    return;
-                }
-
-                // Adiciona uma verificação crucial: o perfil foi realmente encontrado?
-                if (!profileData) {
-                    alert('Falha no login: Perfil de usuário não encontrado. O cadastro pode não ter sido concluído corretamente. Contate o administrador.');
-                    console.error('Login bem-sucedido para o e-mail, mas nenhum perfil correspondente encontrado na tabela "profiles" para o ID:', authData.user.id);
-                    await supabase.auth.signOut(); // Desloga o usuário para evitar estado inconsistente
-                    return;
-                }
-
-                // O objeto `usuarioLogado` precisa ter a mesma estrutura que o sistema espera.
-                const usuarioParaSalvar = { ...profileData, email: authData.user.email };
-
-                // Salva o perfil no localStorage para compatibilidade com o resto do sistema
-                localStorage.setItem('usuarioLogado', JSON.stringify(usuarioParaSalvar));
-                
-                // Redirecionar para dashboard após login
-                window.location.href = 'pages/dashboard.html';
+            // Adiciona uma verificação crucial: o perfil foi realmente encontrado?
+            if (!profileData) {
+                alert('Falha no login: Perfil de usuário não encontrado. O cadastro pode não ter sido concluído corretamente. Contate o administrador.');
+                console.error('Login bem-sucedido para o e-mail, mas nenhum perfil correspondente encontrado na tabela "profiles" para o ID:', authData.user.id);
+                await supabase.auth.signOut(); // Desloga o usuário para evitar estado inconsistente
+                return;
             }
-        });
-    }
+
+            // O objeto `usuarioLogado` precisa ter a mesma estrutura que o sistema espera.
+            const usuarioParaSalvar = { ...profileData, email: authData.user.email };
+
+            // Salva o perfil no localStorage para compatibilidade com o resto do sistema
+            localStorage.setItem('usuarioLogado', JSON.stringify(usuarioParaSalvar));
+            
+            // Redirecionar para dashboard após login
+            window.location.href = 'pages/dashboard.html';
+        }
+    });
 }
 
 function atualizarMenu() {
