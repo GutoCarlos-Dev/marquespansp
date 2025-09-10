@@ -57,9 +57,8 @@ FOR ALL USING (true);
 CREATE POLICY "Permitir acesso público a solicitações" ON solicitacoes
 FOR ALL USING (true);
 
--- Políticas para peças (leitura pública)
-CREATE POLICY "Permitir leitura de peças" ON pecas
-FOR SELECT USING (true);
+-- Políticas para peças (acesso público)
+CREATE POLICY "Permitir acesso público a pecas" ON pecas FOR ALL USING (true);
 
 -- Políticas para veículos (acesso público)
 CREATE POLICY "Permitir acesso público a veiculos" ON veiculos

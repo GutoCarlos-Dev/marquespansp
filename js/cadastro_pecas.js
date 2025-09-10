@@ -1,80 +1,92 @@
-// Cadastro de Peças - Lógica
-// Simulação de armazenamento local
+// js/cadastro_pecas.js
+// Lógica do cadastro de peças, agora com SupaBase
 
-let pecas = JSON.parse(localStorage.getItem('pecas')) || [];
+let pecas = []; // Cache local das peças para edição
+let editandoId = null;
 
-let editandoId = null; // Controla o modo de edição
-
-// Função para gerar o próximo código de peça
-function gerarProximoCodigo() {
-    if (pecas.length === 0) {
-        return 1;
-    }
-    // Garante que os códigos sejam tratados como números para encontrar o máximo
-    const maxCodigo = Math.max(...pecas.map(p => parseInt(p.codigo, 10)));
-    return maxCodigo + 1;
-}
-
-// Função para definir o próximo código no formulário
-function definirProximoCodigo() {
-    document.getElementById('codigo').value = gerarProximoCodigo();
-}
-
-// Função para salvar ou atualizar peça
-document.getElementById('form-peca').addEventListener('submit', function(e) {
+// Função para salvar peça (adicionar ou editar)
+document.getElementById('form-peca').addEventListener('submit', async function(e) {
     e.preventDefault();
+    if (!supabase) {
+        alert('Erro: A conexão com o Supabase não foi inicializada.');
+        return;
+    }
 
     const codigo = document.getElementById('codigo').value;
     const nome = document.getElementById('nome').value;
     const descricao = document.getElementById('descricao').value;
 
-    if (editandoId) {
-        // Atualizando peça existente
-        const index = pecas.findIndex(p => p.id === editandoId);
-        if (index !== -1) {
-            // Não permite alterar o código na edição para manter a integridade
-            pecas[index].nome = nome;
-            pecas[index].descricao = descricao;
-        }
-        editandoId = null;
-        document.querySelector('form button[type="submit"]').textContent = 'Salvar Peça';
-    } else {
-        // Adicionando nova peça
-        // Verifica se o código já existe
-        if (pecas.some(p => p.codigo === codigo)) {
-            alert('Erro: O código da peça já existe. Por favor, insira um código único.');
-            return;
-        }
+    const pecaData = {
+        codigo,
+        nome,
+        descricao,
+    };
 
-        const novaPeca = {
-            id: Date.now(),
-            codigo: codigo,
-            nome,
-            descricao
-        };
-        pecas.push(novaPeca);
+    let error;
+
+    if (editandoId) {
+        // Editando
+        const { error: updateError } = await supabase
+            .from('pecas')
+            .update(pecaData)
+            .eq('id', editandoId);
+        error = updateError;
+    } else {
+        // Adicionando
+        const { error: insertError } = await supabase
+            .from('pecas')
+            .insert([pecaData])
+            .select();
+        error = insertError;
     }
 
-    localStorage.setItem('pecas', JSON.stringify(pecas));
-
-    // Limpar formulário
-    this.reset();
-
-    atualizarTabela();
-    definirProximoCodigo(); // Define o código para a próxima peça
+    if (error) {
+        console.error('Erro ao salvar peça:', error);
+        alert('Erro ao salvar peça. Verifique se o código já existe.');
+    } else {
+        alert('Peça salva com sucesso!');
+        this.reset();
+        editandoId = null;
+        document.querySelector('form button[type="submit"]').textContent = 'Salvar Peça';
+        await atualizarTabela();
+    }
 });
 
-// Função para atualizar tabela
-function atualizarTabela() {
+// Função para atualizar tabela de peças
+async function atualizarTabela() {
     const tbody = document.querySelector('#tabela-pecas tbody');
+    if (!tbody || !supabase) {
+        tbody.innerHTML = '<tr><td colspan="4">Erro: Conexão com o Supabase não inicializada.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>';
+
+    const { data, error } = await supabase
+        .from('pecas')
+        .select('*')
+        .order('nome');
+
+    if (error) {
+        console.error('Erro ao buscar peças:', error);
+        tbody.innerHTML = '<tr><td colspan="4">Erro ao carregar peças.</td></tr>';
+        return;
+    }
+
+    pecas = data; // Atualiza o cache local
     tbody.innerHTML = '';
+
+    if (pecas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4">Nenhuma peça cadastrada.</td></tr>';
+        return;
+    }
 
     pecas.forEach(peca => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${peca.codigo}</td>
             <td>${peca.nome}</td>
-            <td>${peca.descricao}</td>
+            <td>${peca.descricao || '-'}</td>
             <td>
                 <button onclick="editarPeca(${peca.id})" class="btn-editar">Editar</button>
                 <button onclick="excluirPeca(${peca.id})" class="btn-excluir">Excluir</button>
@@ -84,7 +96,7 @@ function atualizarTabela() {
     });
 }
 
-// Função para editar peça
+// Função para preencher formulário para edição
 function editarPeca(id) {
     const peca = pecas.find(p => p.id === id);
     if (peca) {
@@ -99,14 +111,33 @@ function editarPeca(id) {
 }
 
 // Função para excluir peça
-function excluirPeca(id) {
-    pecas = pecas.filter(p => p.id !== id);
-    localStorage.setItem('pecas', JSON.stringify(pecas));
-    atualizarTabela();
+async function excluirPeca(id) {
+    if (confirm('Tem certeza que deseja excluir esta peça?')) {
+        if (!supabase) {
+            alert('Erro: A conexão com o Supabase não foi inicializada.');
+            return;
+        }
+
+        const { error } = await supabase
+            .from('pecas')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Erro ao excluir peça:', error);
+            alert('Erro ao excluir peça.');
+        } else {
+            alert('Peça excluída com sucesso!');
+            await atualizarTabela();
+        }
+    }
 }
 
-// Inicializar página
-document.addEventListener('DOMContentLoaded', () => {
+// Inicializar ao carregar página
+document.addEventListener('DOMContentLoaded', function() {
+    if (!JSON.parse(localStorage.getItem('usuarioLogado'))) {
+        window.location.href = '../index.html';
+        return;
+    }
     atualizarTabela();
-    definirProximoCodigo();
 });
