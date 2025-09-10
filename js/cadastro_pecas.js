@@ -50,7 +50,7 @@ document.getElementById('form-peca').addEventListener('submit', async function(e
     let error;
 
     if (editandoId) {
-        // Editando
+        // Editando (lógica padronizada com a de veículos)
         const { error: updateError } = await supabase
             .from('pecas')
             .update(pecaData)
@@ -70,8 +70,9 @@ document.getElementById('form-peca').addEventListener('submit', async function(e
         alert('Erro ao salvar peça. Verifique se o código já existe.');
     } else {
         alert('Peça salva com sucesso!');
-        this.reset();
+        // Limpa o formulário e reseta o modo de edição
         editandoId = null;
+        document.getElementById('form-peca').reset();
         document.querySelector('form button[type="submit"]').textContent = 'Salvar Peça';
         await atualizarTabela();
         sugerirProximoCodigo(); // Sugere o próximo código após salvar
@@ -99,7 +100,7 @@ async function atualizarTabela() {
         return;
     }
 
-    pecas = data; // Atualiza o cache local
+    pecas = data || []; // Atualiza o cache local, garantindo que seja um array
     tbody.innerHTML = '';
 
     if (pecas.length === 0) {
@@ -128,7 +129,7 @@ function editarPeca(id) {
     if (peca) {
         document.getElementById('codigo').value = peca.codigo;
         document.getElementById('nome').value = peca.nome;
-        document.getElementById('descricao').value = peca.descricao;
+        document.getElementById('descricao').value = peca.descricao || ''; // Garante que o campo não fique com 'null' ou 'undefined'
 
         editandoId = id;
         document.querySelector('form button[type="submit"]').textContent = 'Atualizar Peça';
@@ -160,7 +161,7 @@ async function excluirPeca(id) {
 }
 
 // Inicializar ao carregar página
-document.addEventListener('DOMContentLoaded', async function() { // Tornou-se async
+document.addEventListener('DOMContentLoaded', async function() {
     if (!JSON.parse(localStorage.getItem('usuarioLogado'))) {
         window.location.href = '../index.html';
         return;
