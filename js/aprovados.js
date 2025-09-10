@@ -192,6 +192,71 @@ async function excluirSolicitacao(id) {
     }
 }
 
+// Função para enviar solicitações em massa
+async function enviarSolicitacoesEmMassa() {
+    // 1. Pega todas as solicitações exibidas na tabela que têm status 'aprovado'
+    const tbody = document.querySelector('#tabela-aprovados tbody');
+    const linhas = Array.from(tbody.querySelectorAll('tr'));
+    const solicitacoesAprovadas = [];
+
+    linhas.forEach(linha => {
+        const statusCell = linha.querySelector('td:nth-child(6)'); // A 6ª célula contém o status
+        if (statusCell && statusCell.textContent.toLowerCase() === 'aprovado') {
+            const codigoSolicitacao = linha.querySelector('td:first-child').textContent;
+            // Remove preenchimento com zeros a esquerda
+            const idSolicitacao = parseInt(codigoSolicitacao, 10);
+            if (!isNaN(idSolicitacao)) {
+                solicitacoesAprovadas.push(idSolicitacao);
+            }
+        }
+    });
+
+    if (solicitacoesAprovadas.length === 0) {
+        alert('Nenhuma solicitação com status "Aprovado" foi encontrada na tabela.');
+        return;
+    }
+
+    if (!confirm(`Deseja marcar ${solicitacoesAprovadas.length} solicitações como "Enviado" e gerar os PDFs?`)) {
+        return;
+    }
+
+    // 2. Para cada solicitação, atualizar o status para 'enviado' e gerar o PDF
+    for (const id of solicitacoesAprovadas) {
+        try {
+            // a) Atualiza o status no banco de dados
+            const { error } = await supabase
+                .from('solicitacoes')
+                .update({
+                    status: 'enviado',
+                    data_envio: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', id);
+
+            if (error) {
+                console.error(`Erro ao atualizar solicitação ${id}:`, error);
+                alert(`Erro ao atualizar solicitação ${id}. Veja o console para detalhes.`);
+                continue; // Vai para a próxima solicitação em caso de falha
+            }
+
+            // b) Simula clique no botão de "Baixar PDF" (substitua pela lógica real de geração do PDF se necessário)
+            // NOTE: A geração do PDF aqui é síncrona, o que pode ser problemático para grandes volumes.
+            //       Idealmente, mover isso para um background worker ou fila.
+            window.open(`envio_solicitacao.html?id=${id}`, '_blank');
+
+        } catch (generalError) {
+            console.error(`Erro geral ao processar solicitação ${id}:`, generalError);
+            alert(`Erro geral ao processar solicitação ${id}. Veja o console para detalhes.`);
+        }
+    }
+
+    // 3. Recarrega a tabela para refletir as mudanças
+    alert('Processamento em massa concluído. Verifique os logs para detalhes de erros.');
+    buscarSolicitacoes();
+}
+
+
+
 // Função para exportar os dados da tabela para um arquivo .xlsx
 function exportarParaPlanilha() {
     // Pega a tabela visível na página
@@ -215,8 +280,9 @@ function exportarParaPlanilha() {
 
 // Inicializar
 document.addEventListener('DOMContentLoaded', function() {
-    carregarOpcoesFiltros();
+    carregarOpcoesFiltros();  
     document.getElementById('btn-buscar').addEventListener('click', buscarSolicitacoes);
     document.getElementById('btn-exportar').addEventListener('click', exportarParaPlanilha);
+    document.getElementById('btn-enviar-massa').addEventListener('click', enviarSolicitacoesEmMassa);
     buscarSolicitacoes(); // Carregar todas inicialmente
 });

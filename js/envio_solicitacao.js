@@ -196,11 +196,24 @@ async function gerarPDF() {
         console.log('Logo placeholder detectado. Pulando a adição do logo no PDF. Substitua o conteúdo da variável "logoBase64" para exibir o logo da sua empresa.');
     }
 
+    // Título do Documento dinâmico com base no status
+    let tituloPDF = 'Relatório de Solicitação de Peças'; // Título padrão
+    switch (solicitacao.status) {
+        case 'enviado':
+            tituloPDF = 'Resumo de Envio de Peças';
+            break;
+        case 'rejeitado':
+            tituloPDF = 'Rejeitado o Envio de Peças';
+            break;
+        case 'aprovado':
+            tituloPDF = 'Pendente Envio de Peças';
+            break;
+    }
     // Título do Documento
     doc.setFontSize(20);
     doc.setTextColor('#4CAF50');
     doc.setFont('helvetica', 'bold');
-    doc.text('Relatório de Solicitação de Peças', 14, 20);
+    doc.text(tituloPDF, 14, 20);
 
     // Linha divisória
     doc.setDrawColor(76, 175, 80);

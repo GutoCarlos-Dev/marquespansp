@@ -59,28 +59,31 @@
                 <div class="filtro-item botoes-filtro">
                     <button type="button" id="btn-buscar">Buscar</button>
                     <button type="button" id="btn-exportar">Gerar XLS</button>
+                    <button type="button" id="btn-enviar-massa">Enviar em Massa</button>
                 </div>
             </div>
         </form>
 
         <!-- Grid de Solicitações Aprovadas -->
-        <table id="tabela-aprovados">
-            <thead>
-                <tr>
-                    <th>Código</th>
-                    <th>Data</th>
-                    <th>Técnico</th>
-                    <th>Placa</th>
-                    <th>Supervisor</th>
-                    <th>Status</th>
-                    <th>Data Envio</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Solicitações serão carregadas aqui -->
-            </tbody>
-        </table>
+        <div class="table-container">
+            <table id="tabela-aprovados">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Data</th>
+                        <th>Técnico</th>
+                        <th>Placa</th>
+                        <th>Supervisor</th>
+                        <th>Status</th>
+                        <th>Data Envio</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Solicitações serão carregadas aqui -->
+                </tbody>
+            </table>
+        </div>
     </main>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- SupaBase Client -->
