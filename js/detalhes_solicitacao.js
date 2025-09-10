@@ -23,18 +23,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Função para carregar os detalhes da solicitação
 async function carregarDetalhesSolicitacao() {
-    const idParam = getQueryParam('id');
+    let idParam = getQueryParam('id');
     if (!idParam) {
         alert('ID da solicitação não fornecido.');
-        window.close();
-        return;
+        return; // Remove window.close() to prevent closing the tab immediately
     }
-    const id = parseInt(idParam, 10);
+    idParam = idParam.trim();
+    let id = parseInt(idParam, 10);
     if (isNaN(id)) {
-        alert('ID da solicitação inválido.');
-        window.close();
-        return;
+        id = idParam;
     }
+    console.log('ID usado na consulta:', id);
 
     if (!supabase) {
         alert('Erro de conexão com o banco de dados.');
@@ -44,26 +43,22 @@ async function carregarDetalhesSolicitacao() {
     const { data: solicitacao, error } = await supabase
         .from('solicitacoes')
         .select(`
-            id,
-            created_at,
-            status,
-            itens,
-            rota,
-            usuario:usuario_id ( nome ),
-            veiculo:veiculo_id ( placa, supervisor:supervisor_id(nome) )
+            id, created_at, status, itens, rota,
+            usuario:usuario_id(nome),
+            veiculo:veiculo_id(placa, supervisor:supervisor_id(nome))
         `)
         .eq('id', id)
         .single();
 
     if (error || !solicitacao) {
         console.error('Erro ao buscar solicitação:', error);
-        alert('Solicitação não encontrada.');
-        window.close();
+        alert(`Solicitação com ID ${id} não encontrada. Verifique o console para mais detalhes.`);
+        // Remove window.close() to allow debugging
         return;
     }
 
     // Preencher campos do formulário
-    document.getElementById('codigo-solicitacao').value = String(solicitacao.id).padStart(5, '0');
+    document.getElementById('codigo-solicitacao').value = String(solicitacao.id).padStart(1, '');
     document.getElementById('nome-tecnico').value = solicitacao.usuario ? solicitacao.usuario.nome : 'N/A';
     document.getElementById('placa').value = solicitacao.veiculo ? solicitacao.veiculo.placa : 'N/A';
     document.getElementById('status').value = solicitacao.status;
@@ -125,11 +120,15 @@ async function carregarDetalhesSolicitacao() {
 // Função para salvar aprovação ou rejeição
 async function salvarAprovacao(novoStatus) {
     const form = document.getElementById('form-aprovacao');
-    const id = parseInt(form.dataset.solicitacaoId, 10);
+    const idParam = form.dataset.solicitacaoId;
 
-    if (!id) {
+    if (!idParam) {
         alert('Nenhuma solicitação selecionada.');
         return;
+    }
+    let id = parseInt(idParam, 10);
+    if (isNaN(id)) {
+        id = idParam;
     }
 
     const rotaValue = document.getElementById('rota').value;
@@ -173,19 +172,23 @@ async function salvarAprovacao(novoStatus) {
 // Função para gerar PDF
 async function gerarPDF() {
     const form = document.getElementById('form-aprovacao');
-    const id = parseInt(form.dataset.solicitacaoId, 10);
+    const idParam = form.dataset.solicitacaoId;
 
-    if (!id) {
+    if (!idParam) {
         alert('Nenhuma solicitação selecionada para gerar PDF.');
         return;
+    }
+    let id = parseInt(idParam, 10);
+    if (isNaN(id)) {
+        id = idParam;
     }
 
     const { data: solicitacao, error: fetchError } = await supabase
         .from('solicitacoes')
         .select(`
             id, created_at, status, itens, rota,
-            usuario:usuario_id ( nome ),
-            veiculo:veiculo_id ( placa, supervisor:supervisor_id(nome) )
+            usuario:usuario_id(nome),
+            veiculo:veiculo_id(placa, supervisor:supervisor_id(nome))
         `)
         .eq('id', id)
         .single();
