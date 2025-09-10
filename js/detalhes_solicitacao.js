@@ -9,11 +9,11 @@ document.addEventListener('DOMContentLoaded', function() {
     carregarDetalhesSolicitacao();
 
     document.getElementById('btn-aprovar').addEventListener('click', function() {
-        salvarAprovacao('Aprovado');
+        salvarAprovacao('aprovado');
     });
 
     document.getElementById('btn-rejeitar').addEventListener('click', function() {
-        salvarAprovacao('Rejeitado');
+        salvarAprovacao('rejeitado');
     });
 
     document.getElementById('btn-imprimir-pdf').addEventListener('click', function() {
@@ -61,7 +61,7 @@ async function carregarDetalhesSolicitacao() {
     document.getElementById('codigo-solicitacao').value = String(solicitacao.id).padStart(1, '');
     document.getElementById('nome-tecnico').value = solicitacao.usuario ? solicitacao.usuario.nome : 'N/A';
     document.getElementById('placa').value = solicitacao.veiculo ? solicitacao.veiculo.placa : 'N/A';
-    document.getElementById('status').value = solicitacao.status;
+    document.getElementById('status').value = solicitacao.status.toLowerCase();
 
     // Preencher data e hora (usando data atual se não existir)
     const dataHoraObj = new Date(solicitacao.created_at);
@@ -114,10 +114,12 @@ async function carregarDetalhesSolicitacao() {
         const rotaInput = document.getElementById('rota');
         rotaInput.readOnly = true;
         rotaInput.classList.add('readonly-field');
+        // Desabilitar select status
+        const statusSelect = document.getElementById('status');
+        statusSelect.disabled = true;
     }
 }
 
-// Função para salvar aprovação ou rejeição
 async function salvarAprovacao(novoStatus) {
     const form = document.getElementById('form-aprovacao');
     const idParam = form.dataset.solicitacaoId;
@@ -134,7 +136,7 @@ async function salvarAprovacao(novoStatus) {
     const rotaValue = document.getElementById('rota').value;
 
     // Validar se a rota foi preenchida ao aprovar
-    if (novoStatus === 'Aprovado' && !rotaValue.trim()) {
+    if (novoStatus === 'aprovado' && !rotaValue.trim()) {
         alert('Por favor, preencha a ROTA de entrega das peças antes de aprovar.');
         document.getElementById('rota').focus();
         return;
@@ -143,7 +145,7 @@ async function salvarAprovacao(novoStatus) {
     const dadosAtualizacao = {
         status: novoStatus,
         rota: rotaValue,
-        data_aprovacao: new Date().toISOString()
+        data_aprovacao: novoStatus === 'aprovado' ? new Date().toISOString() : null
     };
 
     const { error } = await supabase
@@ -153,12 +155,12 @@ async function salvarAprovacao(novoStatus) {
 
     if (error) {
         console.error('Erro ao atualizar solicitação:', error);
-        alert(`Erro ao ${novoStatus.toLowerCase()} a solicitação.`);
+        alert(`Erro ao atualizar a solicitação.`);
         return;
     }
 
     // Mostrar mensagem de sucesso
-    alert(`Solicitação ${novoStatus.toLowerCase()} com sucesso!`);
+    alert(`Solicitação atualizada com sucesso!`);
 
     // Tenta recarregar a página que abriu esta (aprovacao.html)
     if (window.opener) {
