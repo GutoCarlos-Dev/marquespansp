@@ -285,8 +285,31 @@ form input {
     padding: 0.75rem;
     border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 1rem;
+    font-size: 0.8rem; /* Fonte um pouco menor para melhor ajuste */
     box-sizing: border-box;
+    padding-right: 45px; /* Espaço para o botão da seta */
+}
+
+.btn-listar-tudo {
+    position: absolute;
+    right: 1px;
+    top: 1px;
+    bottom: 1px;
+    width: 40px;
+    border: none;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    border-radius: 0 4px 4px 0;
+    font-size: 1.1rem;
+    color: #555;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-listar-tudo:hover {
+    background-color: #e0e0e0;
 }
 
 .search-results {
@@ -300,7 +323,7 @@ form input {
     border-radius: 0 0 6px 6px;
     max-height: 150px;
     overflow-y: auto;
-    z-index: 1001; /* Acima do conteúdo do modal */
+    z-index: 1002; /* Acima do conteúdo do modal e outros elementos */
     display: none; /* Começa escondido */
 }
 
@@ -314,6 +337,44 @@ form input {
     background-color: #e6f2e6;
 }
 /* --- Fim dos estilos para busca --- */
+
+/* --- Estilos para o layout em colunas do modal --- */
+.modal-inputs-container {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start; /* Alinha pelo topo */
+    margin-bottom: 1.5rem;
+}
+
+.modal-input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-input-group.peca-group {
+    flex-grow: 1; /* Ocupa o espaço restante */
+}
+
+.modal-input-group.qtd-group {
+    width: 100px; /* Largura fixa para quantidade */
+}
+
+.modal-input-group label {
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.modal-input-group input[type="number"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+/* --- Fim dos estilos de layout --- */
 
 .modal-actions {
     display: flex;

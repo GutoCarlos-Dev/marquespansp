@@ -102,29 +102,56 @@ function abrirModalAdicionar() {
     titulo.textContent = 'Adicionar Peça';
     modalContent.appendChild(titulo);
 
-    // --- NOVO CAMPO DE BUSCA ---
+    // --- Container para os inputs lado a lado ---
+    const inputsContainer = document.createElement('div');
+    inputsContainer.className = 'modal-inputs-container';
+
+    // --- Grupo da Peça (Esquerda) ---
+    const pecaGroup = document.createElement('div');
+    pecaGroup.className = 'modal-input-group peca-group';
+    
+    const pecaLabel = document.createElement('label');
+    pecaLabel.textContent = 'Peça';
+    pecaGroup.appendChild(pecaLabel);
+
     const searchContainer = document.createElement('div');
     searchContainer.className = 'search-container';
 
     const inputBusca = document.createElement('input');
     inputBusca.type = 'text';
-    inputBusca.placeholder = 'Digite o código ou nome da peça...';
+    inputBusca.placeholder = 'Digite o código ou nome...';
     searchContainer.appendChild(inputBusca);
+
+    const btnListarTudo = document.createElement('button');
+    btnListarTudo.type = 'button';
+    btnListarTudo.className = 'btn-listar-tudo';
+    btnListarTudo.innerHTML = '&#9662;';
+    searchContainer.appendChild(btnListarTudo);
 
     const searchResults = document.createElement('div');
     searchResults.className = 'search-results';
     searchContainer.appendChild(searchResults);
     
-    modalContent.appendChild(searchContainer);
-    // --- FIM DO CAMPO DE BUSCA ---
+    pecaGroup.appendChild(searchContainer);
+    inputsContainer.appendChild(pecaGroup);
 
-    // Input quantidade
+    // --- Grupo da Quantidade (Direita) ---
+    const qtdGroup = document.createElement('div');
+    qtdGroup.className = 'modal-input-group qtd-group';
+
+    const qtdLabel = document.createElement('label');
+    qtdLabel.textContent = 'Quantidade';
+    qtdGroup.appendChild(qtdLabel);
+
     const inputQtd = document.createElement('input');
     inputQtd.type = 'number';
     inputQtd.min = '1';
     inputQtd.value = '1';
-    inputQtd.placeholder = 'Quantidade';
-    modalContent.appendChild(inputQtd);
+    inputQtd.placeholder = 'Qtd';
+    qtdGroup.appendChild(inputQtd);
+
+    inputsContainer.appendChild(qtdGroup);
+    modalContent.appendChild(inputsContainer);
 
     // Botões
     const actionsDiv = document.createElement('div');
@@ -189,6 +216,44 @@ function abrirModalAdicionar() {
         }
     });
 
+    // Evento para o botão de listar tudo
+    btnListarTudo.addEventListener('click', async () => {
+        // Se os resultados já estiverem visíveis, esconde
+        if (searchResults.style.display === 'block') {
+            searchResults.style.display = 'none';
+            return;
+        }
+
+        searchResults.innerHTML = 'Carregando...';
+        searchResults.style.display = 'block';
+        pecaSelecionada = null;
+
+        const { data: todasAsPecas, error } = await supabase
+            .from('pecas')
+            .select('id, codigo, nome')
+            .order('nome');
+
+        if (error) {
+            console.error('Erro ao buscar todas as peças:', error);
+            searchResults.innerHTML = 'Erro ao carregar.';
+            return;
+        }
+
+        searchResults.innerHTML = ''; // Limpa o "Carregando..."
+
+        todasAsPecas.forEach(p => {
+            const itemResultado = document.createElement('div');
+            itemResultado.className = 'search-result-item';
+            itemResultado.textContent = `${p.codigo} - ${p.nome}`;
+            itemResultado.onclick = () => {
+                inputBusca.value = p.nome;
+                pecaSelecionada = p;
+                searchResults.style.display = 'none';
+            };
+            searchResults.appendChild(itemResultado);
+        });
+    });
+
     // Eventos dos botões
     btnAdicionar.addEventListener('click', () => {
         const quantidade = parseInt(inputQtd.value);
@@ -235,7 +300,8 @@ function abrirModalAdicionar() {
 // Função para carregar os veículos no dropdown
 async function carregarVeiculos(usuario) { // Passa o objeto do usuário logado
     const selectPlaca = document.getElementById('placa');
-    if (!selectPlaca || !supabase) return;
+    const supervisorInput = document.getElementById('supervisor');
+    if (!selectPlaca || !supervisorInput || !supabase) return;
 
     let query = supabase
         .from('veiculos')
@@ -267,24 +333,37 @@ async function carregarVeiculos(usuario) { // Passa o objeto do usuário logado
         selectPlaca.appendChild(option);
     });
 
-    if (todosVeiculos.length === 0 && (usuario.nivel === 'tecnico' || usuario.nivel === 'supervisor')) {
-        selectPlaca.innerHTML = '<option value="">Nenhum veículo associado a você</option>';
-        selectPlaca.disabled = true;
-    } else {
-        selectPlaca.disabled = false;
-    }
+    // Lógica de pré-seleção para técnico e supervisor
+    if (usuario.nivel === 'tecnico' || usuario.nivel === 'supervisor') {
+        if (todosVeiculos.length > 0) {
+            // Se o usuário tem veículos associados, seleciona o primeiro da lista
+            const veiculoPadrao = todosVeiculos[0];
+            selectPlaca.value = veiculoPadrao.id;
+            supervisorInput.value = veiculoPadrao.supervisor?.nome || 'Sem supervisor';
 
-    // Adiciona evento para atualizar o supervisor quando a placa muda
-    selectPlaca.addEventListener('change', (e) => {
-        const veiculoId = e.target.value;
-        const supervisorInput = document.getElementById('supervisor');
-        if (veiculoId) {
-            const veiculoSelecionado = todosVeiculos.find(v => v.id == veiculoId);
-            supervisorInput.value = veiculoSelecionado?.supervisor?.nome || 'Sem supervisor';
+            // Desabilita o campo para que não possa ser alterado
+            selectPlaca.disabled = true;
+            selectPlaca.classList.add('readonly-field'); // Adiciona classe para estilo visual
         } else {
+            // Se não houver veículos associados, informa o usuário
+            selectPlaca.innerHTML = '<option value="">Nenhum veículo associado</option>';
+            selectPlaca.disabled = true;
             supervisorInput.value = '';
         }
-    });
+    } else {
+        // Lógica para admin/matriz: permitir seleção
+        selectPlaca.disabled = false;
+        selectPlaca.classList.remove('readonly-field');
+        selectPlaca.addEventListener('change', (e) => {
+            const veiculoId = e.target.value;
+            if (veiculoId) {
+                const veiculoSelecionado = todosVeiculos.find(v => v.id == veiculoId);
+                supervisorInput.value = veiculoSelecionado?.supervisor?.nome || 'Sem supervisor';
+            } else {
+                supervisorInput.value = '';
+            }
+        });
+    }
 }
 
 // Função para gerar o próximo código de solicitação
