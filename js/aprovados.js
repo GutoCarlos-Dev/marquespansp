@@ -192,66 +192,159 @@ async function excluirSolicitacao(id) {
     }
 }
 
+// Função para gerar um único PDF com múltiplas solicitações
+async function gerarPdfEmMassa(solicitacoes) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    let isFirstPage = true;
+
+    // Placeholder do logo (substitua pelo seu logo em Base64)
+    const logoBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAABkCAYAAADDhn8LAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABSSURBVHhe7cExAQAAAMKg9U9tCF8gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwZ08AAQAB2ds4AAAAAElFTkSuQmCC';
+    const placeholderLogo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAABkCAYAAADDhn8LAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABSSURBVHhe7cExAQAAAMKg9U9tCF8gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwZ08AAQAB2ds4AAAAAElFTkSuQmCC';
+
+    for (const solicitacao of solicitacoes) {
+        if (!isFirstPage) {
+            doc.addPage();
+        }
+        isFirstPage = false;
+
+        // --- CABEÇALHO ---
+        if (logoBase64 && logoBase64 !== placeholderLogo) {
+            try {
+                doc.addImage(logoBase64, 'PNG', 150, 8, 45, 15);
+            } catch (e) {
+                console.warn('Não foi possível adicionar o logo ao PDF.', e);
+            }
+        }
+
+        doc.setFontSize(20);
+        doc.setTextColor('#4CAF50');
+        doc.setFont('helvetica', 'bold');
+        doc.text('Resumo de Envio de Peças', 14, 20);
+
+        doc.setDrawColor(76, 175, 80);
+        doc.setLineWidth(0.5);
+        doc.line(14, 25, 196, 25);
+
+        // --- INFORMAÇÕES GERAIS ---
+        doc.setFontSize(12);
+        doc.setTextColor(40);
+        let startY = 40;
+
+        const drawField = (label, value, y, isSecondColumn = false) => {
+            const labelX = isSecondColumn ? 143 : 58;
+            const valueX = isSecondColumn ? 145 : 60;
+            doc.setFont('helvetica', 'bold');
+            doc.text(label, labelX, y, { align: 'right' });
+            doc.setFont('helvetica', 'normal');
+            doc.text(String(value), valueX, y);
+        };
+
+        drawField('Código:', String(solicitacao.id).padStart(5, '0'), startY);
+        drawField('Data Solicitação:', new Date(solicitacao.created_at).toLocaleString('pt-BR'), startY, true);
+        startY += 8;
+        drawField('Técnico:', solicitacao.usuario?.nome || 'N/A', startY);
+        startY += 8;
+        drawField('Placa:', solicitacao.veiculo?.placa || 'N/A', startY);
+        drawField('Supervisor:', solicitacao.veiculo?.supervisor?.nome || 'N/A', startY, true);
+        startY += 8;
+        drawField('Rota de Entrega:', solicitacao.rota || 'Não definida', startY);
+
+        // --- TABELA DE ITENS ---
+        const totalQuantidadePDF = solicitacao.itens.reduce((total, item) => total + item.quantidade, 0);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Total de Peças: ${totalQuantidadePDF}`, 196, startY + 10, { align: 'right' });
+
+        const tableColumn = ["Código", "Nome da Peça", "Quantidade"];
+        const tableRows = solicitacao.itens.map(item => [item.codigo, item.nome, item.quantidade]);
+
+        doc.autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: startY + 15,
+            theme: 'grid',
+            headStyles: { fillColor: [76, 175, 80] },
+            styles: { font: 'helvetica', fontSize: 10 }
+        });
+    }
+
+    // --- RODAPÉ ---
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Documento gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 287);
+        doc.text(`Página ${i} de ${pageCount}`, 196, 287, { align: 'right' });
+    }
+
+    // Salvar o PDF
+    doc.save(`envio_em_massa_${new Date().toISOString().split('T')[0]}.pdf`);
+}
+
 // Função para enviar solicitações em massa
 async function enviarSolicitacoesEmMassa() {
-    // 1. Pega todas as solicitações exibidas na tabela que têm status 'aprovado'
     const tbody = document.querySelector('#tabela-aprovados tbody');
     const linhas = Array.from(tbody.querySelectorAll('tr'));
-    const solicitacoesAprovadas = [];
+    const idsAprovados = [];
 
     linhas.forEach(linha => {
-        const statusCell = linha.querySelector('td:nth-child(6)'); // A 6ª célula contém o status
+        const statusCell = linha.querySelector('td:nth-child(6)');
         if (statusCell && statusCell.textContent.toLowerCase() === 'aprovado') {
             const codigoSolicitacao = linha.querySelector('td:first-child').textContent;
-            // Remove preenchimento com zeros a esquerda
             const idSolicitacao = parseInt(codigoSolicitacao, 10);
             if (!isNaN(idSolicitacao)) {
-                solicitacoesAprovadas.push(idSolicitacao);
+                idsAprovados.push(idSolicitacao);
             }
         }
     });
 
-    if (solicitacoesAprovadas.length === 0) {
+    if (idsAprovados.length === 0) {
         alert('Nenhuma solicitação com status "Aprovado" foi encontrada na tabela.');
         return;
     }
 
-    if (!confirm(`Deseja marcar ${solicitacoesAprovadas.length} solicitações como "Enviado" e gerar os PDFs?`)) {
+    if (!confirm(`Deseja marcar ${idsAprovados.length} solicitações como "Enviado" e gerar um PDF único?`)) {
         return;
     }
 
-    // 2. Para cada solicitação, atualizar o status para 'enviado' e gerar o PDF
-    for (const id of solicitacoesAprovadas) {
-        try {
-            // a) Atualiza o status no banco de dados
-            const { error } = await supabase
-                .from('solicitacoes')
-                .update({
-                    status: 'enviado',
-                    data_envio: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', id);
+    // 2. Buscar detalhes completos das solicitações para o PDF
+    const { data: solicitacoesDetalhadas, error: fetchError } = await supabase
+        .from('solicitacoes')
+        .select(`
+            id, created_at, status, itens, rota,
+            usuario:usuario_id(nome),
+            veiculo:veiculo_id(placa, supervisor:supervisor_id(nome))
+        `)
+        .in('id', idsAprovados);
 
-            if (error) {
-                console.error(`Erro ao atualizar solicitação ${id}:`, error);
-                alert(`Erro ao atualizar solicitação ${id}. Veja o console para detalhes.`);
-                continue; // Vai para a próxima solicitação em caso de falha
-            }
-
-            // b) Simula clique no botão de "Baixar PDF" (substitua pela lógica real de geração do PDF se necessário)
-            // NOTE: A geração do PDF aqui é síncrona, o que pode ser problemático para grandes volumes.
-            //       Idealmente, mover isso para um background worker ou fila.
-            window.open(`envio_solicitacao.html?id=${id}`, '_blank');
-
-        } catch (generalError) {
-            console.error(`Erro geral ao processar solicitação ${id}:`, generalError);
-            alert(`Erro geral ao processar solicitação ${id}. Veja o console para detalhes.`);
-        }
+    if (fetchError || !solicitacoesDetalhadas) {
+        console.error('Erro ao buscar detalhes para o PDF:', fetchError);
+        alert('Não foi possível carregar os dados para gerar o PDF.');
+        return;
     }
 
-    // 3. Recarrega a tabela para refletir as mudanças
-    alert('Processamento em massa concluído. Verifique os logs para detalhes de erros.');
+    // 3. Gerar o PDF consolidado
+    await gerarPdfEmMassa(solicitacoesDetalhadas);
+
+    // 4. Atualizar o status de todas as solicitações no banco de dados
+    const { error: updateError } = await supabase
+        .from('solicitacoes')
+        .update({
+            status: 'enviado',
+            data_envio: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        })
+        .in('id', idsAprovados);
+
+    if (updateError) {
+        console.error('Erro ao atualizar solicitações em massa:', updateError);
+        alert('Erro ao atualizar o status das solicitações. O PDF foi gerado, mas o status não foi salvo.');
+        return;
+    }
+
+    // 5. Recarregar a tabela para refletir as mudanças
+    alert('Processamento em massa concluído! O PDF foi gerado e as solicitações foram atualizadas.');
     buscarSolicitacoes();
 }
 
