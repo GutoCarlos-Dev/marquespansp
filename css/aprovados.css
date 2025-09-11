@@ -299,27 +299,179 @@ h2 {
     background-color: #388E3C;
 }
 
-/* Responsividade */
+/* ===== MOBILE RESPONSIVE STYLES ===== */
+
+/* Tablets and smaller screens */
 @media (max-width: 768px) {
+    header nav {
+        padding: 1rem;
+    }
+
+    header nav h1 {
+        font-size: 1.5rem;
+    }
+
     main {
+        padding: 1rem;
+        margin: 0;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Formulário de filtros responsivo */
+    #form-filtros {
         padding: 1rem;
     }
 
     .filtros-container {
         grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .filtro-item {
+        margin-bottom: 0.5rem;
+    }
+
+    .filtro-item label {
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .filtro-item input,
+    .filtro-item select {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+        min-height: 44px; /* Touch-friendly */
+    }
+
+    .botoes-filtro {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+
+    .botoes-filtro button {
+        width: 100%;
+        min-height: 44px;
+        font-size: 0.9rem;
+        padding: 0.75rem;
+    }
+
+    /* Tabela responsiva */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+        margin-top: 1rem;
     }
 
     #tabela-aprovados {
-        font-size: 0.9rem;
+        min-width: 800px; /* Largura mínima para scroll horizontal */
+        font-size: 0.8rem;
     }
 
     #tabela-aprovados th,
     #tabela-aprovados td {
-        padding: 0.75rem 0.5rem;
+        padding: 0.5rem 0.3rem;
+        white-space: nowrap;
+    }
+
+    #tabela-aprovados button {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+        min-height: 36px;
+    }
+
+    /* Modal responsivo */
+    .modal-content {
+        width: 95vw;
+        max-width: none;
+        margin: 1rem;
+        padding: 1rem;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-content input {
+        min-height: 44px;
+        font-size: 1rem;
+    }
+
+    .modal-content button {
+        min-height: 44px;
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+    }
+}
+
+/* Mobile phones */
+@media (max-width: 480px) {
+    header nav {
+        padding: 0.75rem;
+    }
+
+    header nav h1 {
+        font-size: 1.3rem;
+    }
+
+    main {
+        padding: 0.5rem;
+    }
+
+    #form-filtros {
+        padding: 0.75rem;
+    }
+
+    .filtros-container {
+        gap: 0.75rem;
+    }
+
+    .filtro-item input,
+    .filtro-item select {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    #tabela-aprovados {
+        min-width: 700px;
+        font-size: 0.75rem;
+    }
+
+    #tabela-aprovados th,
+    #tabela-aprovados td {
+        padding: 0.4rem 0.2rem;
+    }
+
+    .botoes-filtro button {
+        padding: 0.6rem;
+        font-size: 0.85rem;
     }
 
     .modal-content {
-        padding: 1.5rem;
+        margin: 0.5rem;
+        padding: 0.75rem;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    .filtro-item input,
+    .filtro-item select,
+    #tabela-aprovados button,
+    .modal-content input,
+    .modal-content button {
+        min-height: 44px;
+        touch-action: manipulation;
+    }
+
+    .filtro-item input:focus,
+    .filtro-item select:focus,
+    .modal-content input:focus {
+        outline: 2px solid #4CAF50;
+        outline-offset: 2px;
     }
 }
 
