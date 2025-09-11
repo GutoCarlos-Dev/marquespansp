@@ -49,6 +49,12 @@ legend {
     white-space: nowrap;
 }
 
+/* Make "Rota de Entrega:" label red and bold */
+.info-grid label[for="rota"] {
+    color: #f44336 !important;
+    font-weight: bold !important;
+}
+
 .info-grid input {
     width: 100%;
     padding: 0.75rem;
