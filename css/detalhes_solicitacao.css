@@ -161,20 +161,25 @@ legend {
         margin-bottom: 1rem;
     }
 
-    /* Make table responsive */
+    /* Make table responsive and centered */
     #itens-grid {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        display: flex;
+        justify-content: center;
+        width: 100%;
     }
 
     #itens-grid table {
-        min-width: 600px; /* Ensure table doesn't get too compressed */
+        min-width: 500px; /* Reduced min-width for better mobile fit */
+        max-width: 100%;
+        font-size: 0.75rem; /* Smaller font size */
     }
 
     #itens-grid th,
     #itens-grid td {
-        padding: 0.5rem;
-        font-size: 0.85rem;
+        padding: 0.4rem 0.3rem; /* Reduced padding */
+        font-size: 0.75rem; /* Smaller font size */
         white-space: nowrap;
     }
 
@@ -223,13 +228,14 @@ legend {
     }
 
     #itens-grid table {
-        min-width: 500px;
+        min-width: 400px; /* Even smaller for phones */
+        font-size: 0.7rem; /* Even smaller font */
     }
 
     #itens-grid th,
     #itens-grid td {
-        padding: 0.4rem;
-        font-size: 0.8rem;
+        padding: 0.3rem 0.2rem; /* Even smaller padding */
+        font-size: 0.7rem; /* Even smaller font */
     }
 
     .form-actions button {
@@ -257,6 +263,7 @@ legend {
 
     #itens-grid th,
     #itens-grid td {
-        padding: 0.75rem 0.5rem;
+        padding: 0.4rem 0.3rem; /* Consistent with mobile styles */
+        font-size: 0.75rem; /* Smaller font for touch devices */
     }
 }
