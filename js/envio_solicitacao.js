@@ -299,6 +299,16 @@ async function gerarPDF() {
     doc.setFont('helvetica', 'bold');
     doc.text(`Total de Peças: ${totalQuantidadePDF}`, 196, startY + 10, { align: 'right' });
 
+    // --- ASSINATURAS (MOVENDO PARA ANTES DA TABELA) ---
+    const signatureY = startY + 20; // Ajusta a posição Y para depois do total
+    doc.setFontSize(10);
+    doc.setTextColor(40);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Motorista: _______________________________', 14, signatureY);
+    doc.text('Recebido Por: _____________________________', 105, signatureY);
+
+    startY = signatureY; // Atualiza o startY para a tabela começar depois das assinaturas
+
     const tableColumn = ["Código", "Nome da Peça", "Quantidade"];
     const tableRows = [];
     solicitacao.itens.forEach(item => {
@@ -308,25 +318,17 @@ async function gerarPDF() {
     doc.autoTable({
         head: [tableColumn],
         body: tableRows,
-        startY: startY + 15,
+        startY: startY + 8, // Posição inicial da tabela ajustada
         theme: 'grid',
         headStyles: { fillColor: [76, 175, 80] },
-        styles: { font: 'helvetica', fontSize: 10 }
+        styles: { font: 'helvetica', fontSize: 8, cellPadding: 2 }, // Fonte e padding reduzidos para caber mais itens
+        margin: { bottom: 20 } // Margem inferior para o rodapé
     });
 
     // --- RODAPÉ ---
     const pageCount = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
-
-        // --- ASSINATURAS ---
-        const signatureY = 275;
-        doc.setFontSize(10);
-        doc.setTextColor(40);
-        doc.setFont('helvetica', 'normal');
-        doc.text('Motorista: _______________________________', 14, signatureY);
-        doc.text('Recebido Por: _____________________________', 105, signatureY);
-
         // --- INFORMAÇÕES DO DOCUMENTO ---
         doc.setFontSize(8);
         doc.setTextColor(150);
