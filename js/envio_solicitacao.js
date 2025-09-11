@@ -265,20 +265,43 @@ async function gerarPDF() {
 
     // Coluna da Esquerda (Dados da Solicitação)
     const dataHora = new Date(solicitacao.created_at).toLocaleString('pt-BR');
-    drawLabeledText('Código da Solicitação:  ', String(solicitacao.id).padStart(5, '0'), leftMargin, startY);
+    drawLabeledText('Código da Solicitação:    ', String(solicitacao.id).padStart(5, '0'), leftMargin, startY);
     startY += lineHeight;
-    drawLabeledText('Data da Solicitação:  ', dataHora, leftMargin, startY);
+    drawLabeledText('Data da Solicitação:   ', dataHora, leftMargin, startY);
     startY += lineHeight;
     drawLabeledText('Técnico:  ', solicitacao.usuario?.nome || 'N/A', leftMargin, startY);
     startY += lineHeight;
-    drawLabeledText('Placa do Veículo:  ', `${solicitacao.veiculo?.placa || 'N/A'}    Supervisor: ${solicitacao.veiculo?.supervisor?.nome || 'N/A'}`, leftMargin, startY);
+    drawLabeledText('Placa do Veículo:   ', `${solicitacao.veiculo?.placa || 'N/A'}    Supervisor: ${solicitacao.veiculo?.supervisor?.nome || 'N/A'}`, leftMargin, startY);
     startY += lineHeight;
     drawLabeledText('Rota de Entrega:  ', solicitacao.rota || 'Não definida', leftMargin, startY);
     startY += lineHeight;
     const dataEnvio = solicitacao.data_envio ? new Date(solicitacao.data_envio).toLocaleString('pt-BR') : 'Aguardando envio';
     const enviadoPor = solicitacao.enviado_por?.nome || (solicitacao.status === 'enviado' ? 'Não registrado' : '');
-    drawLabeledText('Data de Envio:  ', `${dataEnvio}    Enviado por: ${enviadoPor}`, leftMargin, startY);
+    
+    // Lógica para negritar múltiplos rótulos na mesma linha
+    let currentX = leftMargin;
+    // 1. "Data de Envio:" (Negrito)
+    doc.setFont('helvetica', 'bold');
+    const labelData = 'Data de Envio:  ';
+    doc.text(labelData, currentX, startY);
+    currentX += doc.getTextWidth(labelData);
 
+    // 2. Valor da data (Normal)
+    doc.setFont('helvetica', 'normal');
+    const valorData = `${dataEnvio}    `; // Adiciona espaço para separar
+    doc.text(valorData, currentX, startY);
+    currentX += doc.getTextWidth(valorData);
+
+    // 3. "Enviado por:" (Negrito)
+    doc.setFont('helvetica', 'bold');
+    const labelEnviado = 'Enviado por: ';
+    doc.text(labelEnviado, currentX, startY);
+    currentX += doc.getTextWidth(labelEnviado);
+
+    // 4. Valor do "Enviado por" (Normal)
+    doc.setFont('helvetica', 'normal');
+    doc.text(enviadoPor, currentX, startY);
+    
     // Coluna da Direita (Assinaturas)
     let signatureY = 40;
     doc.text('Motorista: _____________________________', rightMargin, signatureY);
