@@ -92,14 +92,25 @@ legend {
 
 form label {
     text-align: right; /* Alinha labels à direita para um visual limpo */
+    white-space: nowrap;
+    font-weight: 600;
+    color: #333;
 }
 
-form input {
+form input, form select {
     width: 100%; /* Inputs ocupam todo o espaço da célula do grid */
-    padding: 0.5rem;
+    padding: 0.75rem;
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+form input:focus, form select:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
 .readonly-field {
@@ -409,6 +420,37 @@ form input {
         padding: 1rem;
     }
 
+    /* Form layout mobile */
+    #form-solicitacao > fieldset:first-of-type {
+        display: block; /* Remove grid no mobile */
+    }
+
+    #form-solicitacao > fieldset:first-of-type > label {
+        display: block;
+        text-align: left;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    #form-solicitacao > fieldset:first-of-type > input,
+    #form-solicitacao > fieldset:first-of-type > select {
+        display: block;
+        width: 100%;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        font-size: 1rem;
+    }
+
+    fieldset {
+        padding: 1rem;
+    }
+
+    legend {
+        font-size: 1.1rem;
+        padding: 0 0.25rem;
+    }
+
     #itens-grid {
         padding: 1rem;
     }
@@ -421,13 +463,118 @@ form input {
         padding: 0.75rem 0.5rem;
     }
 
+    /* Mobile table improvements */
+    #itens-grid table thead {
+        display: none; /* Hide table headers on mobile */
+    }
+
+    #itens-grid table tbody tr {
+        display: block;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: white;
+    }
+
+    #itens-grid table tbody td {
+        display: block;
+        border: none;
+        padding: 0.5rem 0;
+        text-align: left;
+    }
+
+    #itens-grid table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #666;
+        display: inline-block;
+        min-width: 100px;
+    }
+
+    #itens-grid table tbody td .btn-remover {
+        margin-top: 0.5rem;
+        width: 100%;
+        padding: 0.75rem;
+    }
+
     button[type="button"], button[type="submit"] {
         width: 100%;
         margin-bottom: 0.5rem;
+        min-height: 48px;
+        font-size: 1rem;
     }
 
-    #modal-adicionar > div {
+    .form-actions {
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .form-actions button {
+        margin: 0.5rem 0;
+        width: 100%;
+    }
+
+    /* Modal mobile improvements */
+    .modal-content {
         width: 95vw;
+        max-width: none;
+        margin: 1rem;
         padding: 1.5rem;
+        max-height: 90vh;
+    }
+
+    .modal-inputs-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .modal-input-group.qtd-group {
+        width: 100%;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-actions button {
+        width: 100%;
+        min-height: 48px;
+    }
+
+    /* Search improvements */
+    .search-container input {
+        font-size: 1rem;
+        padding-right: 50px;
+    }
+
+    .btn-listar-tudo {
+        width: 44px;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+    main {
+        margin: 0.5rem;
+        padding: 1rem;
+    }
+
+    fieldset {
+        padding: 0.75rem;
+    }
+
+    .modal-content {
+        margin: 0.5rem;
+        padding: 1rem;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+    }
+
+    legend {
+        font-size: 1rem;
     }
 }

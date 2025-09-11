@@ -196,3 +196,168 @@ main {
         grid-template-columns: 1fr;
     }
 }
+
+/* Mobile responsiveness improvements */
+@media (max-width: 768px) {
+    main {
+        padding: 1rem;
+        margin: 1rem;
+    }
+
+    .dashboard-header {
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .dashboard-header h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .dashboard-header p {
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    /* Summary cards mobile layout */
+    .summary-cards {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1rem;
+    }
+
+    .card {
+        padding: 1rem;
+        text-align: center;
+        min-height: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .card h4 {
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .card p {
+        font-size: 1.8rem;
+        margin: 0;
+        font-weight: 700;
+    }
+
+    /* Charts mobile layout */
+    .charts-container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .chart-card {
+        padding: 1rem;
+    }
+
+    .chart-card h3 {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+
+    .chart-wrapper {
+        height: 250px; /* Smaller height for mobile */
+        position: relative;
+    }
+
+    /* Recent activity table mobile */
+    .recent-activity-grid {
+        padding: 1rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .recent-activity-grid h3 {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    #tabela-recente {
+        font-size: 0.85rem;
+    }
+
+    #tabela-recente th,
+    #tabela-recente td {
+        padding: 0.5rem 0.75rem;
+        white-space: nowrap;
+    }
+
+    #tabela-recente th {
+        font-size: 0.75rem;
+    }
+
+    /* Mobile table improvements */
+    @media (max-width: 600px) {
+        #tabela-recente thead {
+            display: none;
+        }
+
+        #tabela-recente tbody tr {
+            display: block;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: white;
+        }
+
+        #tabela-recente tbody td {
+            display: block;
+            border: none;
+            padding: 0.5rem 0;
+            text-align: left;
+        }
+
+        #tabela-recente tbody td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: #4CAF50;
+            display: inline-block;
+            min-width: 80px;
+            font-size: 0.8rem;
+        }
+
+        #tabela-recente tbody td:not(:last-child) {
+            border-bottom: 1px solid #eee;
+        }
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+    main {
+        margin: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    .summary-cards {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    .card {
+        padding: 0.75rem;
+        min-height: 80px;
+    }
+
+    .card h4 {
+        font-size: 0.75rem;
+    }
+
+    .card p {
+        font-size: 1.5rem;
+    }
+
+    .chart-wrapper {
+        height: 200px;
+    }
+
+    .recent-activity-grid {
+        padding: 0.75rem;
+    }
+}
