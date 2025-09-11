@@ -23,12 +23,21 @@ async function carregarDetalhesSolicitacao() {
         return;
     }
 
+    // Carregar usuário logado
+    const user = supabase.auth.user();
+    if (user) {
+        document.getElementById('usuario-logado').value = user.email || user.user_metadata?.name || 'Usuário não identificado';
+    } else {
+        document.getElementById('usuario-logado').value = 'Não logado';
+    }
+
     const { data: solicitacao, error } = await supabase
         .from('solicitacoes')
         .select(`
-            id, created_at, status, itens, rota, data_envio,
+            id, created_at, status, itens, rota, data_envio, enviado_por_id,
             usuario:usuario_id ( nome ),
-            veiculo:veiculo_id ( placa, supervisor:supervisor_id(nome) )
+            veiculo:veiculo_id ( placa, supervisor:supervisor_id(nome) ),
+            enviado_por:enviado_por_id ( nome )
         `)
         .eq('id', id)
         .single();
