@@ -46,14 +46,23 @@ legend {
 .info-grid label {
     text-align: right;
     font-weight: bold;
+    white-space: nowrap;
 }
 
 .info-grid input {
     width: 100%;
-    padding: 0.5rem;
+    padding: 0.75rem;
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.info-grid input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
 .readonly-field {
@@ -105,3 +114,149 @@ legend {
 #btn-aprovar { background-color: #4CAF50; color: white; }
 #btn-rejeitar { background-color: #f44336; color: white; }
 #btn-imprimir-pdf { background-color: #607D8B; color: white; }
+
+/* ===== MOBILE RESPONSIVE STYLES ===== */
+
+/* Tablets and smaller screens */
+@media (max-width: 768px) {
+    header nav {
+        padding: 1rem;
+    }
+
+    header nav h1 {
+        font-size: 1.5rem;
+    }
+
+    main {
+        margin: 1rem;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    fieldset {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    legend {
+        font-size: 1.1rem;
+    }
+
+    /* Convert grid to stacked layout on mobile */
+    .info-grid {
+        display: block;
+    }
+
+    .info-grid label {
+        display: block;
+        text-align: left;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .info-grid input {
+        width: 100%;
+        padding: 0.6rem;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Make table responsive */
+    #itens-grid {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #itens-grid table {
+        min-width: 600px; /* Ensure table doesn't get too compressed */
+    }
+
+    #itens-grid th,
+    #itens-grid td {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    /* Stack buttons vertically on mobile */
+    .form-actions {
+        text-align: center;
+    }
+
+    .form-actions button {
+        display: block;
+        width: 100%;
+        margin: 0.5rem 0;
+        padding: 1rem;
+        font-size: 1rem;
+        border-radius: 8px;
+    }
+}
+
+/* Mobile phones */
+@media (max-width: 480px) {
+    header nav {
+        padding: 0.75rem;
+    }
+
+    header nav h1 {
+        font-size: 1.3rem;
+    }
+
+    main {
+        margin: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    fieldset {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    legend {
+        font-size: 1rem;
+    }
+
+    .info-grid input {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    #itens-grid table {
+        min-width: 500px;
+    }
+
+    #itens-grid th,
+    #itens-grid td {
+        padding: 0.4rem;
+        font-size: 0.8rem;
+    }
+
+    .form-actions button {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    /* Hide less important table columns on very small screens */
+    #itens-grid th:nth-child(3),
+    #itens-grid td:nth-child(3) {
+        display: none;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    .info-grid input {
+        min-height: 44px; /* iOS recommended touch target size */
+    }
+
+    .form-actions button {
+        min-height: 48px; /* Ensure buttons are touch-friendly */
+        margin: 0.75rem 0;
+    }
+
+    #itens-grid th,
+    #itens-grid td {
+        padding: 0.75rem 0.5rem;
+    }
+}
