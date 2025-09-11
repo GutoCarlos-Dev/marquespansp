@@ -24,9 +24,11 @@ async function carregarDetalhesSolicitacao() {
     }
 
     // Carregar usuário logado
-    const { data: user, error } = await supabase.auth.getUser();
-    if (user && !error) {
-        document.getElementById('usuario-logado').value = user.user_metadata?.email || user.user_metadata?.name || 'Usuário não identificado';
+    const { data, error } = await supabase.auth.getUser();
+    let currentUser = null;
+    if (data && !error) {
+        currentUser = data.user;
+        document.getElementById('usuario-logado').value = currentUser.user_metadata?.email || currentUser.user_metadata?.name || 'Usuário não identificado';
     } else {
         document.getElementById('usuario-logado').value = 'Não logado';
     }
