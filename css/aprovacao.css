@@ -27,6 +27,13 @@ header nav h1 {
     gap: 1rem; /* Adiciona espaçamento entre os botões do menu */
 }
 
+/* Hide mobile menu toggle button on desktop */
+@media (min-width: 769px) {
+    .mobile-menu-toggle {
+        display: none !important;
+    }
+}
+
 #menu button {
     background-color: white;
     color: #4CAF50;
