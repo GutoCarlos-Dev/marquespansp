@@ -37,11 +37,12 @@ nav #menu button {
 }
 
 /* Hide mobile menu button on desktop */
-@media (min-width: 769px) {
+/* Removed to fix menu visibility on desktop */
+/* @media (min-width: 769px) {
     nav #menu button {
         display: none;
     }
-}
+} */
 
 nav #menu button:hover {
     background-color: #388E3C;
