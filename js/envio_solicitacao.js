@@ -265,19 +265,19 @@ async function gerarPDF() {
 
     // Coluna da Esquerda (Dados da Solicitação)
     const dataHora = new Date(solicitacao.created_at).toLocaleString('pt-BR');
-    drawLabeledText('Código da Solicitação: ', String(solicitacao.id).padStart(5, '0'), leftMargin, startY);
+    drawLabeledText('Código da Solicitação:  ', String(solicitacao.id).padStart(5, '0'), leftMargin, startY);
     startY += lineHeight;
-    drawLabeledText('Data da Solicitação: ', dataHora, leftMargin, startY);
+    drawLabeledText('Data da Solicitação:  ', dataHora, leftMargin, startY);
     startY += lineHeight;
-    drawLabeledText('Técnico: ', solicitacao.usuario?.nome || 'N/A', leftMargin, startY);
+    drawLabeledText('Técnico:  ', solicitacao.usuario?.nome || 'N/A', leftMargin, startY);
     startY += lineHeight;
-    drawLabeledText('Placa do Veículo: ', `${solicitacao.veiculo?.placa || 'N/A'}    Supervisor: ${solicitacao.veiculo?.supervisor?.nome || 'N/A'}`, leftMargin, startY);
+    drawLabeledText('Placa do Veículo:  ', `${solicitacao.veiculo?.placa || 'N/A'}    Supervisor: ${solicitacao.veiculo?.supervisor?.nome || 'N/A'}`, leftMargin, startY);
     startY += lineHeight;
-    drawLabeledText('Rota de Entrega: ', solicitacao.rota || 'Não definida', leftMargin, startY);
+    drawLabeledText('Rota de Entrega:  ', solicitacao.rota || 'Não definida', leftMargin, startY);
     startY += lineHeight;
     const dataEnvio = solicitacao.data_envio ? new Date(solicitacao.data_envio).toLocaleString('pt-BR') : 'Aguardando envio';
     const enviadoPor = solicitacao.enviado_por?.nome || (solicitacao.status === 'enviado' ? 'Não registrado' : '');
-    drawLabeledText('Data de Envio: ', `${dataEnvio}    Enviado por: ${enviadoPor}`, leftMargin, startY);
+    drawLabeledText('Data de Envio:  ', `${dataEnvio}    Enviado por: ${enviadoPor}`, leftMargin, startY);
 
     // Coluna da Direita (Assinaturas)
     let signatureY = 40;
