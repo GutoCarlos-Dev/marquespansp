@@ -225,20 +225,25 @@ async function gerarPDF() {
 
     // Título do Documento dinâmico com base no status
     let tituloPDF = 'Relatório de Solicitação de Peças'; // Título padrão
+    let tituloCor = '#000000'; // Preto (padrão)
+
     switch (solicitacao.status) {
         case 'enviado':
             tituloPDF = 'Resumo de Envio de Peças';
+            tituloCor = '#4CAF50'; // Verde
             break;
         case 'rejeitado':
             tituloPDF = 'Rejeitado o Envio de Peças';
+            tituloCor = '#f44336'; // Vermelho
             break;
         case 'aprovado':
             tituloPDF = 'Pendente Envio de Peças';
+            tituloCor = '#2196F3'; // Azul
             break;
     }
     // Título do Documento
     doc.setFontSize(20);
-    doc.setTextColor('#4CAF50');
+    doc.setTextColor(tituloCor);
     doc.setFont('helvetica', 'bold');
     doc.text(tituloPDF, 14, 20);
 
