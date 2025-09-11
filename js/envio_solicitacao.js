@@ -309,6 +309,7 @@ async function gerarPDF() {
     doc.text(enviadoPor, currentX, startY);
 
     
+    
     // Adicionar QTD Equipe em vermelho
     doc.setTextColor('#f44336'); // Cor vermelha
     drawLabeledText('QTD Equipe: ', solicitacao.veiculo?.qtd_equipe || 'N/A', leftMargin, startY);
