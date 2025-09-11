@@ -2,6 +2,7 @@
 // Para Matriz
 
 let todosVeiculos = [];
+let todosUsuariosEnvio = [];
 let todosSupervisores = [];
 
 // Carregar opções de filtros
@@ -44,6 +45,26 @@ async function carregarOpcoesFiltros() {
             selectSupervisor.appendChild(option);
         });
     }
+
+    // Carregar usuários de envio (matriz/admin)
+    const { data: usuariosEnvioData, error: usuariosEnvioError } = await supabase
+        .from('usuarios')
+        .select('id, nome')
+        .in('nivel', ['matriz', 'administrador'])
+        .order('nome');
+
+    if (usuariosEnvioError) {
+        console.error('Erro ao carregar usuários de envio:', usuariosEnvioError);
+    } else {
+        todosUsuariosEnvio = usuariosEnvioData;
+        const selectEnviadoPor = document.getElementById('enviado-por');
+        todosUsuariosEnvio.forEach(usr => {
+            const option = document.createElement('option');
+            option.value = usr.nome;
+            option.textContent = usr.nome;
+            selectEnviadoPor.appendChild(option);
+        });
+    }
 }
 
 async function buscarSolicitacoes() {
@@ -52,6 +73,7 @@ async function buscarSolicitacoes() {
     const status = document.getElementById('status').value;
     const placa = document.getElementById('placa').value;
     const supervisor = document.getElementById('supervisor').value;
+    const enviadoPorNome = document.getElementById('enviado-por').value;
     const codigo = document.getElementById('codigo').value;
     const tbody = document.querySelector('#tabela-aprovados tbody');
     tbody.innerHTML = '<tr><td colspan="8">Buscando...</td></tr>';
@@ -98,6 +120,12 @@ async function buscarSolicitacoes() {
                 exibirSolicitacoes([]);
                 return;
             }
+        }
+    }
+    if (enviadoPorNome) {
+        const usuarioEnvioFiltrado = todosUsuariosEnvio.find(u => u.nome === enviadoPorNome);
+        if (usuarioEnvioFiltrado) {
+            query = query.eq('enviado_por_id', usuarioEnvioFiltrado.id);
         }
     }
     if (codigo) {
