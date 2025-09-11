@@ -331,12 +331,31 @@ async function gerarPDF() {
 
     // --- RODAPÉ ---
     const pageCount = doc.internal.getNumberOfPages();
+    const codigoSolicitacaoFormatado = String(solicitacao.id).padStart(5, '0');
+
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
         // --- INFORMAÇÕES DO DOCUMENTO ---
         doc.setFontSize(8);
         doc.setTextColor(150);
-        doc.text(`Documento gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 287);
+
+        const textoData = `Documento gerado em: ${new Date().toLocaleString('pt-BR')}`;
+        
+        // Se houver mais de uma página, adiciona o código da solicitação em negrito
+        if (pageCount > 1) {
+            doc.setFont('helvetica', 'normal');
+            doc.text(textoData, 14, 287);
+            
+            const textoCodigo = ` (Código da Solicitação: ${codigoSolicitacaoFormatado})`;
+            doc.setFont('helvetica', 'bold');
+            doc.text(textoCodigo, 14 + doc.getTextWidth(textoData), 287);
+        } else {
+            doc.setFont('helvetica', 'normal');
+            doc.text(textoData, 14, 287);
+        }
+
+        // Restaura a fonte para normal para a paginação
+        doc.setFont('helvetica', 'normal');
         doc.text(`Página ${i} de ${pageCount}`, 196, 287, { align: 'right' });
     }
 
