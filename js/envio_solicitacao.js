@@ -185,7 +185,12 @@ async function gerarPDF() {
 
     const { data: solicitacao, error } = await supabase
         .from('solicitacoes')
-        .select(`*, usuario:usuario_id(nome), veiculo:veiculo_id(placa, supervisor:supervisor_id(nome))`)
+        .select(`
+            *,
+            usuario:usuario_id(nome),
+            veiculo:veiculo_id(placa, supervisor:supervisor_id(nome)),
+            enviado_por:enviado_por_id(nome)
+        `)
         .eq('id', id)
         .single();
 
@@ -281,6 +286,12 @@ async function gerarPDF() {
     const dataEnvio = solicitacao.data_envio ? new Date(solicitacao.data_envio).toLocaleString('pt-BR') : 'Aguardando envio';
     drawField('Data de Envio:', dataEnvio, startY);
 
+    // Adiciona o campo "Enviado por" na segunda coluna se a solicitação foi enviada
+    const enviadoPor = solicitacao.enviado_por?.nome || (solicitacao.status === 'enviado' ? 'Não registrado' : '');
+    if (enviadoPor) {
+        drawField('Enviado por:', enviadoPor, startY, true);
+    }
+
     // --- TABELA DE ITENS ---
 
     // Adicionar total de peças antes da tabela
@@ -307,6 +318,16 @@ async function gerarPDF() {
     const pageCount = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
+
+        // --- ASSINATURAS ---
+        const signatureY = 275;
+        doc.setFontSize(10);
+        doc.setTextColor(40);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Motorista: _______________________________', 14, signatureY);
+        doc.text('Recebido Por: _____________________________', 105, signatureY);
+
+        // --- INFORMAÇÕES DO DOCUMENTO ---
         doc.setFontSize(8);
         doc.setTextColor(150);
         doc.text(`Documento gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 287);
