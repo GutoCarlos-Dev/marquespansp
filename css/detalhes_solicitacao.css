@@ -90,6 +90,7 @@ legend {
 #itens-grid table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
 #itens-grid th, #itens-grid td {
@@ -190,6 +191,10 @@ legend {
         word-break: break-word; /* Break long words */
     }
 
+    #itens-grid th:nth-child(1), #itens-grid td:nth-child(1) { width: 20%; }
+    #itens-grid th:nth-child(2), #itens-grid td:nth-child(2) { width: 50%; }
+    #itens-grid th:nth-child(3), #itens-grid td:nth-child(3) { width: 30%; }
+
     /* Stack buttons vertically on mobile */
     .form-actions {
         text-align: center;
@@ -247,15 +252,13 @@ legend {
         word-break: break-word; /* Break long words */
     }
 
+    #itens-grid th:nth-child(1), #itens-grid td:nth-child(1) { width: 25%; }
+    #itens-grid th:nth-child(2), #itens-grid td:nth-child(2) { width: 45%; }
+    #itens-grid th:nth-child(3), #itens-grid td:nth-child(3) { width: 30%; }
+
     .form-actions button {
         padding: 0.8rem;
         font-size: 0.9rem;
-    }
-
-    /* Hide less important table columns on very small screens */
-    #itens-grid th:nth-child(3),
-    #itens-grid td:nth-child(3) {
-        display: none;
     }
 }
 
