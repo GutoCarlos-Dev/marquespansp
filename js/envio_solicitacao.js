@@ -342,9 +342,17 @@ async function gerarPDF() {
     
     // Coluna da Direita (Assinaturas)
     let signatureY = 40;
-    doc.text('Motorista: _____________________________', rightMargin, signatureY);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Motorista:', rightMargin, signatureY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(' _____________________________', rightMargin + doc.getTextWidth('Motorista:'), signatureY);
+
     signatureY += lineHeight * 2; // Espaço maior entre as assinaturas
-    doc.text('Recebido Por: ___________________________', rightMargin, signatureY);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Recebido Por:', rightMargin, signatureY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(' ___________________________', rightMargin + doc.getTextWidth('Recebido Por:'), signatureY);
 
     // Adicionar total de peças antes da tabela
     const totalQuantidadePDF = solicitacao.itens.reduce((total, item) => total + item.quantidade, 0);
