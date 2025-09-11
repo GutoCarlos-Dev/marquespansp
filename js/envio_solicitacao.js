@@ -276,7 +276,30 @@ async function gerarPDF() {
     startY += lineHeight;
     drawLabeledText('Técnico:  ', solicitacao.usuario?.nome || 'N/A', leftMargin, startY);
     startY += lineHeight;
-    drawLabeledText('Placa do Veículo:   ', `${solicitacao.veiculo?.placa || 'N/A'}    Supervisor: ${solicitacao.veiculo?.supervisor?.nome || 'N/A'}`, leftMargin, startY);
+
+    // Lógica para negritar "Placa do Veículo" e "Supervisor" na mesma linha
+    let currentXPlaca = leftMargin;
+    // 1. "Placa do Veículo:" (Negrito)
+    doc.setFont('helvetica', 'bold');
+    const labelPlaca = 'Placa do Veículo:   ';
+    doc.text(labelPlaca, currentXPlaca, startY);
+    currentXPlaca += doc.getTextWidth(labelPlaca);
+
+    // 2. Valor da placa (Normal)
+    doc.setFont('helvetica', 'normal');
+    const valorPlaca = `${solicitacao.veiculo?.placa || 'N/A'}    `; // Adiciona espaço para separar
+    doc.text(valorPlaca, currentXPlaca, startY);
+    currentXPlaca += doc.getTextWidth(valorPlaca);
+
+    // 3. "Supervisor:" (Negrito)
+    doc.setFont('helvetica', 'bold');
+    const labelSupervisor = 'Supervisor: ';
+    doc.text(labelSupervisor, currentXPlaca, startY);
+    currentXPlaca += doc.getTextWidth(labelSupervisor);
+
+    // 4. Valor do "Supervisor" (Normal)
+    doc.setFont('helvetica', 'normal');
+    doc.text(solicitacao.veiculo?.supervisor?.nome || 'N/A', currentXPlaca, startY);
     startY += lineHeight;
 
     drawLabeledText('Rota de Entrega:  ', solicitacao.rota || 'Não definida', leftMargin, startY);
