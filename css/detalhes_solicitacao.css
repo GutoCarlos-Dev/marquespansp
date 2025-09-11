@@ -177,7 +177,7 @@ legend {
     }
 
     #itens-grid table {
-        min-width: 500px; /* Reduced min-width for better mobile fit */
+        min-width: 300px; /* Further reduced min-width for better mobile fit */
         max-width: 100%;
         font-size: 0.75rem; /* Smaller font size */
     }
@@ -186,7 +186,8 @@ legend {
     #itens-grid td {
         padding: 0.4rem 0.3rem; /* Reduced padding */
         font-size: 0.75rem; /* Smaller font size */
-        white-space: nowrap;
+        white-space: normal; /* Allow text wrapping */
+        word-break: break-word; /* Break long words */
     }
 
     /* Stack buttons vertically on mobile */
@@ -234,7 +235,7 @@ legend {
     }
 
     #itens-grid table {
-        min-width: 400px; /* Even smaller for phones */
+        min-width: 250px; /* Further reduced for phones */
         font-size: 0.7rem; /* Even smaller font */
     }
 
@@ -242,6 +243,8 @@ legend {
     #itens-grid td {
         padding: 0.3rem 0.2rem; /* Even smaller padding */
         font-size: 0.7rem; /* Even smaller font */
+        white-space: normal; /* Allow text wrapping */
+        word-break: break-word; /* Break long words */
     }
 
     .form-actions button {
@@ -271,5 +274,7 @@ legend {
     #itens-grid td {
         padding: 0.4rem 0.3rem; /* Consistent with mobile styles */
         font-size: 0.75rem; /* Smaller font for touch devices */
+        white-space: normal; /* Allow text wrapping */
+        word-break: break-word; /* Break long words */
     }
 }
