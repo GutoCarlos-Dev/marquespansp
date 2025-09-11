@@ -342,9 +342,9 @@ async function gerarPDF() {
     
     // Coluna da Direita (Assinaturas)
     let signatureY = 40;
-    doc.text('bold','Motorista: _____________________________', rightMargin, signatureY);
+    doc.text('Motorista: _____________________________', rightMargin, signatureY);
     signatureY += lineHeight * 2; // Espaço maior entre as assinaturas
-    doc.text('bold','Recebido Por: ___________________________', rightMargin, signatureY);
+    doc.text('Recebido Por: ___________________________', rightMargin, signatureY);
 
     // Adicionar total de peças antes da tabela
     const totalQuantidadePDF = solicitacao.itens.reduce((total, item) => total + item.quantidade, 0);
