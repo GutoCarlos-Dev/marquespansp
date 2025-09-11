@@ -279,12 +279,6 @@ async function gerarPDF() {
     drawLabeledText('Placa do Veículo:   ', `${solicitacao.veiculo?.placa || 'N/A'}    Supervisor: ${solicitacao.veiculo?.supervisor?.nome || 'N/A'}`, leftMargin, startY);
     startY += lineHeight;
 
-    // Adicionar QTD Equipe em vermelho
-    doc.setTextColor('#f44336'); // Cor vermelha
-    drawLabeledText('QTD Equipe: ', solicitacao.veiculo?.qtd_equipe || 'N/A', leftMargin, startY);
-    doc.setTextColor(40); // Restaurar cor padrão (cinza escuro)
-    startY += lineHeight;
-
     drawLabeledText('Rota de Entrega:  ', solicitacao.rota || 'Não definida', leftMargin, startY);
     startY += lineHeight;
     const dataEnvio = solicitacao.data_envio ? new Date(solicitacao.data_envio).toLocaleString('pt-BR') : 'Aguardando envio';
@@ -313,6 +307,12 @@ async function gerarPDF() {
     // 4. Valor do "Enviado por" (Normal)
     doc.setFont('helvetica', 'normal');
     doc.text(enviadoPor, currentX, startY);
+
+    // Adicionar QTD Equipe em vermelho
+    doc.setTextColor('#f44336'); // Cor vermelha
+    drawLabeledText('QTD Equipe: ', solicitacao.veiculo?.qtd_equipe || 'N/A', leftMargin, startY);
+    doc.setTextColor(40); // Restaurar cor padrão (cinza escuro)
+    startY += lineHeight;
     
     // Coluna da Direita (Assinaturas)
     let signatureY = 40;
