@@ -46,6 +46,12 @@ document.getElementById('form-usuario').addEventListener('submit', async functio
             document.querySelector('form button[type="submit"]').textContent = 'Salvar Usuário';
         } else {
             // Adicionando novo usuário
+            // Validação: A senha é obrigatória para novos usuários
+            if (!senha) {
+                alert('O campo Senha é obrigatório para cadastrar um novo usuário.');
+                return;
+            }
+
             const novoUsuario = {
                 nome,
                 email,
@@ -53,13 +59,18 @@ document.getElementById('form-usuario').addEventListener('submit', async functio
                 nivel
             };
 
-            const { error } = await supabase // O ID será gerado pelo banco de dados.
+            const { error } = await supabase
                 .from('usuarios')
-                .insert([novoUsuario]);
+                .insert([novoUsuario]); 
+                // .select() foi removido. Isso deve impedir a biblioteca de gerar uma URL malformada
+                // com o parâmetro 'columns' em uma requisição de inserção, resolvendo o erro 400.
+
 
             if (error) {
+                // Exibe o erro real do Supabase para facilitar a depuração
+                const mensagemErro = `Erro ao cadastrar usuário: ${error.message || 'Verifique o console para detalhes.'}`;
                 console.error('Erro ao inserir usuário:', error);
-                alert('Erro ao cadastrar usuário. Verifique se o email já existe.');
+                alert(mensagemErro);
                 return;
             }
         }
@@ -173,60 +184,6 @@ async function excluirUsuario(id) {
     }
 }
 
-// Função para exportar usuários para SQL do SupaBase
-function exportarUsuariosSQL() {
-    if (usuarios.length === 0) {
-        alert('❌ Nenhum usuário cadastrado para exportar.');
-        return;
-    }
-
-    let sql = '-- Script SQL para importar usuários no SupaBase\n';
-    sql += '-- Gerado em: ' + new Date().toLocaleString('pt-BR') + '\n\n';
-
-    // Criar tabela
-    sql += '-- Criar tabela usuarios\n';
-    sql += 'CREATE TABLE IF NOT EXISTS usuarios (\n';
-    sql += '    id BIGINT PRIMARY KEY,\n';
-    sql += '    nome TEXT NOT NULL,\n';
-    sql += '    email TEXT UNIQUE NOT NULL,\n';
-    sql += '    senha TEXT NOT NULL,\n';
-    sql += '    nivel TEXT NOT NULL\n';
-    sql += ');\n\n';
-
-    // Inserir usuários
-    sql += '-- Inserir usuários\n';
-    usuarios.forEach((usuario, index) => {
-        try {
-            const nome = usuario.nome ? usuario.nome.replace(/'/g, "''") : '';
-            const email = usuario.email ? usuario.email.replace(/'/g, "''") : '';
-            const senha = usuario.senha ? usuario.senha.replace(/'/g, "''") : '';
-            const nivel = usuario.nivel || 'tecnico';
-
-            sql += `INSERT INTO usuarios (id, nome, email, senha, nivel) VALUES (${usuario.id}, '${nome}', '${email}', '${senha}', '${nivel}');\n`;
-        } catch (error) {
-            console.error(`Erro ao processar usuário ${index + 1}:`, error);
-        }
-    });
-
-    // Verificar inserção
-    sql += '\n-- Verificar inserção\n';
-    sql += 'SELECT * FROM usuarios ORDER BY id;\n';
-
-    // Criar um blob com o SQL e fazer download
-    const blob = new Blob([sql], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `usuarios_supabase_${new Date().toISOString().split('T')[0]}.sql`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    alert(`✅ SQL exportado com sucesso!\n\n📁 Arquivo: usuarios_supabase_${new Date().toISOString().split('T')[0]}.sql\n\n📋 Copie o conteúdo do arquivo e cole no SQL Editor do SupaBase.`);
-}
-
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('form-usuario');
     if (form) {
@@ -237,11 +194,5 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         atualizarTabela();
-    }
-
-    // Adicionar event listener para o botão de exportar
-    const btnExportar = document.getElementById('btn-exportar-sql');
-    if (btnExportar) {
-        btnExportar.addEventListener('click', exportarUsuariosSQL);
     }
 });
