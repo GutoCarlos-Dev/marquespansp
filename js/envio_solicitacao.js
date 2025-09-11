@@ -237,7 +237,7 @@ async function gerarPDF() {
             break;
     }
     // Título do Documento
-    doc.setFontSize(15);
+    doc.setFontSize(20);
     doc.setTextColor('#4CAF50');
     doc.setFont('helvetica', 'bold');
     doc.text(tituloPDF, 14, 20);
