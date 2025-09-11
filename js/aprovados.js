@@ -308,44 +308,70 @@ async function enviarSolicitacoesEmMassa() {
         return;
     }
 
-    // 2. Buscar detalhes completos das solicitações para o PDF
-    const { data: solicitacoesDetalhadas, error: fetchError } = await supabase
-        .from('solicitacoes')
-        .select(`
-            id, created_at, status, itens, rota,
-            usuario:usuario_id(nome),
-            veiculo:veiculo_id(placa, supervisor:supervisor_id(nome))
-        `)
-        .in('id', idsAprovados);
+    try {
+        // 1. Primeiro, atualizar o status e data_envio no banco de dados
+        console.log('Iniciando atualização em massa para IDs:', idsAprovados);
+        const dataEnvioAtual = new Date().toISOString();
+        console.log('Data de envio a ser definida:', dataEnvioAtual);
 
-    if (fetchError || !solicitacoesDetalhadas) {
-        console.error('Erro ao buscar detalhes para o PDF:', fetchError);
-        alert('Não foi possível carregar os dados para gerar o PDF.');
-        return;
+        const { data: updateData, error: updateError } = await supabase
+            .from('solicitacoes')
+            .update({
+                status: 'enviado',
+                data_envio: dataEnvioAtual,
+                updated_at: new Date().toISOString()
+            })
+            .in('id', idsAprovados)
+            .select('id, status, data_envio'); // Retornar os campos atualizados para verificação
+
+        if (updateError) {
+            console.error('Erro ao atualizar solicitações em massa:', updateError);
+            alert('Erro ao atualizar o status das solicitações. Verifique o console para mais detalhes.');
+            return;
+        }
+
+        console.log('Solicitações atualizadas com sucesso:', updateData);
+
+        // Verificar se a atualização foi realmente aplicada
+        if (updateData && updateData.length > 0) {
+            updateData.forEach(item => {
+                console.log(`ID ${item.id}: Status=${item.status}, DataEnvio=${item.data_envio}`);
+            });
+        }
+
+        // 2. Buscar detalhes completos das solicitações atualizadas para o PDF
+        const { data: solicitacoesDetalhadas, error: fetchError } = await supabase
+            .from('solicitacoes')
+            .select(`
+                id, created_at, status, itens, rota, data_envio,
+                usuario:usuario_id(nome),
+                veiculo:veiculo_id(placa, supervisor:supervisor_id(nome))
+            `)
+            .in('id', idsAprovados);
+
+        if (fetchError || !solicitacoesDetalhadas) {
+            console.error('Erro ao buscar detalhes para o PDF:', fetchError);
+            alert('Não foi possível carregar os dados para gerar o PDF.');
+            return;
+        }
+
+        console.log('Dados para PDF carregados:', solicitacoesDetalhadas.map(s => ({
+            id: s.id,
+            status: s.status,
+            data_envio: s.data_envio
+        })));
+
+        // 3. Gerar o PDF consolidado
+        await gerarPdfEmMassa(solicitacoesDetalhadas);
+
+        // 4. Recarregar a tabela para refletir as mudanças
+        alert('Processamento em massa concluído! O PDF foi gerado e as solicitações foram atualizadas.');
+        buscarSolicitacoes();
+
+    } catch (error) {
+        console.error('Erro inesperado no processamento em massa:', error);
+        alert('Erro inesperado durante o processamento. Verifique o console para mais detalhes.');
     }
-
-    // 3. Gerar o PDF consolidado
-    await gerarPdfEmMassa(solicitacoesDetalhadas);
-
-    // 4. Atualizar o status de todas as solicitações no banco de dados
-    const { error: updateError } = await supabase
-        .from('solicitacoes')
-        .update({
-            status: 'enviado',
-            data_envio: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-        })
-        .in('id', idsAprovados);
-
-    if (updateError) {
-        console.error('Erro ao atualizar solicitações em massa:', updateError);
-        alert('Erro ao atualizar o status das solicitações. O PDF foi gerado, mas o status não foi salvo.');
-        return;
-    }
-
-    // 5. Recarregar a tabela para refletir as mudanças
-    alert('Processamento em massa concluído! O PDF foi gerado e as solicitações foram atualizadas.');
-    buscarSolicitacoes();
 }
 
 
