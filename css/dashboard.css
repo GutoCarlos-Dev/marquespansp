@@ -36,6 +36,13 @@ nav #menu button {
     transition: background-color 0.3s ease;
 }
 
+/* Hide mobile menu button on desktop */
+@media (min-width: 769px) {
+    nav #menu button {
+        display: none;
+    }
+}
+
 nav #menu button:hover {
     background-color: #388E3C;
     color: white;
