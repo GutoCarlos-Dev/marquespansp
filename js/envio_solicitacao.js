@@ -119,8 +119,7 @@ async function carregarDetalhesSolicitacao() {
 
     // Se a solicitação já foi enviada, desabilitar o botão de salvar
     if (solicitacao.status === 'enviado') {
-        document.getElementById('btn-enviar').disabled = true;
-        document.getElementById('btn-enviar').textContent = 'Já Enviado';
+        document.getElementById('btn-enviar').style.display = 'none';
         document.getElementById('data-envio').readOnly = true;
         document.getElementById('hora-envio').readOnly = true;
         document.getElementById('usuario-envio').readOnly = true;

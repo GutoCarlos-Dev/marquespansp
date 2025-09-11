@@ -488,3 +488,24 @@ h2 {
 #tabela-aprovados .btn-detalhes-rejeitado:hover {
     background-color: #c62828; /* Vermelho mais escuro no hover */
 }
+
+/* Estilos para o grid de itens na página envio_solicitacao.html */
+#itens-grid {
+    max-height: 300px; /* Altura máxima antes de mostrar a barra de rolagem */
+    overflow-y: auto;  /* Adiciona a barra de rolagem vertical quando necessário */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 0.5rem;
+    background-color: #fff;
+}
+
+#itens-grid table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#itens-grid table th,
+#itens-grid table td {
+    font-size: 0.9rem; /* Fonte menor para melhor visualização */
+    padding: 0.5rem;
+}
