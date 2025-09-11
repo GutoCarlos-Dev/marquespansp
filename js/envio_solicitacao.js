@@ -23,12 +23,10 @@ async function carregarDetalhesSolicitacao() {
         return;
     }
 
-    // Carregar usuário logado
-    const { data, error } = await supabase.auth.getUser();
-    let currentUser = null;
-    if (data && !error) {
-        currentUser = data.user;
-        document.getElementById('usuario-logado').value = currentUser.user_metadata?.email || currentUser.user_metadata?.name || 'Usuário não identificado';
+    // Corrigido: Carregar usuário logado a partir do localStorage, como no resto do sistema.
+    const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+    if (usuarioLogado && usuarioLogado.nome) {
+        document.getElementById('usuario-logado').value = usuarioLogado.nome;
     } else {
         document.getElementById('usuario-logado').value = 'Não logado';
     }
@@ -76,9 +74,13 @@ async function carregarDetalhesSolicitacao() {
         const dataEnvioObj = new Date(solicitacao.data_envio);
         document.getElementById('data-envio').value = dataEnvioObj.toISOString().split('T')[0];
         document.getElementById('hora-envio').value = dataEnvioObj.toTimeString().slice(0, 5);
+        // Exibe o campo e preenche com o nome do usuário que enviou
+        document.getElementById('container-usuario-envio').style.display = 'flex';
+        document.getElementById('usuario-envio').value = solicitacao.enviado_por?.nome || 'N/A';
     } else {
         document.getElementById('data-envio').value = dataAtual;
         document.getElementById('hora-envio').value = horaAtual;
+        // Mantém o campo de "Enviado por" oculto
     }
 
     // Preencher grid de itens
@@ -121,6 +123,8 @@ async function carregarDetalhesSolicitacao() {
         document.getElementById('btn-enviar').textContent = 'Já Enviado';
         document.getElementById('data-envio').readOnly = true;
         document.getElementById('hora-envio').readOnly = true;
+        document.getElementById('usuario-envio').readOnly = true;
+        document.getElementById('container-usuario-envio').style.display = 'flex';
     }
 }
 
@@ -134,6 +138,12 @@ async function salvarEnvio() {
         return;
     }
 
+    const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+    if (!usuarioLogado || !usuarioLogado.id) {
+        alert('Erro: Usuário não identificado. Faça login novamente.');
+        return;
+    }
+
     // Pega a data e hora exatas do momento do clique, ignorando os campos do formulário.
     const dataHoraEnvio = new Date();
 
@@ -142,7 +152,8 @@ async function salvarEnvio() {
         .update({
             status: 'enviado',
             data_envio: dataHoraEnvio.toISOString(),
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            enviado_por_id: usuarioLogado.id // Salva o ID do usuário que clicou no botão
         })
         .eq('id', id);
 
