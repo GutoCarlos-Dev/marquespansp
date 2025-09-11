@@ -174,11 +174,21 @@ function abrirModalAdicionar() {
     setTimeout(() => modal.classList.add('ativo'), 10);
     inputBusca.focus();
 
+    // Função para limpar seleção de peça
+    function limparSelecaoPeca() {
+        pecaSelecionada = null;
+        searchContainer.classList.remove('selected');
+    }
+
     // Evento de busca ao digitar
     inputBusca.addEventListener('input', async () => {
         const termo = inputBusca.value.toLowerCase().trim();
         searchResults.innerHTML = '';
-        pecaSelecionada = null; // Limpa seleção anterior
+
+        // Se o usuário está digitando, limpa a seleção anterior
+        if (termo !== (pecaSelecionada ? pecaSelecionada.nome : '')) {
+            limparSelecaoPeca();
+        }
 
         if (termo.length < 1) {
             searchResults.style.display = 'none';
@@ -206,9 +216,19 @@ function abrirModalAdicionar() {
                 itemResultado.onclick = () => {
                     inputBusca.value = p.nome;
                     pecaSelecionada = p; // Guarda a peça inteira
+                    searchContainer.classList.add('selected'); // Adiciona feedback visual
                     searchResults.innerHTML = '';
                     searchResults.style.display = 'none';
-                }; // Correção: O fechamento de uma atribuição de função é com '};' e não '});'
+
+                    // Feedback adicional para mobile
+                    if (window.innerWidth <= 768) {
+                        // Pequena vibração/visual feedback
+                        inputBusca.style.transform = 'scale(1.02)';
+                        setTimeout(() => {
+                            inputBusca.style.transform = 'scale(1)';
+                        }, 150);
+                    }
+                };
                 searchResults.appendChild(itemResultado);
             });
         } else {
@@ -226,7 +246,7 @@ function abrirModalAdicionar() {
 
         searchResults.innerHTML = 'Carregando...';
         searchResults.style.display = 'block';
-        pecaSelecionada = null;
+        limparSelecaoPeca(); // Limpa seleção anterior
 
         const { data: todasAsPecas, error } = await supabase
             .from('pecas')
@@ -248,7 +268,17 @@ function abrirModalAdicionar() {
             itemResultado.onclick = () => {
                 inputBusca.value = p.nome;
                 pecaSelecionada = p;
+                searchContainer.classList.add('selected'); // Adiciona feedback visual
                 searchResults.style.display = 'none';
+
+                // Feedback adicional para mobile
+                if (window.innerWidth <= 768) {
+                    // Pequena vibração/visual feedback
+                    inputBusca.style.transform = 'scale(1.02)';
+                    setTimeout(() => {
+                        inputBusca.style.transform = 'scale(1)';
+                    }, 150);
+                }
             };
             searchResults.appendChild(itemResultado);
         });
@@ -286,14 +316,29 @@ function abrirModalAdicionar() {
         // Limpar campos para adicionar outra peça
         inputBusca.value = '';
         inputQtd.value = '1';
-        pecaSelecionada = null;
+        limparSelecaoPeca();
         inputBusca.focus();
+
+        // Feedback visual de sucesso
+        btnAdicionar.style.backgroundColor = '#4CAF50';
+        btnAdicionar.textContent = '✓ Adicionada!';
+        setTimeout(() => {
+            btnAdicionar.textContent = 'Adicionar';
+        }, 1000);
     });
 
     btnCancelar.addEventListener('click', () => {
         modal.classList.remove('ativo');
         // Remove o modal do DOM após a animação de fade-out
         setTimeout(() => document.body.removeChild(modal), 300);
+    });
+
+    // Evento para fechar modal ao clicar no overlay
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('ativo');
+            setTimeout(() => document.body.removeChild(modal), 300);
+        }
     });
 }
 
