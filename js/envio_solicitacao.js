@@ -36,7 +36,7 @@ async function carregarDetalhesSolicitacao() {
         .select(`
             id, created_at, status, itens, rota, data_envio, enviado_por_id,
             usuario:usuario_id ( nome ),
-            veiculo:veiculo_id ( placa, supervisor:supervisor_id(nome) ),
+            veiculo:veiculo_id ( placa, qtd_equipe, supervisor:supervisor_id(nome) ),
             enviado_por:enviado_por_id ( nome )
         `)
         .eq('id', id)
@@ -53,6 +53,7 @@ async function carregarDetalhesSolicitacao() {
     document.getElementById('codigo-solicitacao').value = String(solicitacao.id).padStart(5, '0');
     document.getElementById('nome-tecnico').value = solicitacao.usuario?.nome || 'N/A';
     document.getElementById('placa').value = solicitacao.veiculo?.placa || 'N/A';
+    document.getElementById('qtd-equipe').value = solicitacao.veiculo?.qtd_equipe || 'N/A';
     document.getElementById('status').value = solicitacao.status;
 
     // Preencher data e hora (usando data atual se não existir)
@@ -187,7 +188,7 @@ async function gerarPDF() {
         .select(`
             *,
             usuario:usuario_id(nome),
-            veiculo:veiculo_id(placa, supervisor:supervisor_id(nome)),
+            veiculo:veiculo_id(placa, qtd_equipe, supervisor:supervisor_id(nome)),
             enviado_por:enviado_por_id(nome)
         `)
         .eq('id', id)
@@ -277,6 +278,13 @@ async function gerarPDF() {
     startY += lineHeight;
     drawLabeledText('Placa do Veículo:   ', `${solicitacao.veiculo?.placa || 'N/A'}    Supervisor: ${solicitacao.veiculo?.supervisor?.nome || 'N/A'}`, leftMargin, startY);
     startY += lineHeight;
+
+    // Adicionar QTD Equipe em vermelho
+    doc.setTextColor('#f44336'); // Cor vermelha
+    drawLabeledText('QTD Equipe: ', solicitacao.veiculo?.qtd_equipe || 'N/A', leftMargin, startY);
+    doc.setTextColor(40); // Restaurar cor padrão (cinza escuro)
+    startY += lineHeight;
+
     drawLabeledText('Rota de Entrega:  ', solicitacao.rota || 'Não definida', leftMargin, startY);
     startY += lineHeight;
     const dataEnvio = solicitacao.data_envio ? new Date(solicitacao.data_envio).toLocaleString('pt-BR') : 'Aguardando envio';
