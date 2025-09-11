@@ -246,68 +246,49 @@ async function gerarPDF() {
     doc.setDrawColor(76, 175, 80);
     doc.setLineWidth(0.5);
     doc.line(14, 25, 196, 25);
-
-    // --- INFORMAÇÕES GERAIS ---
-    const labelCol1 = 58;
-    const valueCol1 = 60;
-    const labelCol2 = 143;
-    const valueCol2 = 145;
-
+    
+    // --- INFORMAÇÕES GERAIS E ASSINATURAS (NOVO LAYOUT) ---
     doc.setFontSize(10);
     doc.setTextColor(40);
-
     let startY = 40;
+    const lineHeight = 7; // Espaçamento entre linhas
+    const leftMargin = 14;
+    const rightMargin = 120;
 
-    // Helper para desenhar campos alinhados
-    const drawField = (label, value, y, isSecondColumn = false) => {
-        const labelX = isSecondColumn ? labelCol2 : labelCol1;
-        const valueX = isSecondColumn ? valueCol2 : valueCol1;
+    // Função auxiliar para desenhar texto com rótulo em negrito
+    const drawLabeledText = (label, value, x, y) => {
         doc.setFont('helvetica', 'bold');
-        doc.text(label, labelX, y, { align: 'right' });
+        doc.text(label, x, y);
         doc.setFont('helvetica', 'normal');
-        doc.text(String(value), valueX, y);
+        doc.text(String(value), x + doc.getTextWidth(label), y);
     };
 
+    // Coluna da Esquerda (Dados da Solicitação)
     const dataHora = new Date(solicitacao.created_at).toLocaleString('pt-BR');
-    drawField('Código da Solicitação:', String(solicitacao.id).padStart(5, '0'), startY);
-    drawField('Data da Solicitação:', dataHora, startY, true);
-
-    startY += 8;
-    drawField('Técnico:', solicitacao.usuario?.nome || 'N/A', startY);
-
-    startY += 8;
-    drawField('Placa do Veículo:', solicitacao.veiculo?.placa || 'N/A', startY);
-    drawField('Supervisor:', solicitacao.veiculo?.supervisor?.nome || 'N/A', startY, true);
-
-    startY += 8;
-    drawField('Rota de Entrega:', solicitacao.rota || 'Não definida', startY);
-
-    startY += 8;
+    drawLabeledText('Código da Solicitação: ', String(solicitacao.id).padStart(5, '0'), leftMargin, startY);
+    startY += lineHeight;
+    drawLabeledText('Data da Solicitação: ', dataHora, leftMargin, startY);
+    startY += lineHeight;
+    drawLabeledText('Técnico: ', solicitacao.usuario?.nome || 'N/A', leftMargin, startY);
+    startY += lineHeight;
+    drawLabeledText('Placa do Veículo: ', `${solicitacao.veiculo?.placa || 'N/A'}    Supervisor: ${solicitacao.veiculo?.supervisor?.nome || 'N/A'}`, leftMargin, startY);
+    startY += lineHeight;
+    drawLabeledText('Rota de Entrega: ', solicitacao.rota || 'Não definida', leftMargin, startY);
+    startY += lineHeight;
     const dataEnvio = solicitacao.data_envio ? new Date(solicitacao.data_envio).toLocaleString('pt-BR') : 'Aguardando envio';
-    drawField('Data de Envio:', dataEnvio, startY);
-
-    // Adiciona o campo "Enviado por" na segunda coluna se a solicitação foi enviada
     const enviadoPor = solicitacao.enviado_por?.nome || (solicitacao.status === 'enviado' ? 'Não registrado' : '');
-    if (enviadoPor) {
-        drawField('Enviado por:', enviadoPor, startY, true);
-    }
+    drawLabeledText('Data de Envio: ', `${dataEnvio}    Enviado por: ${enviadoPor}`, leftMargin, startY);
 
-    // --- TABELA DE ITENS ---
+    // Coluna da Direita (Assinaturas)
+    let signatureY = 40;
+    doc.text('Motorista: _____________________________', rightMargin, signatureY);
+    signatureY += lineHeight * 2; // Espaço maior entre as assinaturas
+    doc.text('Recebido Por: ___________________________', rightMargin, signatureY);
 
     // Adicionar total de peças antes da tabela
     const totalQuantidadePDF = solicitacao.itens.reduce((total, item) => total + item.quantidade, 0);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Total de Peças: ${totalQuantidadePDF}`, 196, startY + 10, { align: 'right' });
-
-    // --- ASSINATURAS (MOVENDO PARA ANTES DA TABELA) ---
-    const signatureY = startY + 20; // Ajusta a posição Y para depois do total
-    doc.setFontSize(10);
-    doc.setTextColor(40);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Motorista: _______________________________', 14, signatureY);
-    doc.text('Recebido Por: _____________________________', 105, signatureY);
-
-    startY = signatureY; // Atualiza o startY para a tabela começar depois das assinaturas
+    doc.setFont('helvetica', 'bold'); // Negrito para o total
+    doc.text(`Total de Peças: ${totalQuantidadePDF}`, 196, startY + lineHeight, { align: 'right' });
 
     const tableColumn = ["Código", "Nome da Peça", "Quantidade"];
     const tableRows = [];
@@ -318,7 +299,7 @@ async function gerarPDF() {
     doc.autoTable({
         head: [tableColumn],
         body: tableRows,
-        startY: startY + 8, // Posição inicial da tabela ajustada
+        startY: startY + (lineHeight * 2), // Posição inicial da tabela ajustada para depois do total
         theme: 'grid',
         headStyles: { fillColor: [76, 175, 80] },
         styles: { font: 'helvetica', fontSize: 8, cellPadding: 2 }, // Fonte e padding reduzidos para caber mais itens
