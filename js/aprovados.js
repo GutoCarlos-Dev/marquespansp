@@ -76,7 +76,7 @@ async function buscarSolicitacoes() {
     const enviadoPorNome = document.getElementById('enviado-por').value;
     const codigo = document.getElementById('codigo').value;
     const tbody = document.querySelector('#tabela-aprovados tbody');
-    tbody.innerHTML = '<tr><td colspan="8">Buscando...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9">Buscando...</td></tr>';
 
     let query = supabase
         .from('solicitacoes')
@@ -433,5 +433,4 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btn-buscar').addEventListener('click', buscarSolicitacoes);
     document.getElementById('btn-exportar').addEventListener('click', exportarParaPlanilha);
     document.getElementById('btn-enviar-massa').addEventListener('click', enviarSolicitacoesEmMassa);
-    buscarSolicitacoes(); // Carregar todas inicialmente
 });
