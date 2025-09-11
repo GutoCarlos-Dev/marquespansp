@@ -59,9 +59,10 @@ async function buscarSolicitacoes() {
     let query = supabase
         .from('solicitacoes')
         .select(`
-            id, data_aprovacao, status, data_envio,
+            id, data_aprovacao, status, data_envio, enviado_por_id,
             usuario:usuario_id ( nome ),
-            veiculo:veiculo_id ( placa, supervisor:supervisor_id ( nome ) )
+            veiculo:veiculo_id ( placa, supervisor:supervisor_id ( nome ) ),
+            enviado_por:enviado_por_id ( nome )
         `)
         .in('status', ['aprovado', 'rejeitado', 'enviado']);
 
@@ -120,7 +121,7 @@ function exibirSolicitacoes(solicitacoes) {
     tbody.innerHTML = '';
 
     if (solicitacoes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8">Nenhuma solicitação encontrada.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9">Nenhuma solicitação encontrada.</td></tr>';
         return;
     }
 
@@ -158,6 +159,7 @@ function exibirSolicitacoes(solicitacoes) {
             <td>${solicitacao.veiculo?.supervisor?.nome || 'N/A'}</td>
             <td>${solicitacao.status}</td>
             <td>${dataEnvioFormatada}</td>
+            <td>${solicitacao.enviado_por?.nome || ''}</td>
             <td>${acaoBotao}</td>
         `;
         tbody.appendChild(tr);
