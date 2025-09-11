@@ -237,7 +237,7 @@ async function gerarPDF() {
             break;
     }
     // Título do Documento
-    doc.setFontSize(20);
+    doc.setFontSize(15);
     doc.setTextColor('#4CAF50');
     doc.setFont('helvetica', 'bold');
     doc.text(tituloPDF, 14, 20);
@@ -253,7 +253,7 @@ async function gerarPDF() {
     const labelCol2 = 143;
     const valueCol2 = 145;
 
-    doc.setFontSize(12);
+    doc.setFontSize(10);
     doc.setTextColor(40);
 
     let startY = 40;
