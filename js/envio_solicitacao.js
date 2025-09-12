@@ -229,7 +229,7 @@ async function gerarPDF() {
 
     switch (solicitacao.status) {
         case 'enviado':
-            tituloPDF = 'Resumo de Envio de Peças';
+            tituloPDF = 'Autorizado, Envio de Peças';
             tituloCor = '#4CAF50'; // Verde
             break;
         case 'rejeitado':
@@ -237,7 +237,7 @@ async function gerarPDF() {
             tituloCor = '#f44336'; // Vermelho
             break;
         case 'aprovado':
-            tituloPDF = 'Pendente Envio de Peças';
+            tituloPDF = 'Aprovado, Aguardando Envio de Peças';
             tituloCor = '#2196F3'; // Azul
             break;
     }
