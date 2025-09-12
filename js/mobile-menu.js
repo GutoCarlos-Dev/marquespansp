@@ -91,11 +91,11 @@ document.addEventListener('DOMContentLoaded', function() {
     touchElements.forEach(element => {
         element.addEventListener('touchstart', function() {
             this.style.transform = 'scale(0.98)';
-        });
+        }, { passive: true });
 
         element.addEventListener('touchend', function() {
             this.style.transform = 'scale(1)';
-        });
+        }, { passive: true });
     });
 
     // Add viewport meta tag if missing (for better mobile experience)

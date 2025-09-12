@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Adiciona o evento de clique para fechar a janela
         btnFechar.addEventListener('click', () => window.close());
-    });
+    }
 });
 
 // Função para carregar os detalhes da solicitação
