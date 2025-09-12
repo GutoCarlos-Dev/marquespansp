@@ -55,7 +55,7 @@ legend {
     font-weight: bold !important;
 }
 
-.info-grid input {
+.info-grid input, .info-grid select {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid #ccc;
@@ -65,7 +65,7 @@ legend {
     transition: border-color 0.3s ease;
 }
 
-.info-grid input:focus {
+.info-grid input:focus, .info-grid select:focus {
     outline: none;
     border-color: #4CAF50;
     box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
@@ -74,6 +74,11 @@ legend {
 .readonly-field {
     background-color: #f5f5f5;
     cursor: not-allowed;
+    /* Garante que a aparência seja consistente em selects desabilitados */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    color: #666;
 }
 
 .section-header {

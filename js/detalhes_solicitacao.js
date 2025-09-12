@@ -108,20 +108,23 @@ async function carregarDetalhesSolicitacao() {
     const form = document.getElementById('form-aprovacao');
     form.dataset.solicitacaoId = id;
 
+    // Desabilitar o campo de status para todos, aplicando o estilo de campo de leitura
+    const statusSelect = document.getElementById('status-select');
+    statusSelect.disabled = true;
+    statusSelect.classList.add('readonly-field');
+
     // Pega o usuário logado para verificar o nível de acesso
     const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
 
     // Desabilita edição e botões de ação, a menos que seja admin/matriz
     const podeEditar = usuarioLogado && (usuarioLogado.nivel === 'administrador' || usuarioLogado.nivel === 'matriz');
 
-    if (solicitacao.status !== 'pendente' && !podeEditar) {
+    if (solicitacao.status !== 'pendente' && !podeEditar) { // Se não for pendente e não tiver permissão para editar...
         document.getElementById('btn-aprovar').style.display = 'none';
         document.getElementById('btn-rejeitar').style.display = 'none';
         const rotaInput = document.getElementById('rota');
         rotaInput.readOnly = true;
         rotaInput.classList.add('readonly-field');
-        const statusSelect = document.getElementById('status-select');
-        statusSelect.disabled = true; // Desabilita o select
     }
 }
 
