@@ -139,19 +139,23 @@ async function salvarAprovacao(novoStatus) {
     }
 
     const rotaValue = document.getElementById('rota').value;
-    const novoStatus = document.getElementById('status-select').value;
+    // Pega o status do select, mas permite que o parâmetro da função (dos botões) o substitua.
+    let statusFinal = document.getElementById('status-select').value;
+    if (novoStatus === 'aprovado' || novoStatus === 'rejeitado') {
+        statusFinal = novoStatus;
+    }
 
     // Validar se a rota foi preenchida ao aprovar
-    if (novoStatus === 'aprovado' && !rotaValue.trim()) {
+    if (statusFinal === 'aprovado' && !rotaValue.trim()) {
         alert('Por favor, preencha a ROTA de entrega das peças antes de aprovar.');
         document.getElementById('rota').focus();
         return;
     }
 
     const dadosAtualizacao = {
-        status: novoStatus,
+        status: statusFinal,
         rota: rotaValue, // Salva a rota mesmo se o status for alterado para rejeitado
-        data_aprovacao: novoStatus === 'aprovado' ? new Date().toISOString() : null,
+        data_aprovacao: statusFinal === 'aprovado' ? new Date().toISOString() : null,
         updated_at: new Date().toISOString() // Garante que a data de atualização seja sempre enviada
     };
 
