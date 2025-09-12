@@ -34,7 +34,12 @@
                     <input type="text" id="placa" readonly class="readonly-field">
 
                     <label>Status:</label>
-                    <input type="text" id="status" readonly class="readonly-field">
+                    <select id="status-select">
+                        <option value="pendente">Pendente</option>
+                        <option value="aprovado">Aprovado</option>
+                        <option value="rejeitado">Rejeitado</option>
+                        <option value="enviado">Enviado</option>
+                    </select>
 
                     <label for="rota">Rota de Entrega:</label>
                     <input type="text" id="rota" placeholder="Informe a rota de entrega das peças">

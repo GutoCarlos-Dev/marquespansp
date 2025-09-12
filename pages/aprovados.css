@@ -1,0 +1,521 @@
+/* Estilos específicos para a página de solicitações aprovadas */
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+header nav {
+    background-color: #4CAF50;
+    padding: 1rem 2rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#menu {
+    margin-left: auto;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+}
+
+header nav h1 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+#menu button {
+    background-color: white;
+    color: #4CAF50;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+#menu button:hover {
+    background-color: #388E3C;
+    color: white;
+}
+
+nav #menu .btn-sair {
+    background-color: #388E3C !important;
+    color: white !important;
+}
+
+nav #menu .btn-sair:hover {
+    background-color: #d32f2f !important;
+    color: white !important;
+}
+
+main {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+h2 {
+    color: #4CAF50;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+/* Estilos para o formulário de filtros */
+#form-filtros {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.filtros-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    align-items: end;
+}
+
+.filtro-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.filtro-item label {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #555;
+}
+
+.filtro-item input,
+.filtro-item select {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.filtro-item input:focus,
+.filtro-item select:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+#btn-buscar,
+#btn-exportar,
+#btn-enviar-massa {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+#btn-buscar, #btn-enviar-massa {
+    padding: 0.75rem 2rem;
+}
+
+#btn-buscar:hover,
+#btn-exportar:hover,
+#btn-enviar-massa:hover {
+    background-color: #388E3C;
+}
+
+.botoes-filtro {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+#btn-exportar {
+    padding: 0.75rem 1.5rem;
+}
+
+/* Estilos para o contêiner da tabela com rolagem */
+.table-container {
+    max-height: 500px; /* Altura máxima antes da rolagem aparecer */
+    overflow-y: auto;  /* Adiciona a barra de rolagem vertical */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 2rem;
+}
+
+/* Deixa o cabeçalho da tabela (th) fixo no topo durante a rolagem */
+.table-container th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+/* Estilos para a tabela */
+#tabela-aprovados {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+}
+
+#tabela-aprovados th,
+#tabela-aprovados td {
+    padding: 0.75rem 1rem; /* Padding vertical reduzido */
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    font-size: 0.85rem; /* Exemplo: um pouco menor que o anterior */
+}
+
+#tabela-aprovados th {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+#tabela-aprovados tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+#tabela-aprovados tbody tr:last-child td {
+    border-bottom: none;
+}
+
+#tabela-aprovados button {
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem; /* Padding reduzido para diminuir a altura */
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem; /* Fonte um pouco menor */
+    transition: background-color 0.3s ease;
+}
+
+/* Botão padrão (Enviar) */
+#tabela-aprovados .btn-enviar {
+    background-color: #4CAF50; /* Verde */
+}
+#tabela-aprovados .btn-enviar:hover {
+    background-color: #388E3C;
+}
+
+/* Botão para baixar PDF */
+#tabela-aprovados .btn-pdf {
+    background-color: #2196F3; /* Azul */
+}
+#tabela-aprovados .btn-pdf:hover {
+    background-color: #1976D2;
+}
+
+/* Botão de detalhes para itens rejeitados */
+#tabela-aprovados .btn-detalhes-rejeitado {
+    background-color: #d32f2f; /* Vermelho */
+}
+
+/* Botão de editar para admin/matriz no grid */
+#tabela-aprovados .btn-editar-grid {
+    background-color: #2196F3; /* Azul */
+    margin-left: 0.5rem;
+}
+
+#tabela-aprovados .btn-editar-grid:hover {
+    background-color: #1976D2;
+}
+
+/* Botão de excluir para admin no grid */
+#tabela-aprovados .btn-excluir-grid {
+    background-color: #f44336; /* Vermelho para exclusão */
+    margin-left: 0.5rem;
+}
+
+#tabela-aprovados .btn-excluir-grid:hover {
+    background-color: #d32f2f;
+}
+
+/* Estilos para o modal */
+#modal-envio {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+}
+
+.modal-content h3 {
+    color: #4CAF50;
+    margin-bottom: 1.5rem;
+}
+
+.modal-content label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: #555;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.modal-content input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+.modal-content button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    margin: 0 0.5rem;
+    transition: background-color 0.3s ease;
+}
+
+.modal-content button:hover {
+    background-color: #388E3C;
+}
+
+/* ===== MOBILE RESPONSIVE STYLES ===== */
+
+/* Tablets and smaller screens */
+@media (max-width: 768px) {
+    header nav {
+        padding: 1rem;
+    }
+
+    header nav h1 {
+        font-size: 1.5rem;
+    }
+
+    main {
+        padding: 1rem;
+        margin: 0;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Formulário de filtros responsivo */
+    #form-filtros {
+        padding: 1rem;
+    }
+
+    .filtros-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .filtro-item {
+        margin-bottom: 0.5rem;
+    }
+
+    .filtro-item label {
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .filtro-item input,
+    .filtro-item select {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+        min-height: 44px; /* Touch-friendly */
+    }
+
+    .botoes-filtro {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+
+    .botoes-filtro button {
+        width: 100%;
+        min-height: 44px;
+        font-size: 0.9rem;
+        padding: 0.75rem;
+    }
+
+    /* Tabela responsiva */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+
+    #tabela-aprovados {
+        min-width: 800px; /* Largura mínima para scroll horizontal */
+        font-size: 0.8rem;
+    }
+
+    #tabela-aprovados th,
+    #tabela-aprovados td {
+        padding: 0.5rem 0.3rem;
+        white-space: nowrap;
+    }
+
+    #tabela-aprovados button {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+        min-height: 36px;
+    }
+
+    /* Modal responsivo */
+    .modal-content {
+        width: 95vw;
+        max-width: none;
+        margin: 1rem;
+        padding: 1rem;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-content input {
+        min-height: 44px;
+        font-size: 1rem;
+    }
+
+    .modal-content button {
+        min-height: 44px;
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+    }
+}
+
+/* Mobile phones */
+@media (max-width: 480px) {
+    header nav {
+        padding: 0.75rem;
+    }
+
+    header nav h1 {
+        font-size: 1.3rem;
+    }
+
+    main {
+        padding: 0.5rem;
+    }
+
+    #form-filtros {
+        padding: 0.75rem;
+    }
+
+    .filtros-container {
+        gap: 0.75rem;
+    }
+
+    .filtro-item input,
+    .filtro-item select {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    #tabela-aprovados {
+        min-width: 700px;
+        font-size: 0.75rem;
+    }
+
+    #tabela-aprovados th,
+    #tabela-aprovados td {
+        padding: 0.4rem 0.2rem;
+    }
+
+    .botoes-filtro button {
+        padding: 0.6rem;
+        font-size: 0.85rem;
+    }
+
+    .modal-content {
+        margin: 0.5rem;
+        padding: 0.75rem;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    .filtro-item input,
+    .filtro-item select,
+    #tabela-aprovados button,
+    .modal-content input,
+    .modal-content button {
+        min-height: 44px;
+        touch-action: manipulation;
+    }
+
+    .filtro-item input:focus,
+    .filtro-item select:focus,
+    .modal-content input:focus {
+        outline: 2px solid #4CAF50;
+        outline-offset: 2px;
+    }
+}
+
+/* Estilo para destacar solicitações rejeitadas no grid */
+.status-rejeitado {
+    background-color: #ffebee !important; /* Fundo vermelho bem claro */
+}
+
+.status-rejeitado td {
+    font-weight: 500; /* Ajustado para melhor legibilidade */
+    color: #c62828; /* Texto em vermelho escuro para maior especificidade */
+}
+
+#tabela-aprovados .btn-detalhes-rejeitado:hover {
+    background-color: #c62828; /* Vermelho mais escuro no hover */
+}
+
+/* Estilos para o grid de itens na página envio_solicitacao.html */
+#itens-grid {
+    max-height: 300px; /* Altura máxima antes de mostrar a barra de rolagem */
+    overflow-y: auto;  /* Adiciona a barra de rolagem vertical quando necessário */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 0.5rem;
+    background-color: #fff;
+}
+
+#itens-grid table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#itens-grid table th,
+#itens-grid table td {
+    font-size: 0.9rem; /* Fonte menor para melhor visualização */
+    padding: 0.5rem;
+}

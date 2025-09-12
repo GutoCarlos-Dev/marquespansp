@@ -174,6 +174,14 @@ function exibirSolicitacoes(solicitacoes) {
             acaoBotao = `<button onclick="enviarSolicitacao('${solicitacao.id}')" class="btn-enviar">Enviar Solicitação</button>`;
         }
 
+        // Adiciona o botão de editar para Matriz e Administrador
+        if (usuarioLogado && (usuarioLogado.nivel === 'administrador' || usuarioLogado.nivel === 'matriz')) {
+            // O botão de detalhes para 'rejeitado' já serve como "editar", então só adicionamos para outros status
+            if (solicitacao.status !== 'rejeitado') {
+                acaoBotao += ` <button onclick="verDetalhes(${solicitacao.id})" class="btn-editar-grid">Editar</button>`;
+            }
+        }
+
         // Adiciona o botão de excluir apenas para o administrador
         if (usuarioLogado && usuarioLogado.nivel === 'administrador') {
             acaoBotao += ` <button onclick="excluirSolicitacao(${solicitacao.id})" class="btn-excluir-grid">Excluir</button>`;

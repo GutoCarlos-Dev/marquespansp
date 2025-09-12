@@ -62,7 +62,7 @@ async function carregarDetalhesSolicitacao() {
     document.getElementById('nome-tecnico').value = solicitacao.usuario ? solicitacao.usuario.nome : 'N/A';
     // O nome do supervisor não é exibido nesta tela, mas a consulta agora está correta para futuras utilizações.
     document.getElementById('placa').value = solicitacao.veiculo ? solicitacao.veiculo.placa : 'N/A';
-    document.getElementById('status').value = solicitacao.status.toLowerCase();
+    document.getElementById('status-select').value = solicitacao.status.toLowerCase();
 
     // Preencher data e hora (usando data atual se não existir)
     const dataHoraObj = new Date(solicitacao.created_at);
@@ -108,16 +108,20 @@ async function carregarDetalhesSolicitacao() {
     const form = document.getElementById('form-aprovacao');
     form.dataset.solicitacaoId = id;
 
-    // Se a solicitação não estiver 'pendente', desabilitar edição e botões de ação
-    if (solicitacao.status !== 'pendente') {
+    // Pega o usuário logado para verificar o nível de acesso
+    const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+
+    // Desabilita edição e botões de ação, a menos que seja admin/matriz
+    const podeEditar = usuarioLogado && (usuarioLogado.nivel === 'administrador' || usuarioLogado.nivel === 'matriz');
+
+    if (solicitacao.status !== 'pendente' && !podeEditar) {
         document.getElementById('btn-aprovar').style.display = 'none';
         document.getElementById('btn-rejeitar').style.display = 'none';
         const rotaInput = document.getElementById('rota');
         rotaInput.readOnly = true;
         rotaInput.classList.add('readonly-field');
-        // Desabilitar select status
-        const statusSelect = document.getElementById('status');
-        statusSelect.disabled = true;
+        const statusSelect = document.getElementById('status-select');
+        statusSelect.disabled = true; // Desabilita o select
     }
 }
 
@@ -135,6 +139,7 @@ async function salvarAprovacao(novoStatus) {
     }
 
     const rotaValue = document.getElementById('rota').value;
+    const novoStatus = document.getElementById('status-select').value;
 
     // Validar se a rota foi preenchida ao aprovar
     if (novoStatus === 'aprovado' && !rotaValue.trim()) {
@@ -145,7 +150,7 @@ async function salvarAprovacao(novoStatus) {
 
     const dadosAtualizacao = {
         status: novoStatus,
-        rota: rotaValue,
+        rota: rotaValue, // Salva a rota mesmo se o status for alterado para rejeitado
         data_aprovacao: novoStatus === 'aprovado' ? new Date().toISOString() : null,
         updated_at: new Date().toISOString() // Garante que a data de atualização seja sempre enviada
     };
