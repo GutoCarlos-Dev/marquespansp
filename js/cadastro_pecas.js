@@ -3,6 +3,9 @@
 
 let pecas = []; // Cache local das peças para edição
 let editandoId = null;
+// Variáveis para controlar a ordenação da tabela
+let sortColumn = 'codigo'; // Coluna inicial de ordenação
+let sortAscending = true; // Direção inicial
 
 // Função para sugerir o próximo código disponível
 function sugerirProximoCodigo() {
@@ -111,7 +114,7 @@ async function atualizarTabela() {
     const { data, error } = await supabase
         .from('pecas')
         .select('*')
-        .order('nome');
+        .order(sortColumn, { ascending: sortAscending });
 
     if (error) {
         console.error('Erro ao buscar peças:', error);
@@ -139,6 +142,14 @@ async function atualizarTabela() {
             </td>
         `;
         tbody.appendChild(tr);
+    });
+
+    // Atualizar indicadores visuais nos cabeçalhos
+    document.querySelectorAll('#tabela-pecas th.sortable').forEach(th => {
+        th.classList.remove('sorted-asc', 'sorted-desc');
+        if (th.dataset.column === sortColumn) {
+            th.classList.add(sortAscending ? 'sorted-asc' : 'sorted-desc');
+        }
     });
 }
 
@@ -185,6 +196,23 @@ document.addEventListener('DOMContentLoaded', async function() {
         window.location.href = '../index.html';
         return;
     }
+
+    // Adicionar listeners de clique aos cabeçalhos da tabela para ordenação
+    document.querySelectorAll('#tabela-pecas th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const column = th.dataset.column;
+            if (sortColumn === column) {
+                // Inverte a direção se a mesma coluna for clicada
+                sortAscending = !sortAscending;
+            } else {
+                // Define a nova coluna e reseta a direção para ascendente
+                sortColumn = column;
+                sortAscending = true;
+            }
+            atualizarTabela(); // Recarrega a tabela com a nova ordenação
+        });
+    });
+
     await atualizarTabela(); // Aguarda a tabela (e o cache 'pecas') ser carregada
     sugerirProximoCodigo(); // Sugere o código com base nos dados carregados
 });

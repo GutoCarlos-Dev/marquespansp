@@ -126,6 +126,31 @@ table th {
     font-size: 0.85rem;
 }
 
+/* Estilos para cabeçalhos ordenáveis */
+table th.sortable {
+    cursor: pointer;
+    position: relative;
+    user-select: none; /* Impede a seleção de texto no cabeçalho */
+}
+
+table th.sortable:hover {
+    background-color: #388E3C; /* Escurece no hover para indicar clicabilidade */
+}
+
+/* Setas de ordenação */
+table th.sortable::after {
+    content: '';
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+
+table th.sortable.sorted-asc::after { content: '▲'; opacity: 1; }
+table th.sortable.sorted-desc::after { content: '▼'; opacity: 1; }
+
 table tbody tr:nth-child(even) {
     background-color: transparent;
 }
