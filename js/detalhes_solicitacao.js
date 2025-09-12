@@ -19,6 +19,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btn-imprimir-pdf').addEventListener('click', function() {
         gerarPDF();
     });
+
+    // Adiciona o evento de clique para o novo botão Fechar
+    document.getElementById('btn-fechar').addEventListener('click', function() {
+        window.close();
+    });
 });
 
 // Função para carregar os detalhes da solicitação
@@ -119,9 +124,15 @@ async function carregarDetalhesSolicitacao() {
     // Desabilita edição e botões de ação, a menos que seja admin/matriz
     const podeEditar = usuarioLogado && (usuarioLogado.nivel === 'administrador' || usuarioLogado.nivel === 'matriz');
 
-    if (solicitacao.status !== 'pendente' && !podeEditar) { // Se não for pendente e não tiver permissão para editar...
-        document.getElementById('btn-aprovar').style.display = 'none';
-        document.getElementById('btn-rejeitar').style.display = 'none';
+    const btnAprovar = document.getElementById('btn-aprovar');
+    const btnRejeitar = document.getElementById('btn-rejeitar');
+    const btnFechar = document.getElementById('btn-fechar');
+
+    if (solicitacao.status !== 'pendente' && !podeEditar) {
+        btnAprovar.style.display = 'none';
+        btnRejeitar.style.display = 'none';
+        btnFechar.style.display = 'inline-block'; // Mostra o botão fechar
+
         const rotaInput = document.getElementById('rota');
         rotaInput.readOnly = true;
         rotaInput.classList.add('readonly-field');
@@ -181,8 +192,13 @@ async function salvarAprovacao(novoStatus) {
         window.opener.location.reload();
     }
 
-    // Fechar a aba após ação
-    window.close();
+    // Se aprovado, recarrega os detalhes na tela. Se rejeitado, fecha a aba.
+    if (novoStatus === 'aprovado') {
+        // Recarrega os dados na mesma tela para refletir a mudança de status
+        await carregarDetalhesSolicitacao();
+    } else {
+        window.close(); // Fecha a aba para outros status (ex: rejeitado)
+    }
 }
 
 // Função para gerar PDF
