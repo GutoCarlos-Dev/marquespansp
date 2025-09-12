@@ -411,24 +411,12 @@ async function carregarVeiculos(usuario) { // Passa o objeto do usuário logado
     }
 }
 
-// Função para gerar o próximo código de solicitação
-async function gerarCodigoSolicitacao() {
+// Função para preencher o campo de código da solicitação com um texto padrão
+function preencherCodigoSolicitacao() {
     const codigoInput = document.getElementById('codigo-solicitacao');
-    if (!codigoInput || !supabase) return;
-
-    // Pega a contagem total de solicitações para gerar o próximo número
-    const { count, error } = await supabase
-        .from('solicitacoes')
-        .select('*', { count: 'exact', head: true });
-
-    if (error) {
-        console.error('Erro ao gerar código da solicitação:', error);
-        codigoInput.value = 'ERRO';
-        return;
+    if (codigoInput) {
+        codigoInput.value = 'Será gerado ao salvar';
     }
-
-    const proximoNumero = (count || 0) + 1;
-    codigoInput.value = proximoNumero.toString().padStart(5, '0');
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -453,7 +441,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('nome-tecnico').value = usuarioLogado.nome;
 
     // Carregar dados dinâmicos do Supabase
-    await gerarCodigoSolicitacao();
+    preencherCodigoSolicitacao(); // Apenas preenche o campo com texto padrão
     await carregarVeiculos(usuarioLogado); // Passa o objeto do usuário logado
     carregarGridItens();
 
@@ -487,15 +475,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             rota: '' // Adiciona o campo rota como uma string vazia
         };
 
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('solicitacoes')
-            .insert([novaSolicitacao]);
+            .insert([novaSolicitacao])
+            .select('id') // Pede ao Supabase para retornar o ID da solicitação criada
+            .single();
 
         if (error) {
             console.error('Erro ao salvar solicitação:', error);
             alert('Ocorreu um erro ao salvar a solicitação. Tente novamente.');
         } else {
-            alert('Solicitação salva com sucesso!');
+            alert(`Solicitação #${String(data.id).padStart(5, '0')} salva com sucesso!`);
             // Redirecionar para dashboard após salvar
             window.location.href = 'dashboard.html';
         }
