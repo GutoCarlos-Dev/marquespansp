@@ -221,6 +221,16 @@ h2 {
     background-color: #d32f2f; /* Vermelho */
 }
 
+/* Botão de editar para admin/matriz no grid */
+#tabela-aprovados .btn-editar-grid {
+    background-color: #A0522D; /* Marrom (Sienna) */
+    margin-left: 0.5rem;
+}
+
+#tabela-aprovados .btn-editar-grid:hover {
+    background-color: #804020; /* Marrom mais escuro */
+}
+
 /* Botão de excluir para admin no grid */
 #tabela-aprovados .btn-excluir-grid {
     background-color: #f44336; /* Vermelho para exclusão */
