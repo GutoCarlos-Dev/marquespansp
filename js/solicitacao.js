@@ -415,7 +415,7 @@ async function carregarVeiculos(usuario) { // Passa o objeto do usuário logado
 function preencherCodigoSolicitacao() {
     const codigoInput = document.getElementById('codigo-solicitacao');
     if (codigoInput) {
-        codigoInput.value = 'Será gerado ao salvar';
+        codigoInput.value = 'Será gerado ao salvar! Anote-o e Informe ao Supervisor para aprovação.';
     }
 }
 
