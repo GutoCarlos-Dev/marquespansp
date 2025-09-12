@@ -20,52 +20,56 @@
         <!-- Formulário de Filtros -->
         <form id="form-filtros">
             <div class="filtros-container">
-                <div class="filtro-item">
-                    <label for="data-inicio">Data Início:</label>
-                    <input type="date" id="data-inicio">
+                <div class="filtros-left">
+                    <div class="filtro-item">
+                        <label for="data-inicio">Data Início:</label>
+                        <input type="date" id="data-inicio">
+                    </div>
+                    <div class="filtro-item">
+                        <label for="data-fim">Data Fim:</label>
+                        <input type="date" id="data-fim">
+                    </div>
+                    <div class="filtro-item">
+                        <label for="status">Status:</label>
+                        <select id="status">
+                            <option value="">Todos</option>
+                            <option value="Aprovado">Aprovado</option>
+                            <option value="Rejeitado">Rejeitado</option>
+                            <option value="Enviado">Enviado</option>
+                        </select>
+                    </div>
+                    <div class="filtro-item">
+                        <label for="placa">Placa:</label>
+                        <select id="placa">
+                            <option value="">Todas</option>
+                            <!-- Opções serão carregadas dinamicamente -->
+                        </select>
+                    </div>
+                    <div class="filtro-item">
+                        <label for="supervisor">Supervisor:</label>
+                        <select id="supervisor">
+                            <option value="">Todos</option>
+                            <!-- Opções serão carregadas dinamicamente -->
+                        </select>
+                    </div>
+                    <div class="filtro-item">
+                        <label for="enviado-por">Enviado Por:</label>
+                        <select id="enviado-por">
+                            <option value="">Todos</option>
+                            <!-- Opções serão carregadas dinamicamente -->
+                        </select>
+                    </div>
+                    <div class="filtro-item">
+                        <label for="codigo">Código da Solicitação:</label>
+                        <input type="text" id="codigo">
+                    </div>
                 </div>
-                <div class="filtro-item">
-                    <label for="data-fim">Data Fim:</label>
-                    <input type="date" id="data-fim">
-                </div>
-                <div class="filtro-item">
-                    <label for="status">Status:</label>
-                    <select id="status">
-                        <option value="">Todos</option>
-                        <option value="Aprovado">Aprovado</option>
-                        <option value="Rejeitado">Rejeitado</option>
-                        <option value="Enviado">Enviado</option>
-                    </select>
-                </div>
-                <div class="filtro-item">
-                    <label for="placa">Placa:</label>
-                    <select id="placa">
-                        <option value="">Todas</option>
-                        <!-- Opções serão carregadas dinamicamente -->
-                    </select>
-                </div>
-                <div class="filtro-item">
-                    <label for="supervisor">Supervisor:</label>
-                    <select id="supervisor">
-                        <option value="">Todos</option>
-                        <!-- Opções serão carregadas dinamicamente -->
-                    </select>
-                </div>
-                <div class="filtro-item">
-                    <label for="enviado-por">Enviado Por:</label>
-                    <select id="enviado-por">
-                        <option value="">Todos</option>
-                        <!-- Opções serão carregadas dinamicamente -->
-                    </select>
-                </div>
-                <div class="filtro-item">
-                    <label for="codigo">Código da Solicitação:</label>
-                    <input type="text" id="codigo">
-                </div>
-                <div class="filtro-item botoes-filtro">
-                    <button type="button" id="btn-buscar">Buscar</button>
-                    <button type="button" id="btn-exportar">Gerar XLS</button>
-                    <button type="button" id="btn-enviar-massa">Enviar em Massa</button>
+                <div class="filtros-right">
+                    <div class="filtro-item botoes-filtro">
+                        <button type="button" id="btn-buscar">Buscar</button>
+                        <button type="button" id="btn-exportar">Gerar XLS</button>
+                        <button type="button" id="btn-enviar-massa">Enviar em Massa</button>
+                    </div>
                 </div>
             </div>
         </form>

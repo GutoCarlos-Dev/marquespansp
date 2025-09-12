@@ -78,10 +78,26 @@ h2 {
 }
 
 .filtros-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
     gap: 1.5rem;
-    align-items: end;
+    flex-wrap: wrap;
+}
+
+.filtros-left {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    max-width: 75%;
+}
+
+.filtros-right {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    max-width: 20%;
+    justify-content: flex-end;
 }
 
 .filtro-item {
