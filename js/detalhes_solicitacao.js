@@ -19,6 +19,23 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btn-imprimir-pdf').addEventListener('click', function() {
         gerarPDF();
     });
+
+    // Criar e configurar o botão Fechar dinamicamente
+    const btnImprimir = document.getElementById('btn-imprimir-pdf');
+    if (btnImprimir && btnImprimir.parentElement) {
+        const btnFechar = document.createElement('button');
+        btnFechar.id = 'btn-fechar';
+        btnFechar.textContent = 'Fechar';
+        btnFechar.type = 'button'; // Importante para não submeter o form
+        btnFechar.className = 'btn-secundario'; // Estilo de botão secundário
+        btnFechar.style.display = 'none'; // Começa escondido
+
+        // Adiciona o botão ao lado do de imprimir PDF
+        btnImprimir.parentElement.appendChild(btnFechar);
+
+        // Adiciona o evento de clique para fechar a janela
+        btnFechar.addEventListener('click', () => window.close());
+    });
 });
 
 // Função para carregar os detalhes da solicitação
@@ -118,6 +135,12 @@ async function carregarDetalhesSolicitacao() {
         // Desabilitar select status
         const statusSelect = document.getElementById('status');
         statusSelect.disabled = true;
+
+        // Mostra o botão Fechar que foi criado dinamicamente
+        const btnFechar = document.getElementById('btn-fechar');
+        if (btnFechar) {
+            btnFechar.style.display = 'inline-block';
+        }
     }
 }
 
@@ -164,13 +187,18 @@ async function salvarAprovacao(novoStatus) {
     // Mostrar mensagem de sucesso
     alert(`Solicitação atualizada com sucesso!`);
 
-    // Tenta recarregar a página que abriu esta (aprovacao.html)
+    // Recarrega a página anterior (aprovacao.html) para manter a lista atualizada
     if (window.opener) {
         window.opener.location.reload();
     }
 
-    // Fechar a aba após ação
-    window.close();
+    // Se a solicitação foi aprovada, atualiza a tela atual sem fechar.
+    // Se foi rejeitada, fecha a aba.
+    if (novoStatus === 'aprovado') {
+        await carregarDetalhesSolicitacao(); // Recarrega os dados na mesma tela
+    } else {
+        window.close(); // Fecha a aba para outros status (ex: rejeitado)
+    }
 }
 
 // Função para gerar PDF
