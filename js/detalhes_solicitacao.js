@@ -61,7 +61,7 @@ async function carregarDetalhesSolicitacao() {
         .from('solicitacoes')
         .select(`
             id, created_at, status, itens, rota,
-            usuario:usuario_id ( nome ), 
+            usuario:usuario_id ( nome ),
             veiculo:veiculo_id ( placa, supervisor:supervisor_id ( nome ) )
         `)
         .eq('id', id)
