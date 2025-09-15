@@ -50,7 +50,7 @@ async function carregarDetalhesSolicitacao() {
         .select(`
             id, created_at, status, itens, rota,
             usuario:usuario_id ( nome ),
-            veiculo:veiculo_id ( placa, supervisor:supervisor_id ( nome ) )
+            veiculo:veiculo_id ( placa, qtd_equipe, supervisor:supervisor_id ( nome ) )
         `)
         .eq('id', id)
         .single();
@@ -66,6 +66,7 @@ async function carregarDetalhesSolicitacao() {
     document.getElementById('codigo-solicitacao').value = String(solicitacao.id).padStart(5, '0');
     document.getElementById('nome-tecnico').value = solicitacao.usuario ? solicitacao.usuario.nome : 'N/A';
     // O nome do supervisor não é exibido nesta tela, mas a consulta agora está correta para futuras utilizações.
+    document.getElementById('qtd-equipe').value = solicitacao.veiculo?.qtd_equipe || 'N/A';
     document.getElementById('placa').value = solicitacao.veiculo ? solicitacao.veiculo.placa : 'N/A';
     document.getElementById('status-select').value = solicitacao.status.toLowerCase();
 
@@ -220,7 +221,7 @@ async function gerarPDF() {
         .select(`
             id, created_at, status, itens, rota,
             usuario:usuario_id(nome),
-            veiculo:veiculo_id(placa, supervisor:supervisor_id(nome))
+            veiculo:veiculo_id(placa, qtd_equipe, supervisor:supervisor_id(nome))
         `)
         .eq('id', id)
         .single();
@@ -320,6 +321,12 @@ async function gerarPDF() {
     startY += 8;
     drawField('Rota de Entrega:', solicitacao.rota || 'Não definida', startY);
 
+    // Adicionar QTD Equipe em vermelho
+    doc.setTextColor('#f44336'); // Cor vermelha
+    drawLabeledText('QTD Equipe: ', solicitacao.veiculo?.qtd_equipe || 'N/A', leftMargin, startY);
+    doc.setTextColor(40); // Restaurar cor padrão (cinza escuro)
+    startY += lineHeight;
+    
     // --- TABELA DE ITENS ---
 
     // Adicionar total de peças antes da tabela
