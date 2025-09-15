@@ -321,11 +321,11 @@ async function gerarPDF() {
     startY += 8;
     drawField('Rota de Entrega:', solicitacao.rota || 'Não definida', startY);
 
+    startY += 8;
     // Adicionar QTD Equipe em vermelho
     doc.setTextColor('#f44336'); // Cor vermelha
-    drawLabeledText('QTD Equipe: ', solicitacao.veiculo?.qtd_equipe || 'N/A', leftMargin, startY);
+    drawField('QTD Equipe:', solicitacao.veiculo?.qtd_equipe || 'N/A', startY);
     doc.setTextColor(40); // Restaurar cor padrão (cinza escuro)
-    startY += lineHeight;
     
     // --- TABELA DE ITENS ---
 
