@@ -267,6 +267,89 @@ function exportToXLS() {
     XLSX.writeFile(wb, 'pecas.xlsx');
 }
 
+// Função para importar arquivo XLS
+async function importarXLS(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        if (jsonData.length < 2) {
+            alert('Arquivo XLS inválido ou vazio.');
+            return;
+        }
+
+        const headers = jsonData[0];
+        const expectedHeaders = ['Código', 'Nome', 'Descrição'];
+        const headersMatch = expectedHeaders.every((header, index) => header === headers[index]);
+
+        if (!headersMatch) {
+            alert('Arquivo XLS inválido. O cabeçalho deve ser: Código,Nome,Descrição');
+            return;
+        }
+
+        let inseridos = 0;
+        let atualizados = 0;
+
+        for (let i = 1; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            const codigo = row[0];
+            const nome = row[1];
+            const descricao = row[2] || '';
+
+            if (!codigo || !nome) {
+                // Ignorar linhas sem código ou nome
+                continue;
+            }
+
+            // Verificar se já existe peça com o código
+            const pecaExistente = pecas.find(p => p.codigo === codigo);
+
+            if (pecaExistente) {
+                // Atualizar peça existente somente se nome ou descrição forem diferentes
+                const camposParaAtualizar = {};
+                if (pecaExistente.nome !== nome) {
+                    camposParaAtualizar.nome = nome;
+                }
+                if ((pecaExistente.descricao || '') !== (descricao || '')) {
+                    camposParaAtualizar.descricao = descricao;
+                }
+                if (Object.keys(camposParaAtualizar).length > 0) {
+                    const { error } = await supabase
+                        .from('pecas')
+                        .update(camposParaAtualizar)
+                        .eq('codigo', codigo);
+                    if (!error) {
+                        atualizados++;
+                    }
+                }
+            } else {
+                // Inserir nova peça somente se nome estiver presente
+                if (nome) {
+                    const { error } = await supabase
+                        .from('pecas')
+                        .insert([{ codigo, nome, descricao }]);
+                    if (!error) {
+                        inseridos++;
+                    }
+                }
+            }
+        }
+
+        alert(`Importação concluída. Inseridos: ${inseridos}, Atualizados: ${atualizados}`);
+        await atualizarTabela();
+        sugerirProximoCodigo();
+    };
+
+    reader.readAsArrayBuffer(file);
+}
+
 // Função para importar arquivo CSV
 async function importarCSV(event) {
     const file = event.target.files[0];
