@@ -48,3 +48,38 @@
     background-color: #e6f2e6;
     border-radius: 4px;
 }
+
+/* Estilos para controles de tabela (busca, filtros, etc.) */
+.table-controls {
+    display: flex;
+    justify-content: flex-start; /* Alinha à esquerda */
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap; /* Para responsividade */
+    gap: 1rem; /* Espaço entre os itens */
+}
+
+.table-controls input[type="text"] {
+    padding: 0.6rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    min-width: 250px; /* Largura mínima */
+}
+
+/* Estilo para botões secundários */
+button.btn-secundario {
+    background-color: #6c757d; /* Cinza */
+    color: white;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+button.btn-secundario:hover {
+    background-color: #5a6268;
+}
