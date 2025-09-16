@@ -85,6 +85,10 @@ form input, form select, form textarea {
     resize: none;
 }
 
+.form-bloco {
+  flex: 1;
+  min-width: 350px;
+}
 
 form button[type="submit"] {
     margin-top: 1.5rem;
