@@ -137,8 +137,8 @@ async function atualizarTabela() {
             <td>${peca.nome}</td>
             <td>${peca.descricao || '-'}</td>
             <td>
-                <button onclick="editarPeca('${peca.id}')" class="btn-editar">Editar</button>
-                <button onclick="excluirPeca('${peca.id}')" class="btn-excluir">Excluir</button>
+                <button onclick="editarPeca('${peca.id}')" class="btn-editar">✏️Editar</button>
+                <button onclick="excluirPeca('${peca.id}')" class="btn-excluir">🗑️Excluir</button>
             </td>
         `;
         tbody.appendChild(tr);
