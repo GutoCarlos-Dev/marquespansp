@@ -9,6 +9,7 @@ document.getElementById('form-usuario').addEventListener('submit', async functio
     e.preventDefault();
 
     const nome = document.getElementById('nome').value;
+    const nomecompleto = document.getElementById('nomecompleto').value;
     const email = document.getElementById('email').value;
     const senha = document.getElementById('senha').value;
     const nivel = document.getElementById('nivel').value;
@@ -24,6 +25,7 @@ document.getElementById('form-usuario').addEventListener('submit', async functio
             // Editando usuário existente
             const updateData = {
                 nome,
+                nomecompleto,
                 email,
                 nivel
             };
@@ -54,6 +56,7 @@ document.getElementById('form-usuario').addEventListener('submit', async functio
 
             const novoUsuario = {
                 nome,
+                nomecompleto,
                 email,
                 senha,
                 nivel
@@ -96,7 +99,7 @@ async function atualizarTabela() {
 
     try {
         if (!supabase) {
-            tbody.innerHTML = '<tr><td colspan="4">Erro: Conexão com o Supabase não inicializada.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5">Erro: Conexão com o Supabase não inicializada.</td></tr>';
             return;
         }
 
@@ -107,7 +110,7 @@ async function atualizarTabela() {
 
         if (error) {
             console.error('Erro ao buscar usuários:', error);
-            tbody.innerHTML = '<tr><td colspan="4">Erro ao carregar usuários</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5">Erro ao carregar usuários</td></tr>';
             return;
         }
 
@@ -115,14 +118,15 @@ async function atualizarTabela() {
         tbody.innerHTML = '';
 
         if (usuarios.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4">Nenhum usuário cadastrado</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5">Nenhum usuário cadastrado</td></tr>';
             return;
         }
 
-        usuarios.forEach(usuario => {
+usuarios.forEach(usuario => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${usuario.nome}</td>
+                <td>${usuario.nomecompleto}</td>
                 <td>${usuario.email}</td>
                 <td>${usuario.nivel}</td>
                 <td>
@@ -134,7 +138,7 @@ async function atualizarTabela() {
         });
     } catch (error) {
         console.error('Erro ao atualizar tabela:', error);
-        tbody.innerHTML = '<tr><td colspan="4">Erro ao carregar usuários</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5">Erro ao carregar usuários</td></tr>';
     }
 }
 
@@ -143,6 +147,7 @@ function editarUsuario(id) {
     const usuario = usuarios.find(u => u.id === id);
     if (usuario) {
         document.getElementById('nome').value = usuario.nome;
+        document.getElementById('nomecompleto').value = usuario.nomecompleto;
         document.getElementById('email').value = usuario.email;
         // Não preenchemos a senha por segurança, o usuário digita uma nova se quiser alterar
         document.getElementById('senha').placeholder = 'Digite uma nova senha para alterar';
