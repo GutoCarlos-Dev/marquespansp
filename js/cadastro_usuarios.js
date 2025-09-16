@@ -45,7 +45,7 @@ document.getElementById('form-usuario').addEventListener('submit', async functio
             }
 
             editandoId = null; // Reseta o modo de edição
-            document.querySelector('form button[type="submit"]').textContent = 'Salvar Usuário';
+            document.querySelector('form button[type="submit"]').innerHTML = '💾 Salvar Usuário';
         } else {
             // Adicionando novo usuário
             // Validação: A senha é obrigatória para novos usuários
@@ -155,7 +155,7 @@ function editarUsuario(id) {
         document.getElementById('nivel').value = usuario.nivel;
         
         editandoId = id;
-        document.querySelector('form button[type="submit"]').textContent = 'Atualizar Usuário';
+        document.querySelector('form button[type="submit"]').innerHTML = '🔄 Atualizar Usuário';
         window.scrollTo(0, 0); // Rola a página para o topo para ver o formulário
     }
 }
