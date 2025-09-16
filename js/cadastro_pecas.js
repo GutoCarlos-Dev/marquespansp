@@ -267,36 +267,39 @@ function exportToXLS() {
     XLSX.writeFile(wb, 'pecas.xlsx');
 }
 
-// Função para importar XLS
-async function importarXLS(event) {
+// Função para importar arquivo CSV
+async function importarCSV(event) {
     const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = async function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+        const text = e.target.result;
+        const lines = text.split(/\r?\n/);
+        if (lines.length < 2) {
+            alert('Arquivo CSV inválido ou vazio.');
+            return;
+        }
 
-        // Verificar cabeçalho
+        const headers = lines[0].split(',');
         const expectedHeaders = ['Código', 'Nome', 'Descrição'];
-        const actualHeaders = Object.keys(jsonData[0] || {});
-        const headersMatch = expectedHeaders.every((header, index) => header === actualHeaders[index]);
+        const headersMatch = expectedHeaders.every((header, index) => header === headers[index]);
 
         if (!headersMatch) {
-            alert('Arquivo XLS inválido. O cabeçalho deve ser: Código, Nome, Descrição');
+            alert('Arquivo CSV inválido. O cabeçalho deve ser: Código,Nome,Descrição');
             return;
         }
 
         let inseridos = 0;
         let atualizados = 0;
 
-        for (const item of jsonData) {
-            const codigo = item['Código'];
-            const nome = item['Nome'];
-            const descricao = item['Descrição'];
+        for (let i = 1; i < lines.length; i++) {
+            if (!lines[i].trim()) continue;
+            const cols = lines[i].split(',');
+
+            const codigo = cols[0];
+            const nome = cols[1];
+            const descricao = cols[2] || '';
 
             if (!codigo || !nome) {
                 // Ignorar linhas sem código ou nome
@@ -342,8 +345,26 @@ async function importarXLS(event) {
         sugerirProximoCodigo();
     };
 
-    reader.readAsArrayBuffer(file);
+    reader.readAsText(file);
 }
+
+// Atualizar listeners para aceitar CSV
+document.getElementById('btn-importar').addEventListener('click', () => {
+    document.getElementById('import-file').click();
+});
+
+document.getElementById('import-file').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (ext === 'csv') {
+        importarCSV(event);
+    } else if (ext === 'xls' || ext === 'xlsx') {
+        importarXLS(event);
+    } else {
+        alert('Formato de arquivo não suportado. Use CSV ou XLS/XLSX.');
+    }
+});
 
 // Inicializar ao carregar página
 document.addEventListener('DOMContentLoaded', async function() {
