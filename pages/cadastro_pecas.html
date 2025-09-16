@@ -32,6 +32,7 @@
         <form id="form-busca">
             <input type="text" id="search-input" placeholder="Digite código ou nome" />
             <button type="button" id="btn-buscar">🔍 Buscar</button>
+            <button type="button" id="btn-extrair">Extrair XLS</button>
         </form>
 
         <h3>Peças Cadastradas</h3>
@@ -51,6 +52,8 @@
             </table>
         </div>
     </main>
+    <!-- XLSX Library for export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- SupaBase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>

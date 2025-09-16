@@ -235,6 +235,38 @@ async function buscarPecas(term) {
     });
 }
 
+// Função para exportar tabela para XLS
+function exportToXLS() {
+    const originalTable = document.getElementById('tabela-pecas');
+    if (!originalTable) {
+        alert('Tabela não encontrada.');
+        return;
+    }
+
+    // Criar uma cópia da tabela sem a coluna de ações
+    const tempTable = originalTable.cloneNode(true);
+    const headers = tempTable.querySelectorAll('th');
+    const rows = tempTable.querySelectorAll('tbody tr');
+
+    // Remover a última coluna (Ações) dos headers
+    if (headers.length > 0) {
+        headers[headers.length - 1].remove();
+    }
+
+    // Remover a última célula de cada linha
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 0) {
+            cells[cells.length - 1].remove();
+        }
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.table_to_sheet(tempTable);
+    XLSX.utils.book_append_sheet(wb, ws, 'Pecas');
+    XLSX.writeFile(wb, 'pecas.xlsx');
+}
+
 // Inicializar ao carregar página
 document.addEventListener('DOMContentLoaded', async function() {
     if (!JSON.parse(localStorage.getItem('usuarioLogado'))) {
@@ -251,6 +283,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             await atualizarTabela();
         }
     });
+
+    // Adicionar listener ao botão extrair XLS
+    document.getElementById('btn-extrair').addEventListener('click', exportToXLS);
 
     // Adicionar listeners de clique aos cabeçalhos da tabela para ordenação
     document.querySelectorAll('#tabela-pecas th.sortable').forEach(th => {
