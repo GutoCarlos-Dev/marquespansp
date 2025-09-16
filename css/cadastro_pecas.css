@@ -85,10 +85,6 @@ form input, form select, form textarea {
     resize: none;
 }
 
-.form-bloco {
-  flex: 1;
-  min-width: 350px;
-}
 
 /* botão salvar */
 
