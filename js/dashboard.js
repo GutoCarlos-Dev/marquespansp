@@ -21,11 +21,85 @@ document.addEventListener('DOMContentLoaded', async () => {
         nomeUsuarioSpan.textContent = usuarioLogado.nome;
     }
 
+    // Adicionar filtro para visão geral (quantidade de solicitações e peças)
+    const filtroContainer = document.createElement('div');
+    filtroContainer.id = 'filtro-visao-geral';
+    filtroContainer.style.marginBottom = '1rem';
+
+    const labelSolicitacoes = document.createElement('label');
+    labelSolicitacoes.textContent = 'Quantidade Solicitações realizadas: ';
+    const inputSolicitacoes = document.createElement('input');
+    inputSolicitacoes.type = 'checkbox';
+    inputSolicitacoes.checked = true;
+    labelSolicitacoes.appendChild(inputSolicitacoes);
+
+    const labelPecas = document.createElement('label');
+    labelPecas.textContent = 'Quantidade total de Peças: ';
+    const inputPecas = document.createElement('input');
+    inputPecas.type = 'checkbox';
+    inputPecas.checked = true;
+    labelPecas.appendChild(inputPecas);
+
+    filtroContainer.appendChild(labelSolicitacoes);
+    filtroContainer.appendChild(labelPecas);
+
+    const dashboardContainer = document.getElementById('dashboard-container');
+    if (dashboardContainer) {
+        dashboardContainer.insertBefore(filtroContainer, dashboardContainer.firstChild);
+    }
+
+    // Função para atualizar a visão geral com base nos filtros
+    async function atualizarVisaoGeral() {
+        const mostrarSolicitacoes = inputSolicitacoes.checked;
+        const mostrarPecas = inputPecas.checked;
+
+        // Atualizar cards e gráficos conforme os filtros
+        if (mostrarSolicitacoes) {
+            await renderDashboardAdminMatriz();
+        } else {
+            // Limpar cards e gráficos relacionados a solicitações
+            const summaryCards = document.getElementById('summary-cards');
+            if (summaryCards) summaryCards.innerHTML = '';
+            const statusChart = document.getElementById('status-chart');
+            if (statusChart) {
+                const ctx = statusChart.getContext('2d');
+                ctx.clearRect(0, 0, statusChart.width, statusChart.height);
+            }
+            const barChart = document.getElementById('bar-chart');
+            if (barChart) {
+                const ctx = barChart.getContext('2d');
+                ctx.clearRect(0, 0, barChart.width, barChart.height);
+            }
+        }
+
+        if (mostrarPecas) {
+            // Aqui você pode adicionar a lógica para mostrar a quantidade total de peças
+            // Por exemplo, buscar do Supabase e mostrar em um card ou gráfico
+            const { data: pecas, error } = await supabase.from('pecas').select('*');
+            if (error) {
+                console.error('Erro ao buscar peças:', error);
+                return;
+            }
+            const totalPecas = pecas.length;
+            const container = document.getElementById('summary-cards');
+            if (container) {
+                const pecasCard = document.createElement('div');
+                pecasCard.className = 'card';
+                pecasCard.innerHTML = `<h4>Quantidade total de Peças</h4><p>${totalPecas}</p>`;
+                container.appendChild(pecasCard);
+            }
+        }
+    }
+
+    // Adicionar listeners para os checkboxes
+    inputSolicitacoes.addEventListener('change', atualizarVisaoGeral);
+    inputPecas.addEventListener('change', atualizarVisaoGeral);
+
     // Renderiza o dashboard de acordo com o nível do usuário
     switch (usuarioLogado.nivel) {
         case 'administrador':
         case 'matriz':
-            await renderDashboardAdminMatriz();
+            await atualizarVisaoGeral();
             break;
         case 'supervisor':
             await renderDashboardSupervisor(usuarioLogado);
