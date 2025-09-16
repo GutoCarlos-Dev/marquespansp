@@ -394,21 +394,21 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Listener para o input file
     document.getElementById('import-file').addEventListener('change', importarXLS);
 
-    // Adicionar listeners de clique aos cabeçalhos da tabela para ordenação
-    document.querySelectorAll('#tabela-pecas th.sortable').forEach(th => {
-        th.addEventListener('click', () => {
-            const column = th.dataset.column;
-            if (sortColumn === column) {
-                // Inverte a direção se a mesma coluna for clicada
-                sortAscending = !sortAscending;
-            } else {
-                // Define a nova coluna e reseta a direção para ascendente
-                sortColumn = column;
-                sortAscending = true;
-            }
-            atualizarTabela(); // Recarrega a tabela com a nova ordenação
-        });
+// Adicionar listeners de clique aos cabeçalhos da tabela para ordenação
+document.querySelectorAll('#tabela-pecas th.sortable').forEach(th => {
+    th.addEventListener('click', async () => {
+        const column = th.dataset.column;
+        if (sortColumn === column) {
+            // Inverte a direção se a mesma coluna for clicada
+            sortAscending = !sortAscending;
+        } else {
+            // Define a nova coluna e reseta a direção para ascendente
+            sortColumn = column;
+            sortAscending = true;
+        }
+        await atualizarTabela(); // Recarrega a tabela com a nova ordenação
     });
+});
 
     await atualizarTabela(); // Aguarda a tabela (e o cache 'pecas') ser carregada
     sugerirProximoCodigo(); // Sugere o código com base nos dados carregados
