@@ -307,21 +307,32 @@ async function importarXLS(event) {
             const pecaExistente = pecas.find(p => p.codigo === codigo);
 
             if (pecaExistente) {
-                // Atualizar peça existente
-                const { error } = await supabase
-                    .from('pecas')
-                    .update({ nome, descricao })
-                    .eq('codigo', codigo);  // Corrigido para usar 'codigo' na condição
-                if (!error) {
-                    atualizados++;
+                // Atualizar peça existente somente se nome ou descrição forem diferentes
+                const camposParaAtualizar = {};
+                if (pecaExistente.nome !== nome) {
+                    camposParaAtualizar.nome = nome;
+                }
+                if ((pecaExistente.descricao || '') !== (descricao || '')) {
+                    camposParaAtualizar.descricao = descricao;
+                }
+                if (Object.keys(camposParaAtualizar).length > 0) {
+                    const { error } = await supabase
+                        .from('pecas')
+                        .update(camposParaAtualizar)
+                        .eq('codigo', codigo);
+                    if (!error) {
+                        atualizados++;
+                    }
                 }
             } else {
-                // Inserir nova peça
-                const { error } = await supabase
-                    .from('pecas')
-                    .insert([{ codigo, nome, descricao }]);
-                if (!error) {
-                    inseridos++;
+                // Inserir nova peça somente se nome estiver presente
+                if (nome) {
+                    const { error } = await supabase
+                        .from('pecas')
+                        .insert([{ codigo, nome, descricao }]);
+                    if (!error) {
+                        inseridos++;
+                    }
                 }
             }
         }
