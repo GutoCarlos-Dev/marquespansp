@@ -95,7 +95,7 @@ document.getElementById('form-peca').addEventListener('submit', async function(e
         // Limpa o formulário e reseta o modo de edição
         editandoId = null;
         document.getElementById('form-peca').reset();
-        document.querySelector('form button[type="submit"]').textContent = 'Salvar Peça';
+        document.querySelector('form button[type="submit"]').textContent = '💾 Salvar Peça';
         await atualizarTabela();
         sugerirProximoCodigo(); // Sugere o próximo código após salvar
     }
@@ -162,7 +162,7 @@ function editarPeca(id) {
         document.getElementById('descricao').value = peca.descricao || ''; // Garante que o campo não fique com 'null' ou 'undefined'
 
         editandoId = id;
-        document.querySelector('form button[type="submit"]').textContent = 'Atualizar Peça';
+        document.querySelector('form button[type="submit"]').textContent = '💾 Atualizar Peça';
         window.scrollTo(0, 0);
     }
 }
@@ -190,12 +190,67 @@ async function excluirPeca(id) {
     }
 }
 
+// Função para buscar peças
+async function buscarPecas(term) {
+    const tbody = document.querySelector('#tabela-pecas tbody');
+    if (!tbody || !supabase) {
+        tbody.innerHTML = '<tr><td colspan="4">Erro: Conexão com o Supabase não inicializada.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = '<tr><td colspan="4">Buscando...</td></tr>';
+
+    const { data, error } = await supabase
+        .from('pecas')
+        .select('*')
+        .or(`codigo.ilike.%${term}%,nome.ilike.%${term}%`)
+        .order(sortColumn, { ascending: sortAscending });
+
+    if (error) {
+        console.error('Erro ao buscar peças:', error);
+        tbody.innerHTML = '<tr><td colspan="4">Erro ao buscar peças.</td></tr>';
+        return;
+    }
+
+    const pecasFiltradas = data || [];
+    tbody.innerHTML = '';
+
+    if (pecasFiltradas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4">Nenhuma peça encontrada.</td></tr>';
+        return;
+    }
+
+    pecasFiltradas.forEach(peca => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${peca.codigo}</td>
+            <td>${peca.nome}</td>
+            <td>${peca.descricao || '-'}</td>
+            <td>
+                <button onclick="editarPeca('${peca.id}')" class="btn-editar">✏️Editar</button>
+                <button onclick="excluirPeca('${peca.id}')" class="btn-excluir">🗑️Excluir</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
 // Inicializar ao carregar página
 document.addEventListener('DOMContentLoaded', async function() {
     if (!JSON.parse(localStorage.getItem('usuarioLogado'))) {
         window.location.href = '../index.html';
         return;
     }
+
+    // Adicionar listener ao botão buscar
+    document.getElementById('btn-buscar').addEventListener('click', async function() {
+        const term = document.getElementById('search-input').value.trim();
+        if (term) {
+            await buscarPecas(term);
+        } else {
+            await atualizarTabela();
+        }
+    });
 
     // Adicionar listeners de clique aos cabeçalhos da tabela para ordenação
     document.querySelectorAll('#tabela-pecas th.sortable').forEach(th => {

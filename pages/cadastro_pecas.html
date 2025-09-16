@@ -29,8 +29,8 @@
             <button type="submit">💾 Salvar Peça</button><br><br>
         </form>
         <h2>Buscar Peças</h2>
-        <form id="form-peca">        
-            <input type="text" id="btn-buscar" />
+        <form id="form-busca">
+            <input type="text" id="search-input" placeholder="Digite código ou nome" />
             <button type="button" id="btn-buscar">🔍 Buscar</button>
         </form>
 
@@ -39,9 +39,9 @@
             <table id="tabela-pecas">
                 <thead>
                     <tr>
-                        <th>Código</th>
-                        <th>Nome</th>
-                        <th>Descrição</th>
+                        <th class="sortable" data-column="codigo">Código</th>
+                        <th class="sortable" data-column="nome">Nome</th>
+                        <th class="sortable" data-column="descricao">Descrição</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
