@@ -311,7 +311,7 @@ async function importarXLS(event) {
                 const { error } = await supabase
                     .from('pecas')
                     .update({ nome, descricao })
-                    .eq('id', pecaExistente.id);
+                    .eq('codigo', codigo);  // Corrigido para usar 'codigo' na condição
                 if (!error) {
                     atualizados++;
                 }
