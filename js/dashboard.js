@@ -74,9 +74,50 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (mostrarPecas) {
             // Buscar as solicitações para calcular a quantidade real de peças por solicitante
-            const { data: solicitacoes, error: solicitacoesError } = await supabase
-                .from('solicitacoes')
-                .select('id, usuario:usuario_id(nome), itens');
+            let solicitacoes = [];
+            if (usuarioLogado.nivel === 'supervisor') {
+                // Buscar veículos do supervisor
+                const { data: veiculosSupervisor, error: veiculosError } = await supabase
+                    .from('veiculos')
+                    .select('id')
+                    .eq('supervisor_id', usuarioLogado.id);
+                if (veiculosError) {
+                    console.error('Erro ao buscar veículos do supervisor:', veiculosError);
+                    return;
+                }
+                const veiculosIds = veiculosSupervisor.map(v => v.id);
+                if (veiculosIds.length > 0) {
+                    const { data, error } = await supabase
+                        .from('solicitacoes')
+                        .select('id, usuario:usuario_id(nome), itens, veiculo_id')
+                        .in('veiculo_id', veiculosIds);
+                    if (error) {
+                        console.error('Erro ao buscar solicitações do supervisor:', error);
+                        return;
+                    }
+                    solicitacoes = data;
+                }
+            } else if (usuarioLogado.nivel === 'administrador' || usuarioLogado.nivel === 'matriz') {
+                const { data, error } = await supabase
+                    .from('solicitacoes')
+                    .select('id, usuario:usuario_id(nome), itens');
+                if (error) {
+                    console.error('Erro ao buscar solicitações:', error);
+                    return;
+                }
+                solicitacoes = data;
+            } else {
+                // Para outros níveis, buscar apenas as solicitações do próprio usuário
+                const { data, error } = await supabase
+                    .from('solicitacoes')
+                    .select('id, usuario:usuario_id(nome), itens')
+                    .eq('usuario_id', usuarioLogado.id);
+                if (error) {
+                    console.error('Erro ao buscar solicitações do usuário:', error);
+                    return;
+                }
+                solicitacoes = data;
+            }
 
             if (solicitacoesError) {
                 console.error('Erro ao buscar solicitações:', solicitacoesError);
