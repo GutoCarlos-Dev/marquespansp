@@ -373,6 +373,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         return;
     }
 
+    // Adicionar listener ao input de busca para busca em tempo real
+    document.getElementById('search-input').addEventListener('input', async function() {
+        const term = this.value.trim();
+        if (term) {
+            await buscarPecas(term);
+        } else {
+            await atualizarTabela();
+        }
+    });
+
     // Adicionar listener ao botão buscar
     document.getElementById('btn-buscar').addEventListener('click', async function() {
         const term = document.getElementById('search-input').value.trim();
@@ -394,22 +404,37 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Listener para o input file
     document.getElementById('import-file').addEventListener('change', importarXLS);
 
-// Adicionar listeners de clique aos cabeçalhos da tabela para ordenação
-document.querySelectorAll('#tabela-pecas th.sortable').forEach(th => {
-    th.addEventListener('click', async () => {
-        const column = th.dataset.column;
-        if (sortColumn === column) {
-            // Inverte a direção se a mesma coluna for clicada
-            sortAscending = !sortAscending;
-        } else {
-            // Define a nova coluna e reseta a direção para ascendente
-            sortColumn = column;
-            sortAscending = true;
-        }
-        await atualizarTabela(); // Recarrega a tabela com a nova ordenação
+    // Adicionar listeners de clique aos cabeçalhos da tabela para ordenação
+    document.querySelectorAll('#tabela-pecas th.sortable').forEach(th => {
+        th.addEventListener('click', async () => {
+            const column = th.dataset.column;
+            if (sortColumn === column) {
+                // Inverte a direção se a mesma coluna for clicada
+                sortAscending = !sortAscending;
+            } else {
+                // Define a nova coluna e reseta a direção para ascendente
+                sortColumn = column;
+                sortAscending = true;
+            }
+            await atualizarTabela(); // Recarrega a tabela com a nova ordenação
+        });
     });
-});
 
-    await atualizarTabela(); // Aguarda a tabela (e o cache 'pecas') ser carregada
-    sugerirProximoCodigo(); // Sugere o código com base nos dados carregados
+    // Atualiza a tabela e sugere o próximo código baseado no maior código existente
+    await atualizarTabela();
+    if (pecas.length > 0) {
+        const codigosNumericos = pecas
+            .map(p => parseInt(p.codigo, 10))
+            .filter(n => !isNaN(n));
+        const maxCodigo = codigosNumericos.length > 0 ? Math.max(...codigosNumericos) : 0;
+        const codigoInput = document.getElementById('codigo');
+        if (codigoInput) {
+            codigoInput.value = maxCodigo + 1;
+        }
+    } else {
+        const codigoInput = document.getElementById('codigo');
+        if (codigoInput) {
+            codigoInput.value = 1;
+        }
+    }
 });
