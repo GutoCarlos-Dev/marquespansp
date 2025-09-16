@@ -15,10 +15,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Mostrar nome do usuário
+    // Mostrar nome completo do usuário no dashboard
     const nomeUsuarioSpan = document.getElementById('nome-usuario');
     if (nomeUsuarioSpan) {
-        nomeUsuarioSpan.textContent = usuarioLogado.nome;
+        nomeUsuarioSpan.textContent = usuarioLogado.nomecompleto || usuarioLogado.nome;
     }
 
     // Adicionar filtro para visão geral (quantidade de solicitações e peças)
