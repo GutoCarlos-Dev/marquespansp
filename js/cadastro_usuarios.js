@@ -130,8 +130,8 @@ usuarios.forEach(usuario => {
                 <td>${usuario.email}</td>
                 <td>${usuario.nivel}</td>
                 <td>
-                    <button onclick="editarUsuario(${usuario.id})" class="btn-editar">Editar</button>
-                    <button onclick="excluirUsuario(${usuario.id})" class="btn-excluir">Excluir</button>
+                    <button onclick="editarUsuario(${usuario.id})" class="btn-editar">✏️Editar</button>
+                    <button onclick="excluirUsuario(${usuario.id})" class="btn-excluir">🗑️Excluir</button>
                 </td>
             `;
             tbody.appendChild(tr);
