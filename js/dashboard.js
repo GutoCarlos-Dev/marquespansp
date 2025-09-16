@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            // Calcular quantidade total de peças por solicitante
+            // Calcular quantidade total de itens utilizados nas solicitações por solicitante
             const pecasPorSolicitante = {};
             solicitacoes.forEach(solicitacao => {
                 const nomeSolicitante = solicitacao.usuario?.nome || 'Desconhecido';
