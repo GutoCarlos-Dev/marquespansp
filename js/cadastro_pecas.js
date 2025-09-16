@@ -111,21 +111,10 @@ async function atualizarTabela() {
 
     tbody.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>';
 
-    // Pega o termo de busca do novo input
-    const termoBusca = document.getElementById('busca-peca')?.value.trim();
-
-    let query = supabase
+    const { data, error } = await supabase
         .from('pecas')
         .select('*')
         .order(sortColumn, { ascending: sortAscending });
-
-    // Se houver um termo de busca, adiciona o filtro na consulta
-    if (termoBusca) {
-        // .or() busca em múltiplas colunas. ilike é case-insensitive.
-        query = query.or(`nome.ilike.%${termoBusca}%,codigo.ilike.%${termoBusca}%`);
-    }
-
-    const { data, error } = await query;
 
     if (error) {
         console.error('Erro ao buscar peças:', error);
@@ -206,17 +195,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!JSON.parse(localStorage.getItem('usuarioLogado'))) {
         window.location.href = '../index.html';
         return;
-    }
-
-    // Adicionar listeners para os novos controles de busca e atualização
-    const buscaInput = document.getElementById('busca-peca');
-    const btnAtualizar = document.getElementById('btn-atualizar-tabela');
-
-    if (buscaInput) {
-        buscaInput.addEventListener('input', () => atualizarTabela());
-    }
-    if (btnAtualizar) {
-        btnAtualizar.addEventListener('click', () => atualizarTabela());
     }
 
     // Adicionar listeners de clique aos cabeçalhos da tabela para ordenação

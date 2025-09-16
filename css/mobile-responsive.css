@@ -147,12 +147,6 @@
         margin: 0 !important;
     }
 
-    /* Stacks table controls vertically on mobile */
-    .table-controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
     /* Modal improvements */
     .modal-overlay, .modal {
         padding: 1rem;
