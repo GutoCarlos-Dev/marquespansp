@@ -55,7 +55,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Atualizar cards e gráficos conforme os filtros
         if (mostrarSolicitacoes) {
-            await renderDashboardAdminMatriz();
+            if (usuarioLogado.nivel === 'supervisor') {
+                await renderDashboardSupervisor(usuarioLogado);
+            } else if (usuarioLogado.nivel === 'administrador' || usuarioLogado.nivel === 'matriz') {
+                await renderDashboardAdminMatriz();
+            } else {
+                await renderDashboardTecnico(usuarioLogado);
+            }
         } else {
             // Limpar cards e gráficos relacionados a solicitações
             const summaryCards = document.getElementById('summary-cards');
@@ -117,11 +123,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     return;
                 }
                 solicitacoes = data;
-            }
-
-            if (solicitacoesError) {
-                console.error('Erro ao buscar solicitações:', solicitacoesError);
-                return;
             }
 
             // Calcular quantidade total de itens utilizados nas solicitações por solicitante
