@@ -267,6 +267,73 @@ function exportToXLS() {
     XLSX.writeFile(wb, 'pecas.xlsx');
 }
 
+// Função para importar XLS
+async function importarXLS(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+        // Verificar cabeçalho
+        const expectedHeaders = ['Código', 'Nome', 'Descrição'];
+        const actualHeaders = Object.keys(jsonData[0] || {});
+        const headersMatch = expectedHeaders.every((header, index) => header === actualHeaders[index]);
+
+        if (!headersMatch) {
+            alert('Arquivo XLS inválido. O cabeçalho deve ser: Código, Nome, Descrição');
+            return;
+        }
+
+        let inseridos = 0;
+        let atualizados = 0;
+
+        for (const item of jsonData) {
+            const codigo = item['Código'];
+            const nome = item['Nome'];
+            const descricao = item['Descrição'];
+
+            if (!codigo || !nome) {
+                // Ignorar linhas sem código ou nome
+                continue;
+            }
+
+            // Verificar se já existe peça com o código
+            const pecaExistente = pecas.find(p => p.codigo === codigo);
+
+            if (pecaExistente) {
+                // Atualizar peça existente
+                const { error } = await supabase
+                    .from('pecas')
+                    .update({ nome, descricao })
+                    .eq('id', pecaExistente.id);
+                if (!error) {
+                    atualizados++;
+                }
+            } else {
+                // Inserir nova peça
+                const { error } = await supabase
+                    .from('pecas')
+                    .insert([{ codigo, nome, descricao }]);
+                if (!error) {
+                    inseridos++;
+                }
+            }
+        }
+
+        alert(`Importação concluída. Inseridos: ${inseridos}, Atualizados: ${atualizados}`);
+        await atualizarTabela();
+        sugerirProximoCodigo();
+    };
+
+    reader.readAsArrayBuffer(file);
+}
+
 // Inicializar ao carregar página
 document.addEventListener('DOMContentLoaded', async function() {
     if (!JSON.parse(localStorage.getItem('usuarioLogado'))) {
@@ -286,6 +353,14 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Adicionar listener ao botão extrair XLS
     document.getElementById('btn-extrair').addEventListener('click', exportToXLS);
+
+    // Adicionar listener ao botão importar XLS
+    document.getElementById('btn-importar').addEventListener('click', () => {
+        document.getElementById('import-file').click();
+    });
+
+    // Listener para o input file
+    document.getElementById('import-file').addEventListener('change', importarXLS);
 
     // Adicionar listeners de clique aos cabeçalhos da tabela para ordenação
     document.querySelectorAll('#tabela-pecas th.sortable').forEach(th => {
