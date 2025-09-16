@@ -73,20 +73,72 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (mostrarPecas) {
-            // Aqui você pode adicionar a lógica para mostrar a quantidade total de peças
-            // Por exemplo, buscar do Supabase e mostrar em um card ou gráfico
-            const { data: pecas, error } = await supabase.from('pecas').select('*');
-            if (error) {
-                console.error('Erro ao buscar peças:', error);
+            // Buscar as solicitações para calcular a quantidade real de peças por solicitante
+            const { data: solicitacoes, error: solicitacoesError } = await supabase
+                .from('solicitacoes')
+                .select('id, usuario:usuario_id(nome), itens');
+
+            if (solicitacoesError) {
+                console.error('Erro ao buscar solicitações:', solicitacoesError);
                 return;
             }
-            const totalPecas = pecas.length;
+
+            // Calcular quantidade total de peças por solicitante
+            const pecasPorSolicitante = {};
+            solicitacoes.forEach(solicitacao => {
+                const nomeSolicitante = solicitacao.usuario?.nome || 'Desconhecido';
+                const totalItens = (solicitacao.itens || []).reduce((acc, item) => acc + (item.quantidade || 0), 0);
+                pecasPorSolicitante[nomeSolicitante] = (pecasPorSolicitante[nomeSolicitante] || 0) + totalItens;
+            });
+
+            // Atualizar o card de quantidade total de peças
             const container = document.getElementById('summary-cards');
             if (container) {
+                // Remover card antigo de peças se existir
+                const antigoCard = container.querySelector('.card.pecas-total');
+                if (antigoCard) {
+                    container.removeChild(antigoCard);
+                }
+
                 const pecasCard = document.createElement('div');
-                pecasCard.className = 'card';
+                pecasCard.className = 'card pecas-total';
+                const totalPecas = Object.values(pecasPorSolicitante).reduce((acc, val) => acc + val, 0);
                 pecasCard.innerHTML = `<h4>Quantidade total de Peças</h4><p>${totalPecas}</p>`;
                 container.appendChild(pecasCard);
+
+                // Atualizar gráfico de barras para mostrar quantidade por solicitante
+                const labels = Object.keys(pecasPorSolicitante);
+                const data = Object.values(pecasPorSolicitante);
+
+                if (barChartInstance) {
+                    barChartInstance.destroy();
+                }
+                const ctx = document.getElementById('bar-chart').getContext('2d');
+                barChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Quantidade de Peças por Solicitante',
+                            data: data,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
             }
         }
     }
