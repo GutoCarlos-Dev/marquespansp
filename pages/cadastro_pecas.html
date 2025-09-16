@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Cadastro de Peças</title>
     <link rel="stylesheet" href="../css/style.css" />
-    <link rel="stylesheet" href="../css/cadastro_pecas.css" />
+    <link rel="stylesheet" href="../css/mobile-responsive.css" />
 </head>
 <body>
     <header>
@@ -20,23 +20,29 @@
             <label for="codigo">Código:</label>
             <input type="text" id="codigo" required />
 
-            <label for="nome">Nome:</label>
+            <label for="nome">Nome da Peça:</label>
             <input type="text" id="nome" required />
 
             <label for="descricao">Descrição:</label>
-            <textarea id="descricao" rows="3"></textarea><br>
+            <textarea id="descricao"></textarea>
 
             <button type="submit">Salvar Peça</button>
         </form>
 
         <h3>Peças Cadastradas</h3>
+        
+        <div class="table-controls">
+            <input type="text" id="busca-peca" placeholder="Buscar por código ou nome...">
+            <button type="button" id="btn-atualizar-tabela" class="btn-secundario">Atualizar</button>
+        </div>
+
         <div class="table-container">
             <table id="tabela-pecas">
                 <thead>
                     <tr>
-                        <th>Código</th>
-                        <th>Nome</th>
-                        <th>Descrição</th>
+                        <th class="sortable" data-column="codigo">Código</th>
+                        <th class="sortable" data-column="nome">Nome da Peça</th>
+                        <th class="sortable" data-column="descricao">Descrição</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -51,5 +57,6 @@
     <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
     <script src="../js/cadastro_pecas.js"></script>
+    <script src="../js/mobile-menu.js"></script>
 </body>
 </html>
