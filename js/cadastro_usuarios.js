@@ -45,7 +45,7 @@ document.getElementById('form-usuario').addEventListener('submit', async functio
             }
 
             editandoId = null; // Reseta o modo de edição
-            document.querySelector('form button[type="submit"]').textContent = '💾 Salvar Usuário';
+            document.querySelector('form button[type="submit"]').textContent = 'Salvar Usuário';
         } else {
             // Adicionando novo usuário
             // Validação: A senha é obrigatória para novos usuários
