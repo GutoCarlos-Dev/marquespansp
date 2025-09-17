@@ -1,3 +1,10 @@
+/* Estilos gerais */
+header nav .logo {
+    height: 40px;
+    margin-right: 1rem;
+    object-fit: contain;
+}
+
 /* Estilos para o dropdown do menu Cadastro */
 .dropdown {
     position: relative;

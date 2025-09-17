@@ -1,7 +1,4 @@
-- [x] Editar pages/cadastro_usuarios.html: Corrigir header da tabela para "Nome Completo"
-- [x] Editar js/cadastro_usuarios.js: Coletar nomecompleto no submit do formulário
-- [x] Incluir nomecompleto em updateData (edição)
-- [x] Incluir nomecompleto em novoUsuario (inserção)
-- [x] Preencher nomecompleto no editarUsuario
-- [x] Adicionar coluna nomecompleto na tabela após nome
-- [x] Atualizar colspan de 4 para 5 nas mensagens de erro
+- [x] Add logo image before the title in pages/dashboard.html
+- [x] Add CSS styles for the logo in css/dashboard.css
+- [x] Add logo to all other pages: cadastro_usuarios.html, cadastro_veiculos.html, cadastro_pecas.html, solicitacao.html, aprovacao.html, aprovados.html
+- [x] Move logo styles to css/style.css for global application
