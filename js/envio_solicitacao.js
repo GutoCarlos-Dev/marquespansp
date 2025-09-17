@@ -132,6 +132,12 @@ async function carregarDetalhesSolicitacao() {
     // Armazenar a solicitação globalmente para uso na edição
     window.solicitacaoAtual = solicitacao;
 
+    // Restaura a visibilidade padrão dos botões de ação principais
+    document.getElementById('btn-enviar').style.display = 'inline-block';
+    document.getElementById('btn-imprimir').style.display = 'inline-block';
+    // Esconde o botão de editar por padrão, para depois ser reavaliado pela permissão
+    document.getElementById('btn-editar-itens').style.display = 'none';
+
     // Verificar nível do usuário para mostrar botão de editar itens
     if (usuarioLogado && (usuarioLogado.nivel === 'administrador' || usuarioLogado.nivel === 'matriz')) {
         document.getElementById('btn-editar-itens').style.display = 'inline-block';
