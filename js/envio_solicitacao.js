@@ -16,6 +16,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btn-editar-itens').addEventListener('click', function() {
         editarItens();
     });
+
+    // Adiciona listeners para os botões de salvar e cancelar a edição
+    document.getElementById('btn-salvar-itens').addEventListener('click', salvarAlteracoesItens);
+    document.getElementById('btn-cancelar-edicao').addEventListener('click', () => {
+        // Simplesmente recarrega os detalhes originais para cancelar
+        carregarDetalhesSolicitacao();
+    });
 });
 
 // Função para carregar os detalhes da solicitação
@@ -126,7 +133,7 @@ async function carregarDetalhesSolicitacao() {
     window.solicitacaoAtual = solicitacao;
 
     // Verificar nível do usuário para mostrar botão de editar itens
-    if (usuarioLogado && (usuarioLogado.nivel === 'admin' || usuarioLogado.nivel === 'matriz')) {
+    if (usuarioLogado && (usuarioLogado.nivel === 'administrador' || usuarioLogado.nivel === 'matriz')) {
         document.getElementById('btn-editar-itens').style.display = 'inline-block';
     }
 
@@ -137,6 +144,73 @@ async function carregarDetalhesSolicitacao() {
         document.getElementById('hora-envio').readOnly = true;
         document.getElementById('usuario-envio').readOnly = true;
         document.getElementById('container-usuario-envio').style.display = 'flex';
+        document.getElementById('btn-editar-itens').style.display = 'none'; // Esconde o botão de editar se já foi enviado
+    }
+
+    // Garante que os botões de ação de edição estejam escondidos ao carregar
+    document.getElementById('edit-actions-container').style.display = 'none';
+}
+
+// Função para habilitar a edição dos itens na grid
+function editarItens() {
+    if (!window.solicitacaoAtual) return;
+
+    const solicitacao = window.solicitacaoAtual;
+    const itensGrid = document.getElementById('itens-grid');
+
+    // Esconde os botões principais para evitar ações conflitantes
+    document.getElementById('btn-enviar').style.display = 'none';
+    document.getElementById('btn-imprimir').style.display = 'none';
+    document.getElementById('btn-editar-itens').style.display = 'none';
+
+    // Mostra os botões de salvar/cancelar edição
+    document.getElementById('edit-actions-container').style.display = 'flex';
+
+    // Cria a tabela com campos de input para quantidade
+    const tabela = document.createElement('table');
+    tabela.innerHTML = `
+        <thead>
+            <tr><th>Código</th><th>Nome da Peça</th><th>Quantidade</th></tr>
+        </thead>
+        <tbody>
+            ${solicitacao.itens.map((item, index) => `
+                <tr>
+                    <td>${item.codigo}</td>
+                    <td>${item.nome}</td>
+                    <td><input type="number" class="input-quantidade" min="1" value="${item.quantidade}" data-index="${index}"></td>
+                </tr>
+            `).join('')}
+        </tbody>
+    `;
+    itensGrid.innerHTML = ''; // Limpa o grid antigo
+    itensGrid.appendChild(tabela);
+}
+
+// Função para salvar as alterações dos itens no Supabase
+async function salvarAlteracoesItens() {
+    const id = window.solicitacaoAtual.id;
+    const inputs = document.querySelectorAll('.input-quantidade');
+    const novosItens = [...window.solicitacaoAtual.itens]; // Cria uma cópia para modificar
+
+    inputs.forEach(input => {
+        const index = parseInt(input.dataset.index, 10);
+        const novaQtd = parseInt(input.value, 10);
+        if (novaQtd > 0) {
+            novosItens[index].quantidade = novaQtd;
+        }
+    });
+
+    const { error } = await supabase
+        .from('solicitacoes')
+        .update({ itens: novosItens, updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+    if (error) {
+        console.error('Erro ao atualizar itens:', error);
+        alert('Erro ao salvar as alterações. Verifique o console.');
+    } else {
+        alert('Itens atualizados com sucesso!');
+        await carregarDetalhesSolicitacao(); // Recarrega a tela para refletir as mudanças e restaurar a UI
     }
 }
 
