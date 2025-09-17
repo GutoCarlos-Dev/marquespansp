@@ -15,7 +15,7 @@ function carregarGridItens() {
 
     // Botão para abrir modal de seleção de peças
     const btnAdicionar = document.createElement('button');
-    btnAdicionar.textContent = 'Adicionar Peça';
+    btnAdicionar.textContent = 'Incluir Peça';
     btnAdicionar.type = 'button'; // Ensure it does not submit form
     btnAdicionar.addEventListener('click', abrirModalAdicionar);
     gridHeader.appendChild(btnAdicionar);
