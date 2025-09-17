@@ -84,7 +84,7 @@ document.getElementById('form-veiculo').addEventListener('submit', async functio
             .eq('id', editandoId);
         error = updateError;
         editandoId = null;
-        document.querySelector('form button[type="submit"]').textContent = 'Salvar Veículo';
+        document.querySelector('form button[type="submit"]').textContent = '💾 Salvar Veículo';
     } else {
         // Adicionando
         const { error: insertError } = await supabase
@@ -150,8 +150,8 @@ async function atualizarTabela() {
             <td>${veiculo.supervisor ? veiculo.supervisor.nome : '-'}</td>
             <td>${veiculo.tecnico ? veiculo.tecnico.nome : '-'}</td>
             <td>
-                <button onclick="editarVeiculo(${veiculo.id})" class="btn-editar">Editar</button>
-                <button onclick="excluirVeiculo(${veiculo.id})" class="btn-excluir">Excluir</button>
+                <button onclick="editarVeiculo(${veiculo.id})" class="btn-editar">✏️Editar</button>
+                <button onclick="excluirVeiculo(${veiculo.id})" class="btn-excluir">🗑️Excluir</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -168,7 +168,7 @@ function editarVeiculo(id) {
         document.getElementById('tecnico').value = veiculo.tecnico_id;
 
         editandoId = id;
-        document.querySelector('form button[type="submit"]').textContent = 'Atualizar Veículo';
+        document.querySelector('form button[type="submit"]').textContent = '🔄 Atualizar Veículo';
         window.scrollTo(0, 0); // Rola a página para o topo para ver o formulário
     }
 }
