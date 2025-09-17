@@ -101,7 +101,7 @@ async function carregarDetalhesSolicitacao() {
         const tabela = document.createElement('table');
         tabela.innerHTML = `
             <thead>
-                <tr><th>Código</th><th>Nome da Peça</th><th>QTD Solicitada</th></tr>
+                <tr><th>Código</th><th>Nome da Peça</th><th>QTD Pedida</th></tr>
             </thead>
             <tbody>
                 ${solicitacao.itens.map(item => `<tr><td>${item.codigo}</td><td>${item.nome}</td><td>${item.quantidade}</td></tr>`).join('')}
