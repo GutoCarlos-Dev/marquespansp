@@ -12,6 +12,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btn-imprimir').addEventListener('click', function() {
         gerarPDF();
     });
+
+    document.getElementById('btn-editar-itens').addEventListener('click', function() {
+        editarItens();
+    });
 });
 
 // Função para carregar os detalhes da solicitação
@@ -117,6 +121,14 @@ async function carregarDetalhesSolicitacao() {
     // Salvar ID da solicitação no formulário para uso posterior
     const form = document.getElementById('form-envio');
     form.dataset.solicitacaoId = id;
+
+    // Armazenar a solicitação globalmente para uso na edição
+    window.solicitacaoAtual = solicitacao;
+
+    // Verificar nível do usuário para mostrar botão de editar itens
+    if (usuarioLogado && (usuarioLogado.nivel === 'admin' || usuarioLogado.nivel === 'matriz')) {
+        document.getElementById('btn-editar-itens').style.display = 'inline-block';
+    }
 
     // Se a solicitação já foi enviada, desabilitar o botão de salvar
     if (solicitacao.status === 'enviado') {
