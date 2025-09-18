@@ -1,5 +1,8 @@
 // Sistema de Solicitação de Peças - Página de Detalhes da Solicitação
 
+let isEditing = false;
+let itensOriginais = [];
+
 document.addEventListener('DOMContentLoaded', function() {
     // Verifica se o usuário está logado antes de carregar
     if (!JSON.parse(localStorage.getItem('usuarioLogado'))) {
@@ -23,6 +26,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Adiciona o evento de clique para o novo botão Fechar
     document.getElementById('btn-fechar').addEventListener('click', function() {
         window.close();
+    });
+
+    // Adiciona o evento de clique para o botão Editar Itens
+    document.getElementById('btn-editar-itens').addEventListener('click', function() {
+        const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+        if (!usuarioLogado || (usuarioLogado.nivel !== 'administrador' && usuarioLogado.nivel !== 'matriz')) {
+            alert('Acesso negado. Apenas administradores ou matriz podem editar itens.');
+            return;
+        }
+
+        if (!isEditing) {
+            entrarModoEdicao();
+        } else {
+            salvarAlteracoes();
+        }
     });
 });
 
@@ -88,6 +106,9 @@ async function carregarDetalhesSolicitacao() {
     if(oldTotal) oldTotal.remove();
 
     if (solicitacao.itens && solicitacao.itens.length > 0) {
+        // Salvar itens originais para edição
+        itensOriginais = JSON.parse(JSON.stringify(solicitacao.itens));
+
         // Calcular total de peças
         const totalQuantidade = solicitacao.itens.reduce((total, item) => total + item.quantidade, 0);
 
@@ -362,4 +383,65 @@ async function gerarPDF() {
 
     // Salvar o PDF
     doc.save(`solicitacao_${String(solicitacao.id).padStart(5, '0')}.pdf`);
+}
+
+// Função para entrar no modo de edição
+function entrarModoEdicao() {
+    const tabela = document.querySelector('#itens-grid table');
+    if (!tabela) return;
+
+    const tbody = tabela.querySelector('tbody');
+    const rows = tbody.querySelectorAll('tr');
+
+    rows.forEach((row, index) => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 3) {
+            const quantidadeCell = cells[2];
+            const quantidade = itensOriginais[index].quantidade;
+            quantidadeCell.innerHTML = `<input type="number" value="${quantidade}" min="1" style="width: 100%; box-sizing: border-box;">`;
+        }
+    });
+
+    isEditing = true;
+    document.getElementById('btn-editar-itens').innerHTML = '💾Salvar';
+}
+
+// Função para salvar as alterações
+async function salvarAlteracoes() {
+    const tabela = document.querySelector('#itens-grid table');
+    if (!tabela) return;
+
+    const tbody = tabela.querySelector('tbody');
+    const rows = tbody.querySelectorAll('tr');
+
+    rows.forEach((row, index) => {
+        const input = row.querySelector('input');
+        if (input) {
+            const newQtd = parseInt(input.value);
+            if (newQtd > 0) {
+                itensOriginais[index].quantidade = newQtd;
+            }
+        }
+    });
+
+    // Atualizar no banco de dados
+    const form = document.getElementById('form-aprovacao');
+    const id = form.dataset.solicitacaoId;
+
+    const { error } = await supabase
+        .from('solicitacoes')
+        .update({ itens: itensOriginais, updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+    if (error) {
+        alert('Erro ao salvar alterações.');
+        return;
+    }
+
+    alert('Alterações salvas com sucesso!');
+    isEditing = false;
+    document.getElementById('btn-editar-itens').innerHTML = '✏️Editar Itens';
+
+    // Recarregar a página
+    window.location.reload();
 }
