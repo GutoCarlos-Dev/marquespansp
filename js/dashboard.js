@@ -130,17 +130,38 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (recentActivityContainer) recentActivityContainer.style.display = 'block';
         }
 
+        // Lógica para o gráfico de barras
+        const barChartContainer = document.getElementById('bar-chart-container');
+        if (barChartContainer) barChartContainer.style.display = 'none'; // Esconde por padrão
+
         if (mostrarPecas) {
             renderizarDadosPecas(solicitacoesFiltradas, usuarioLogado.nivel);
             if (chartsContainer) chartsContainer.style.display = 'grid';
+        } else if (mostrarSolicitacoes) {
+            // Se 'Peças' não está marcado, mas 'Solicitações' está, mostramos solicitações por técnico
+            if (usuarioLogado.nivel !== 'tecnico') {
+                if (barChartContainer) barChartContainer.style.display = 'block';
+                const barChartTitle = document.getElementById('bar-chart-title');
+                if (barChartTitle) barChartTitle.textContent = 'Nº de Solicitações por Técnico';
+
+                const solicitacoesPorTecnico = {};
+                solicitacoesFiltradas.forEach(s => {
+                    if (s.usuario && (s.usuario.nivel === 'tecnico' || usuarioLogado.nivel === 'supervisor')) {
+                        const nomeTecnico = s.usuario.nome;
+                        solicitacoesPorTecnico[nomeTecnico] = (solicitacoesPorTecnico[nomeTecnico] || 0) + 1;
+                    }
+                });
+                renderBarChart('bar-chart', 'Nº de Solicitações', Object.keys(solicitacoesPorTecnico), Object.values(solicitacoesPorTecnico));
+            }
         }
 
         // Se ambos estiverem desmarcados, mostra uma mensagem
         if (!mostrarSolicitacoes && !mostrarPecas) {
             if (summaryCards) {
-                summaryCards.innerHTML = '<p class="aviso-filtro">Selecione uma opção e clique em "Filtrar" para ver os dados.</p>';
+                summaryCards.innerHTML = '<p class="aviso-filtro">Selecione uma opção e clique em "Filtrar e Mostrar Gráficos" para ver os dados.</p>';
             }
         }
+
         // Se nenhum gráfico for exibido, esconde o container
         if (!mostrarSolicitacoes && !mostrarPecas) {
             if (chartsContainer) chartsContainer.style.display = 'none';
