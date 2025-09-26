@@ -150,6 +150,66 @@ main {
 .card.rejeitado { border-top-color: #f44336; }
 .card.pecas-total { border-top-color: #607d8b; } /* Cinza azulado para o total de peças */
 
+/* Filtros do Dashboard */
+#filtro-visao-geral {
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    align-items: flex-end; /* Alinha os grupos na base */
+}
+
+.filtro-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filtro-titulo {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.filtro-item, .filtro-item-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filtro-item label, .filtro-item-check label {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.filtro-item input[type="date"] {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.filtro-grupo-botoes {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto; /* Empurra os botões para a direita */
+}
+
+/* Estilo para o botão de limpar filtro */
+.btn-secundario {
+    background-color: #757575;
+    color: white;
+}
+
+.btn-secundario:hover {
+    background-color: #616161;
+}
+
 /* Gráficos */
 .charts-container {
     display: grid;
@@ -219,13 +279,21 @@ main {
     }
 }
 
-/* Responsividade para tablets e telas menores */
+/* Responsividade para tablets e telas médias */
 @media (max-width: 1200px) {
     main {
         padding: 1rem;
     }
     .summary-cards {
         grid-template-columns: repeat(3, 1fr); /* 3 colunas */
+    }
+    #filtro-visao-geral {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.5rem;
+    }
+    .filtro-grupo-botoes {
+        margin-left: 0;
     }
 }
 
