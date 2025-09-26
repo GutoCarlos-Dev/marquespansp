@@ -36,6 +36,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div id="bar-chart-container" class="chart-card"><h3 id="bar-chart-title"></h3><canvas id="bar-chart"></canvas></div>
             </div>`;
         }
+        // Adiciona o contêiner para a atividade recente
+        if (!document.getElementById('recent-activity-container')) {
+            container.innerHTML += `<div id="recent-activity-container" class="recent-activity-grid-container" style="display: none;">
+                <h2>Atividade Recente</h2><table id="tabela-recente"><thead></thead><tbody></tbody></table>
+            </div>`;
+        }
     }
 
     // --- Container de Filtros ---    
