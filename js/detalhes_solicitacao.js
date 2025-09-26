@@ -1,6 +1,7 @@
 // Sistema de Solicitação de Peças - Página de Detalhes da Solicitação
 
 let isEditing = false;
+let itensEmEdicao = [];
 let itensOriginais = [];
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -39,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!isEditing) {
             entrarModoEdicao();
         } else {
-            salvarAlteracoes();
+            salvarAlteracoes(); // O botão agora é "Salvar"
         }
     });
 });
@@ -108,6 +109,7 @@ async function carregarDetalhesSolicitacao() {
     if (solicitacao.itens && solicitacao.itens.length > 0) {
         // Salvar itens originais para edição
         itensOriginais = JSON.parse(JSON.stringify(solicitacao.itens));
+        itensEmEdicao = JSON.parse(JSON.stringify(solicitacao.itens)); // Cria cópia para edição
 
         // Calcular total de peças
         const totalQuantidade = solicitacao.itens.reduce((total, item) => total + item.quantidade, 0);
@@ -149,12 +151,21 @@ async function carregarDetalhesSolicitacao() {
     const btnAprovar = document.getElementById('btn-aprovar');
     const btnRejeitar = document.getElementById('btn-rejeitar');
     const btnFechar = document.getElementById('btn-fechar');
+    const btnEditar = document.getElementById('btn-editar-itens');
 
     if (solicitacao.status !== 'pendente' && !podeEditar) {
         btnAprovar.style.display = 'none';
         btnRejeitar.style.display = 'none';
         btnFechar.style.display = 'inline-block'; // Mostra o botão fechar
 
+        const rotaInput = document.getElementById('rota');
+        rotaInput.readOnly = true;
+        rotaInput.classList.add('readonly-field');
+    }
+
+    // Esconde o botão de editar se o status não for 'pendente' ou 'aprovado'
+    if (solicitacao.status === 'rejeitado' || solicitacao.status === 'enviado') {
+        btnEditar.style.display = 'none';
         const rotaInput = document.getElementById('rota');
         rotaInput.readOnly = true;
         rotaInput.classList.add('readonly-field');
@@ -387,61 +398,103 @@ async function gerarPDF() {
 
 // Função para entrar no modo de edição
 function entrarModoEdicao() {
-    const tabela = document.querySelector('#itens-grid table');
-    if (!tabela) return;
+    const itensGrid = document.getElementById('itens-grid');
+    itensGrid.innerHTML = ''; // Limpa o grid
 
-    const tbody = tabela.querySelector('tbody');
-    const rows = tbody.querySelectorAll('tr');
+    const tabela = document.createElement('table');
+    tabela.innerHTML = `
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nome da Peça</th>
+                <th>QTD</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${itensEmEdicao.map((item, index) => `
+                <tr data-index="${index}">
+                    <td>${item.codigo}</td>
+                    <td>${item.nome}</td>
+                    <td><input type="number" value="${item.quantidade}" min="0" class="input-qtd-edicao" style="width: 70px;"></td>
+                    <td><button type="button" class="btn-excluir-item" data-index="${index}">Excluir</button></td>
+                </tr>
+            `).join('')}
+        </tbody>
+    `;
+    itensGrid.appendChild(tabela);
 
-    rows.forEach((row, index) => {
-        const cells = row.querySelectorAll('td');
-        if (cells.length >= 3) {
-            const quantidadeCell = cells[2];
-            const quantidade = itensOriginais[index].quantidade;
-            quantidadeCell.innerHTML = `<input type="number" value="${quantidade}" min="1" style="width: 100%; box-sizing: border-box;">`;
-        }
+    // Adiciona eventos para os botões de excluir
+    tabela.querySelectorAll('.btn-excluir-item').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const index = parseInt(this.dataset.index, 10);
+            // Remove o item da lista de edição
+            itensEmEdicao.splice(index, 1);
+            // Re-renderiza a tabela de edição
+            entrarModoEdicao();
+        });
     });
 
     isEditing = true;
-    document.getElementById('btn-editar-itens').innerHTML = '💾Salvar';
+    const btnEditar = document.getElementById('btn-editar-itens');
+    btnEditar.textContent = '💾 Salvar Alterações';
+
+    // Adiciona um botão de cancelar
+    const btnCancelar = document.createElement('button');
+    btnCancelar.type = 'button';
+    btnCancelar.id = 'btn-cancelar-edicao';
+    btnCancelar.textContent = 'Cancelar Edição';
+    btnCancelar.className = 'btn-secundario';
+    btnEditar.insertAdjacentElement('afterend', btnCancelar);
+
+    btnCancelar.addEventListener('click', () => {
+        window.location.reload(); // Simplesmente recarrega a página para cancelar
+    });
 }
 
 // Função para salvar as alterações
 async function salvarAlteracoes() {
-    const tabela = document.querySelector('#itens-grid table');
-    if (!tabela) return;
+    const inputs = document.querySelectorAll('.input-qtd-edicao');
+    const itensAtualizados = [];
 
-    const tbody = tabela.querySelector('tbody');
-    const rows = tbody.querySelectorAll('tr');
+    // Itera sobre os itens que ainda estão na lista de edição
+    itensEmEdicao.forEach((item, index) => {
+        // Encontra o input correspondente na tabela
+        const row = document.querySelector(`tr[data-index="${index}"]`);
+        const input = row ? row.querySelector('.input-qtd-edicao') : null;
 
-    rows.forEach((row, index) => {
-        const input = row.querySelector('input');
         if (input) {
-            const newQtd = parseInt(input.value);
-            if (newQtd > 0) {
-                itensOriginais[index].quantidade = newQtd;
+            const novaQtd = parseInt(input.value, 10);
+            if (!isNaN(novaQtd) && novaQtd > 0) {
+                item.quantidade = novaQtd;
+                itensAtualizados.push(item);
             }
+            // Se a quantidade for 0 ou inválida, o item simplesmente não é adicionado à lista final,
+            // efetivamente o removendo.
         }
     });
 
     // Atualizar no banco de dados
     const form = document.getElementById('form-aprovacao');
     const id = form.dataset.solicitacaoId;
-
+    
     const { error } = await supabase
         .from('solicitacoes')
-        .update({ itens: itensOriginais, updated_at: new Date().toISOString() })
+        .update({ itens: itensAtualizados, updated_at: new Date().toISOString() })
         .eq('id', id);
 
     if (error) {
-        alert('Erro ao salvar alterações.');
+        console.error("Erro ao salvar alterações:", error);
+        alert('Erro ao salvar as alterações. Verifique o console.');
         return;
     }
 
     alert('Alterações salvas com sucesso!');
     isEditing = false;
-    document.getElementById('btn-editar-itens').innerHTML = '✏️Editar Itens';
+    document.getElementById('btn-editar-itens').textContent = '✏️Editar Itens';
 
-    // Recarregar a página
-    window.location.reload();
+    // Remove o botão de cancelar e recarrega os detalhes
+    const btnCancelar = document.getElementById('btn-cancelar-edicao');
+    if (btnCancelar) btnCancelar.remove();
+    await carregarDetalhesSolicitacao();
 }
