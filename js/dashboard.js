@@ -21,183 +21,222 @@ document.addEventListener('DOMContentLoaded', async () => {
         nomeUsuarioSpan.textContent = usuarioLogado.nomecompleto || usuarioLogado.nome;
     }
 
-    // --- Container de Filtros ---    
+    // Adicionar filtro para visão geral (quantidade de solicitações e peças)
     const filtroContainer = document.createElement('div');
     filtroContainer.id = 'filtro-visao-geral';
-    filtroContainer.innerHTML = `
-        <div class="filtro-grupo">
-            <span class="filtro-titulo">Filtrar por Período:</span>
-            <div class="filtro-item">
-                <label for="data-inicio">De:</label>
-                <input type="date" id="data-inicio">
-            </div>
-            <div class="filtro-item">
-                <label for="data-fim">Até:</label>
-                <input type="date" id="data-fim">
-            </div>
-        </div>
-        <div class="filtro-grupo">
-            <span class="filtro-titulo">Mostrar Dados de:</span>
-            <div class="filtro-item-check">
-                <input type="checkbox" id="check-solicitacoes" checked>
-                <label for="check-solicitacoes">Solicitações</label>
-            </div>
-            <div class="filtro-item-check">
-                <input type="checkbox" id="check-pecas" checked>
-                <label for="check-pecas">Peças por Técnico</label>
-            </div>
-        </div>
-        <div class="filtro-grupo-botoes">
-            <button id="btn-filtrar-data">Filtrar</button>
-            <button id="btn-limpar-filtro" class="btn-secundario">Limpar</button>
-        </div>
-    `;
-    
+    filtroContainer.style.marginBottom = '1rem';
+
+    const labelSolicitacoes = document.createElement('label');
+    labelSolicitacoes.textContent = 'Quantidade Solicitações realizadas: ';
+    const inputSolicitacoes = document.createElement('input');
+    inputSolicitacoes.type = 'checkbox';
+    inputSolicitacoes.checked = true;
+    labelSolicitacoes.appendChild(inputSolicitacoes);
+
+    const labelPecas = document.createElement('label');
+    labelPecas.textContent = 'Quantidade total de Peças: ';
+    const inputPecas = document.createElement('input');
+    inputPecas.type = 'checkbox';
+    inputPecas.checked = true;
+    labelPecas.appendChild(inputPecas);
+
+    filtroContainer.appendChild(labelSolicitacoes);
+    filtroContainer.appendChild(labelPecas);
+
     const dashboardContainer = document.getElementById('dashboard-container');
     if (dashboardContainer) {
         dashboardContainer.insertBefore(filtroContainer, dashboardContainer.firstChild);
     }
 
-    // Função para atualizar a visão geral com base em todos os filtros
-    async function atualizarVisaoGeralComFiltro() {
-        const dataInicio = document.getElementById('data-inicio').value;
-        const dataFim = document.getElementById('data-fim').value;
-        const mostrarSolicitacoes = document.getElementById('check-solicitacoes').checked;
-        const mostrarPecas = document.getElementById('check-pecas').checked;
+    // Função para atualizar a visão geral com base nos filtros
+    async function atualizarVisaoGeral() {
+        const mostrarSolicitacoes = inputSolicitacoes.checked;
+        const mostrarPecas = inputPecas.checked;
 
-        // Limpa os containers antes de renderizar
-        document.getElementById('summary-cards').innerHTML = '';
-        document.getElementById('charts-container').style.display = 'none'; // Esconde para evitar layout quebrado
-        document.getElementById('recent-activity-container').style.display = 'none';
-
-        if (statusChartInstance) statusChartInstance.destroy();
-        if (barChartInstance) barChartInstance.destroy();
-
-        let solicitacoesFiltradas = [];
-
-        // Busca os dados base uma única vez
-        switch (usuarioLogado.nivel) {
-            case 'administrador':
-            case 'matriz':
-                solicitacoesFiltradas = await buscarSolicitacoesAdmin(dataInicio, dataFim);
-                break;
-            case 'supervisor':
-                solicitacoesFiltradas = await buscarSolicitacoesSupervisor(usuarioLogado, dataInicio, dataFim);
-                break;
-            case 'tecnico':
-                solicitacoesFiltradas = await buscarSolicitacoesTecnico(usuarioLogado, dataInicio, dataFim);
-                break;
-            default:
-                document.getElementById('dashboard-container').innerHTML = '<p>Nível de usuário não reconhecido.</p>';
-                return;
-        }
-
-        // Renderiza os componentes com base nos checkboxes
+        // Atualizar cards e gráficos conforme os filtros
         if (mostrarSolicitacoes) {
-            renderizarDadosSolicitacoes(solicitacoesFiltradas, usuarioLogado.nivel);
-            document.getElementById('charts-container').style.display = 'grid';
-            document.getElementById('recent-activity-container').style.display = 'block';
+            if (usuarioLogado.nivel === 'supervisor') {
+                await renderDashboardSupervisor(usuarioLogado);
+            } else if (usuarioLogado.nivel === 'administrador' || usuarioLogado.nivel === 'matriz') {
+                await renderDashboardAdminMatriz();
+            } else {
+                await renderDashboardTecnico(usuarioLogado);
+            }
+        } else {
+            // Limpar cards e gráficos relacionados a solicitações
+            const summaryCards = document.getElementById('summary-cards');
+            if (summaryCards) summaryCards.innerHTML = '';
+            const statusChart = document.getElementById('status-chart');
+            if (statusChart) {
+                const ctx = statusChart.getContext('2d');
+                ctx.clearRect(0, 0, statusChart.width, statusChart.height);
+            }
+            const barChart = document.getElementById('bar-chart');
+            if (barChart) {
+                const ctx = barChart.getContext('2d');
+                ctx.clearRect(0, 0, barChart.width, barChart.height);
+            }
         }
 
         if (mostrarPecas) {
-            renderizarDadosPecas(solicitacoesFiltradas, usuarioLogado.nivel);
-            document.getElementById('charts-container').style.display = 'grid';
-        }
+            // Buscar as solicitações para calcular a quantidade real de peças por solicitante
+            let solicitacoes = [];
+            if (usuarioLogado.nivel === 'supervisor') {
+                // Buscar veículos do supervisor
+                const { data: veiculosSupervisor, error: veiculosError } = await supabase
+                    .from('veiculos')
+                    .select('id')
+                    .eq('supervisor_id', usuarioLogado.id);
+                if (veiculosError) {
+                    console.error('Erro ao buscar veículos do supervisor:', veiculosError);
+                    return;
+                }
+                const veiculosIds = veiculosSupervisor.map(v => v.id);
+                if (veiculosIds.length > 0) {
+                    const { data, error } = await supabase
+                        .from('solicitacoes')
+                        .select('id, usuario:usuario_id(nome), itens, veiculo_id')
+                        .in('veiculo_id', veiculosIds);
+                    if (error) {
+                        console.error('Erro ao buscar solicitações do supervisor:', error);
+                        return;
+                    }
+                    solicitacoes = data;
+                }
+            } else if (usuarioLogado.nivel === 'administrador' || usuarioLogado.nivel === 'matriz') {
+                const { data, error } = await supabase
+                    .from('solicitacoes')
+                    .select('id, usuario:usuario_id(nome), itens');
+                if (error) {
+                    console.error('Erro ao buscar solicitações:', error);
+                    return;
+                }
+                solicitacoes = data;
+            } else {
+                // Para outros níveis, buscar apenas as solicitações do próprio usuário
+                const { data, error } = await supabase
+                    .from('solicitacoes')
+                    .select('id, usuario:usuario_id(nome), itens')
+                    .eq('usuario_id', usuarioLogado.id);
+                if (error) {
+                    console.error('Erro ao buscar solicitações do usuário:', error);
+                    return;
+                }
+                solicitacoes = data;
+            }
 
-        // Se ambos estiverem desmarcados, mostra uma mensagem
-        if (!mostrarSolicitacoes && !mostrarPecas) {
-            document.getElementById('summary-cards').innerHTML = '<p class="aviso-filtro">Selecione "Solicitações" ou "Peças por Técnico" e clique em Filtrar para ver os dados.</p>';
-        }
+            // Calcular quantidade total de itens utilizados nas solicitações por solicitante
+            const pecasPorSolicitante = {};
+            solicitacoes.forEach(solicitacao => {
+                const nomeSolicitante = solicitacao.usuario?.nome || 'Desconhecido';
+                const totalItens = (solicitacao.itens || []).reduce((acc, item) => acc + (item.quantidade || 0), 0);
+                pecasPorSolicitante[nomeSolicitante] = (pecasPorSolicitante[nomeSolicitante] || 0) + totalItens;
+            });
 
+            // Atualizar o card de quantidade total de peças
+            const container = document.getElementById('summary-cards');
+            if (container) {
+                // Remover card antigo de peças se existir
+                const antigoCard = container.querySelector('.card.pecas-total');
+                if (antigoCard) {
+                    container.removeChild(antigoCard);
+                }
+
+                const pecasCard = document.createElement('div');
+                pecasCard.className = 'card pecas-total';
+                const totalPecas = Object.values(pecasPorSolicitante).reduce((acc, val) => acc + val, 0);
+                pecasCard.innerHTML = `<h4>Quantidade total de Peças</h4><p>${totalPecas}</p>`;
+                container.appendChild(pecasCard);
+
+                // Atualizar gráfico de barras para mostrar quantidade por solicitante
+                const labels = Object.keys(pecasPorSolicitante);
+                const data = Object.values(pecasPorSolicitante);
+
+                if (barChartInstance) {
+                    barChartInstance.destroy();
+                }
+                const ctx = document.getElementById('bar-chart').getContext('2d');
+                barChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Quantidade de Peças por Solicitante',
+                            data: data,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
     }
 
-    // Adicionar listeners para os botões de filtro
-    document.getElementById('btn-filtrar-data').addEventListener('click', atualizarVisaoGeralComFiltro);
-    document.getElementById('btn-limpar-filtro').addEventListener('click', () => {
-        document.getElementById('data-inicio').value = '';
-        document.getElementById('data-fim').value = '';
-        document.getElementById('check-solicitacoes').checked = true;
-        document.getElementById('check-pecas').checked = true;
-        atualizarVisaoGeralComFiltro(); // Recarrega com os filtros limpos
-    });
+    // Adicionar listeners para os checkboxes
+    inputSolicitacoes.addEventListener('change', atualizarVisaoGeral);
+    inputPecas.addEventListener('change', atualizarVisaoGeral);
 
-    // Carregamento inicial do dashboard (sem filtro de data)
-    atualizarVisaoGeralComFiltro();
+    // Renderiza o dashboard de acordo com o nível do usuário
+    switch (usuarioLogado.nivel) {
+        case 'administrador':
+        case 'matriz':
+            await atualizarVisaoGeral();
+            break;
+        case 'supervisor':
+            await renderDashboardSupervisor(usuarioLogado);
+            break;
+        case 'tecnico':
+            await renderDashboardTecnico(usuarioLogado);
+            break;
+        default:
+            document.getElementById('dashboard-container').innerHTML = '<p>Nível de usuário não reconhecido.</p>';
+    }
 });
+
+// --- Funções de Renderização de Dashboards ---
 
 // Variáveis para armazenar as instâncias dos gráficos e destruí-las antes de recriar
 let statusChartInstance = null;
 let barChartInstance = null;
 
-// --- Funções de Busca de Dados ---
-
-async function buscarSolicitacoesComFiltro(baseQuery, dataInicio, dataFim) {
-    if (dataInicio) {
-        baseQuery = baseQuery.gte('created_at', `${dataInicio}T00:00:00`);
-    }
-    if (dataFim) {
-        baseQuery = baseQuery.lte('created_at', `${dataFim}T23:59:59`);
-    }
-    const { data, error } = await baseQuery;
-    if (error) {
-        console.error('Erro ao buscar solicitações:', error);
-        return [];
-    }
-    return data;
-}
-
-async function buscarSolicitacoesAdmin(dataInicio, dataFim) {
-    let query = supabase
+async function renderDashboardAdminMatriz() {
+    // Busca todas as solicitações com os dados do usuário associado
+    const { data: solicitacoes, error: solicitacoesError } = await supabase
         .from('solicitacoes')
         .select('id, created_at, status, itens, usuario:usuario_id(nome, nivel)');
-    return await buscarSolicitacoesComFiltro(query, dataInicio, dataFim);
-}
 
-async function buscarSolicitacoesSupervisor(usuarioSupervisor, dataInicio, dataFim) {
-    const { data: veiculosSupervisor, error: veiculosError } = await supabase
-        .from('veiculos')
-        .select('id')
-        .eq('supervisor_id', usuarioSupervisor.id);
-
-    if (veiculosError || !veiculosSupervisor || veiculosSupervisor.length === 0) {
-        console.error('Erro ou nenhum veículo encontrado para o supervisor:', veiculosError);
-        return [];
+    if (solicitacoesError) {
+        console.error('Erro ao buscar solicitações:', solicitacoesError);
+        return;
     }
-    const veiculosIds = veiculosSupervisor.map(v => v.id);
-    let query = supabase
-        .from('solicitacoes')
-        .select('id, created_at, status, itens, usuario:usuario_id(nome, nivel)')
-        .in('veiculo_id', veiculosIds);
-    return await buscarSolicitacoesComFiltro(query, dataInicio, dataFim);
-}
 
-async function buscarSolicitacoesTecnico(usuarioTecnico, dataInicio, dataFim) {
-    let query = supabase
-        .from('solicitacoes')
-        .select('id, created_at, status, itens, usuario:usuario_id(nome)')
-        .eq('usuario_id', usuarioTecnico.id);
-    return await buscarSolicitacoesComFiltro(query, dataInicio, dataFim);
-}
-
-// --- Funções de Renderização de Componentes ---
-
-function renderizarDadosSolicitacoes(solicitacoes, nivelUsuario) {
-    // 1. Cards de Resumo de Solicitações
+    // 1. Renderizar Cards de Resumo
     const totalSolicitacoes = solicitacoes.length;
     const totalPendente = solicitacoes.filter(s => s.status === 'pendente').length;
     const totalAprovado = solicitacoes.filter(s => s.status === 'aprovado').length;
-    const totalRejeitado = solicitacoes.filter(s => s.status === 'rejeitado').length;
     const totalEnviado = solicitacoes.filter(s => s.status === 'enviado').length;
     renderSummaryCards([
         { title: 'Total de Solicitações', value: totalSolicitacoes, className: '' },
-        { title: 'Pendentes', value: totalPendente, className: 'pendente', icon: 'fas fa-clock' },
-        { title: 'Aprovadas', value: totalAprovado, className: 'aprovado', icon: 'fas fa-check-circle' },
-        { title: 'Rejeitadas', value: totalRejeitado, className: 'rejeitado', icon: 'fas fa-times-circle' },
-        { title: 'Enviadas', value: totalEnviado, className: 'enviado', icon: 'fas fa-truck' }
+        { title: 'Pendentes', value: totalPendente, className: 'pendente' },
+        { title: 'Aprovadas', value: totalAprovado, className: 'aprovado' },
+        { title: 'Enviadas', value: totalEnviado, className: 'enviado' }
     ]);
 
-    // 2. Gráfico de Pizza: Status
-    document.getElementById('status-chart-container').style.display = 'block';
+    // 2. Renderizar Gráficos
+    // Gráfico de Pizza: Status das Solicitações
     const statusData = {
         'Pendente': solicitacoes.filter(s => s.status === 'pendente').length,
         'Aprovado': solicitacoes.filter(s => s.status === 'aprovado').length,
@@ -206,50 +245,133 @@ function renderizarDadosSolicitacoes(solicitacoes, nivelUsuario) {
     };
     renderPieChart('status-chart', 'Status das Solicitações', Object.keys(statusData), Object.values(statusData));
 
-    // 3. Grid de Atividade Recente
+    // Gráfico de Barras: Solicitações por Técnico
+    const solicitacoesPorTecnico = {};
+    solicitacoes.forEach(s => {
+        if (s.usuario && s.usuario.nivel === 'tecnico') {
+            const nomeTecnico = s.usuario.nome;
+            solicitacoesPorTecnico[nomeTecnico] = (solicitacoesPorTecnico[nomeTecnico] || 0) + 1;
+        }
+    });
+    renderBarChart('bar-chart', 'Nº de Solicitações', Object.keys(solicitacoesPorTecnico), Object.values(solicitacoesPorTecnico));
+
+    // 3. Renderizar Grid de Atividade Recente
     const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
     renderRecentActivityGrid(solicitacoesRecentes);
 }
 
-function renderizarDadosPecas(solicitacoes, nivelUsuario) {
-    // 1. Card de Total de Peças
-    const totalPecas = solicitacoes.reduce((total, s) => {
-        return total + (s.itens || []).reduce((subtotal, item) => subtotal + item.quantidade, 0);
-    }, 0);
-    renderSummaryCards([{ title: 'Total de Peças Solicitadas', value: totalPecas, className: 'pecas-total', icon: 'fas fa-cogs' }]);
+async function renderDashboardSupervisor(usuarioSupervisor) {
+    // 1. Encontrar os veículos que este supervisor gerencia
+    const { data: veiculosSupervisor, error: veiculosError } = await supabase
+        .from('veiculos')
+        .select('id')
+        .eq('supervisor_id', usuarioSupervisor.id);
 
-    // 2. Gráfico de Barras: Peças por Técnico
-    // Não mostrar para técnico, pois só teria uma barra
-    if (nivelUsuario === 'tecnico') {
-        document.getElementById('bar-chart-container').style.display = 'none';
+    if (veiculosError) {
+        console.error('Erro ao buscar veículos do supervisor:', veiculosError);
         return;
     }
-    document.getElementById('bar-chart-container').style.display = 'block';
-    document.getElementById('bar-chart-title').textContent = 'Peças por Técnico';
+    const veiculosIds = veiculosSupervisor.map(v => v.id);
 
+    // 2. Buscar as solicitações apenas desses veículos
+    let solicitacoes = [];
+    if (veiculosIds.length > 0) {
+        const { data, error } = await supabase
+            .from('solicitacoes')
+            .select('id, created_at, status, itens, usuario:usuario_id(nome, nivel)')
+            .in('veiculo_id', veiculosIds);
+        if (error) {
+            console.error('Erro ao buscar solicitações da equipe:', error);
+        } else {
+            solicitacoes = data;
+        }
+    }
+
+    // 1. Renderizar Cards de Resumo
+    const totalPendente = solicitacoes.filter(s => s.status === 'pendente').length;
+    const totalAprovado = solicitacoes.filter(s => s.status === 'aprovado').length;
+    const totalEnviado = solicitacoes.filter(s => s.status === 'enviado').length;
+    renderSummaryCards([
+        { title: 'Pendentes (Sua Equipe)', value: totalPendente, className: 'pendente' },
+        { title: 'Aprovadas (Sua Equipe)', value: totalAprovado, className: 'aprovado' },
+        { title: 'Enviadas (Sua Equipe)', value: totalEnviado, className: 'enviado' }
+    ]);
+
+    // 2. Renderizar Gráficos
+    const statusData = {
+        'Pendente': solicitacoes.filter(s => s.status === 'pendente').length,
+        'Aprovado': solicitacoes.filter(s => s.status === 'aprovado').length,
+        'Enviado': solicitacoes.filter(s => s.status === 'enviado').length,
+        'Rejeitado': solicitacoes.filter(s => s.status === 'rejeitado').length
+    };
+    renderPieChart('status-chart', 'Status das Solicitações (Sua Equipe)', Object.keys(statusData), Object.values(statusData));
+
+    document.getElementById('bar-chart-title').textContent = 'Solicitações por Técnico (Sua Equipe)';
     const solicitacoesPorTecnico = {};
     solicitacoes.forEach(s => {
-        if (s.usuario && (s.usuario.nivel === 'tecnico' || nivelUsuario === 'supervisor')) {
-            const nomeTecnico = s.usuario.nome;
-            const totalItens = (s.itens || []).reduce((acc, item) => acc + (item.quantidade || 0), 0);
-            solicitacoesPorTecnico[nomeTecnico] = (solicitacoesPorTecnico[nomeTecnico] || 0) + totalItens;
+        if (s.usuario) {
+            solicitacoesPorTecnico[s.usuario.nome] = (solicitacoesPorTecnico[s.usuario.nome] || 0) + 1;
         }
     });
-    renderBarChart('bar-chart', 'Nº de Peças', Object.keys(solicitacoesPorTecnico), Object.values(solicitacoesPorTecnico));
+    renderBarChart('bar-chart', 'Nº de Solicitações', Object.keys(solicitacoesPorTecnico), Object.values(solicitacoesPorTecnico));
+
+    // 3. Renderizar Grid de Atividade Recente
+    const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
+    renderRecentActivityGrid(solicitacoesRecentes);
 }
+
+async function renderDashboardTecnico(usuarioTecnico) {
+    const { data: solicitacoes, error } = await supabase
+        .from('solicitacoes')
+        .select('id, created_at, status, itens, usuario:usuario_id(nome)')
+        .eq('usuario_id', usuarioTecnico.id);
+
+    if (error) {
+        console.error('Erro ao buscar suas solicitações:', error);
+        return;
+    }
+
+    // 1. Renderizar Cards de Resumo
+    const totalPendente = solicitacoes.filter(s => s.status === 'pendente').length;
+    const totalAprovado = solicitacoes.filter(s => s.status === 'aprovado').length;
+    const totalEnviado = solicitacoes.filter(s => s.status === 'enviado').length;
+    renderSummaryCards([
+        { title: 'Minhas Pendentes', value: totalPendente, className: 'pendente' },
+        { title: 'Minhas Aprovadas', value: totalAprovado, className: 'aprovado' },
+        { title: 'Minhas Enviadas', value: totalEnviado, className: 'enviado' }
+    ]);
+
+    // 2. Renderizar Gráficos
+    // Esconder o gráfico de barras que não faz sentido para o técnico
+    const barChartContainer = document.getElementById('bar-chart-container');
+    if (barChartContainer) barChartContainer.style.display = 'none';
+    // Ajustar o layout para o gráfico de pizza ocupar mais espaço
+    document.getElementById('charts-container').style.gridTemplateColumns = '1fr';
+
+    const statusData = {
+        'Pendente': solicitacoes.filter(s => s.status === 'pendente').length,
+        'Aprovado': solicitacoes.filter(s => s.status === 'aprovado').length,
+        'Enviado': solicitacoes.filter(s => s.status === 'enviado').length,
+        'Rejeitado': solicitacoes.filter(s => s.status === 'rejeitado').length
+    };
+    renderPieChart('status-chart', 'Status das Minhas Solicitações', Object.keys(statusData), Object.values(statusData));
+
+    // 3. Renderizar Grid de Atividade Recente
+    const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
+    renderRecentActivityGrid(solicitacoesRecentes);
+}
+
+// --- Funções Auxiliares de Renderização ---
 
 function renderSummaryCards(cardsData) {
     const container = document.getElementById('summary-cards');
-    // Não limpa, para que os cards de peças e solicitações possam ser adicionados juntos
+    container.innerHTML = '';
     cardsData.forEach(data => {
         const card = document.createElement('div');
         card.className = `card ${data.className || ''}`;
         card.innerHTML = `
-            <div class="card-icon"><i class="${data.icon || 'fas fa-info-circle'}"></i></div>
-            <div class="card-content">
-                <h4>${data.title}</h4>
-                <p>${data.value}</p>
-            </div>
+            <h4>${data.title}</h4>
+            <p>${data.value}</p>
         `;
         container.appendChild(card);
     });
@@ -268,7 +390,7 @@ function renderPieChart(canvasId, label, labels, data) {
             datasets: [{
                 label: label,
                 data: data,
-                backgroundColor: ['#ff9800', '#4CAF50', '#2196F3', '#f44336'], // Pendente, Aprovado, Enviado, Rejeitado
+                backgroundColor: ['#ff9800', '#4CAF50', '#2196F3', '#f44336'],
                 hoverOffset: 4
             }]
         },
@@ -323,7 +445,7 @@ function renderRecentActivityGrid(solicitacoes) {
             <th>Data</th>
             <th>Técnico</th>
             <th>Status</th>
-            <th>Itens</th>
+            <th>Total Itens</th>
         </tr>
     `;
     tbody.innerHTML = '';
@@ -338,8 +460,8 @@ function renderRecentActivityGrid(solicitacoes) {
         tr.innerHTML = `
             <td>${String(s.id).padStart(5, '0')}</td>
             <td>${new Date(s.created_at).toLocaleString('pt-BR')}</td>
-            <td>${s.usuario?.nome || 'N/A'}</td> 
-            <td><span class="status ${s.status.toLowerCase()}">${s.status}</span></td>
+            <td>${s.usuario?.nome || 'N/A'}</td>
+            <td>${s.status}</td>
             <td>${(s.itens || []).reduce((total, item) => total + item.quantidade, 0)}</td>
         `;
         tbody.appendChild(tr);
