@@ -21,189 +21,61 @@ document.addEventListener('DOMContentLoaded', async () => {
         nomeUsuarioSpan.textContent = usuarioLogado.nomecompleto || usuarioLogado.nome;
     }
 
-    // Adicionar filtro para visão geral (quantidade de solicitações e peças)
+    // --- Container de Filtros ---
     const filtroContainer = document.createElement('div');
     filtroContainer.id = 'filtro-visao-geral';
-    filtroContainer.style.marginBottom = '1rem';
-
-    const labelSolicitacoes = document.createElement('label');
-    labelSolicitacoes.textContent = 'Quantidade Solicitações realizadas: ';
-    const inputSolicitacoes = document.createElement('input');
-    inputSolicitacoes.type = 'checkbox';
-    inputSolicitacoes.checked = true;
-    labelSolicitacoes.appendChild(inputSolicitacoes);
-
-    const labelPecas = document.createElement('label');
-    labelPecas.textContent = 'Quantidade total de Peças: ';
-    const inputPecas = document.createElement('input');
-    inputPecas.type = 'checkbox';
-    inputPecas.checked = true;
-    labelPecas.appendChild(inputPecas);
-
-    filtroContainer.appendChild(labelSolicitacoes);
-    filtroContainer.appendChild(labelPecas);
+    filtroContainer.innerHTML = `
+        <div class="filtro-item">
+            <label for="data-inicio">De:</label>
+            <input type="date" id="data-inicio">
+        </div>
+        <div class="filtro-item">
+            <label for="data-fim">Até:</label>
+            <input type="date" id="data-fim">
+        </div>
+        <div class="filtro-item">
+            <button id="btn-filtrar-data">Filtrar</button>
+            <button id="btn-limpar-filtro" class="btn-secundario">Limpar</button>
+        </div>
+    `;
 
     const dashboardContainer = document.getElementById('dashboard-container');
     if (dashboardContainer) {
         dashboardContainer.insertBefore(filtroContainer, dashboardContainer.firstChild);
     }
 
-    // Função para atualizar a visão geral com base nos filtros
-    async function atualizarVisaoGeral() {
-        const mostrarSolicitacoes = inputSolicitacoes.checked;
-        const mostrarPecas = inputPecas.checked;
+    // Função para atualizar a visão geral com base nos filtros de data
+    async function atualizarVisaoGeralComFiltro() {
+        const dataInicio = document.getElementById('data-inicio').value;
+        const dataFim = document.getElementById('data-fim').value;
 
-        // Atualizar cards e gráficos conforme os filtros
-        if (mostrarSolicitacoes) {
-            if (usuarioLogado.nivel === 'supervisor') {
-                await renderDashboardSupervisor(usuarioLogado);
-            } else if (usuarioLogado.nivel === 'administrador' || usuarioLogado.nivel === 'matriz') {
-                await renderDashboardAdminMatriz();
-            } else {
-                await renderDashboardTecnico(usuarioLogado);
-            }
-        } else {
-            // Limpar cards e gráficos relacionados a solicitações
-            const summaryCards = document.getElementById('summary-cards');
-            if (summaryCards) summaryCards.innerHTML = '';
-            const statusChart = document.getElementById('status-chart');
-            if (statusChart) {
-                const ctx = statusChart.getContext('2d');
-                ctx.clearRect(0, 0, statusChart.width, statusChart.height);
-            }
-            const barChart = document.getElementById('bar-chart');
-            if (barChart) {
-                const ctx = barChart.getContext('2d');
-                ctx.clearRect(0, 0, barChart.width, barChart.height);
-            }
-        }
-
-        if (mostrarPecas) {
-            // Buscar as solicitações para calcular a quantidade real de peças por solicitante
-            let solicitacoes = [];
-            if (usuarioLogado.nivel === 'supervisor') {
-                // Buscar veículos do supervisor
-                const { data: veiculosSupervisor, error: veiculosError } = await supabase
-                    .from('veiculos')
-                    .select('id')
-                    .eq('supervisor_id', usuarioLogado.id);
-                if (veiculosError) {
-                    console.error('Erro ao buscar veículos do supervisor:', veiculosError);
-                    return;
-                }
-                const veiculosIds = veiculosSupervisor.map(v => v.id);
-                if (veiculosIds.length > 0) {
-                    const { data, error } = await supabase
-                        .from('solicitacoes')
-                        .select('id, usuario:usuario_id(nome), itens, veiculo_id')
-                        .in('veiculo_id', veiculosIds);
-                    if (error) {
-                        console.error('Erro ao buscar solicitações do supervisor:', error);
-                        return;
-                    }
-                    solicitacoes = data;
-                }
-            } else if (usuarioLogado.nivel === 'administrador' || usuarioLogado.nivel === 'matriz') {
-                const { data, error } = await supabase
-                    .from('solicitacoes')
-                    .select('id, usuario:usuario_id(nome), itens');
-                if (error) {
-                    console.error('Erro ao buscar solicitações:', error);
-                    return;
-                }
-                solicitacoes = data;
-            } else {
-                // Para outros níveis, buscar apenas as solicitações do próprio usuário
-                const { data, error } = await supabase
-                    .from('solicitacoes')
-                    .select('id, usuario:usuario_id(nome), itens')
-                    .eq('usuario_id', usuarioLogado.id);
-                if (error) {
-                    console.error('Erro ao buscar solicitações do usuário:', error);
-                    return;
-                }
-                solicitacoes = data;
-            }
-
-            // Calcular quantidade total de itens utilizados nas solicitações por solicitante
-            const pecasPorSolicitante = {};
-            solicitacoes.forEach(solicitacao => {
-                const nomeSolicitante = solicitacao.usuario?.nome || 'Desconhecido';
-                const totalItens = (solicitacao.itens || []).reduce((acc, item) => acc + (item.quantidade || 0), 0);
-                pecasPorSolicitante[nomeSolicitante] = (pecasPorSolicitante[nomeSolicitante] || 0) + totalItens;
-            });
-
-            // Atualizar o card de quantidade total de peças
-            const container = document.getElementById('summary-cards');
-            if (container) {
-                // Remover card antigo de peças se existir
-                const antigoCard = container.querySelector('.card.pecas-total');
-                if (antigoCard) {
-                    container.removeChild(antigoCard);
-                }
-
-                const pecasCard = document.createElement('div');
-                pecasCard.className = 'card pecas-total';
-                const totalPecas = Object.values(pecasPorSolicitante).reduce((acc, val) => acc + val, 0);
-                pecasCard.innerHTML = `<h4>Quantidade total de Peças</h4><p>${totalPecas}</p>`;
-                container.appendChild(pecasCard);
-
-                // Atualizar gráfico de barras para mostrar quantidade por solicitante
-                const labels = Object.keys(pecasPorSolicitante);
-                const data = Object.values(pecasPorSolicitante);
-
-                if (barChartInstance) {
-                    barChartInstance.destroy();
-                }
-                const ctx = document.getElementById('bar-chart').getContext('2d');
-                barChartInstance = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Quantidade de Peças por Solicitante',
-                            data: data,
-                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    stepSize: 1
-                                }
-                            }
-                        }
-                    }
-                });
-            }
+        // Renderiza o dashboard de acordo com o nível do usuário, passando as datas
+        switch (usuarioLogado.nivel) {
+            case 'administrador':
+            case 'matriz':
+                await renderDashboardAdminMatriz(dataInicio, dataFim);
+                break;
+            case 'supervisor':
+                await renderDashboardSupervisor(usuarioLogado, dataInicio, dataFim);
+                break;
+            case 'tecnico':
+                await renderDashboardTecnico(usuarioLogado, dataInicio, dataFim);
+                break;
+            default:
+                document.getElementById('dashboard-container').innerHTML = '<p>Nível de usuário não reconhecido.</p>';
         }
     }
 
-    // Adicionar listeners para os checkboxes
-    inputSolicitacoes.addEventListener('change', atualizarVisaoGeral);
-    inputPecas.addEventListener('change', atualizarVisaoGeral);
+    // Adicionar listeners para os botões de filtro
+    document.getElementById('btn-filtrar-data').addEventListener('click', atualizarVisaoGeralComFiltro);
+    document.getElementById('btn-limpar-filtro').addEventListener('click', () => {
+        document.getElementById('data-inicio').value = '';
+        document.getElementById('data-fim').value = '';
+        atualizarVisaoGeralComFiltro(); // Recarrega com os filtros limpos
+    });
 
-    // Renderiza o dashboard de acordo com o nível do usuário
-    switch (usuarioLogado.nivel) {
-        case 'administrador':
-        case 'matriz':
-            await atualizarVisaoGeral();
-            break;
-        case 'supervisor':
-            await renderDashboardSupervisor(usuarioLogado);
-            break;
-        case 'tecnico':
-            await renderDashboardTecnico(usuarioLogado);
-            break;
-        default:
-            document.getElementById('dashboard-container').innerHTML = '<p>Nível de usuário não reconhecido.</p>';
-    }
+    // Carregamento inicial do dashboard (sem filtro de data)
+    atualizarVisaoGeralComFiltro();
 });
 
 // --- Funções de Renderização de Dashboards ---
@@ -212,11 +84,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 let statusChartInstance = null;
 let barChartInstance = null;
 
-async function renderDashboardAdminMatriz() {
+async function renderDashboardAdminMatriz(dataInicio, dataFim) {
     // Busca todas as solicitações com os dados do usuário associado
-    const { data: solicitacoes, error: solicitacoesError } = await supabase
+    let query = supabase
         .from('solicitacoes')
         .select('id, created_at, status, itens, usuario:usuario_id(nome, nivel)');
+
+    // Aplica filtro de data se fornecido
+    if (dataInicio) {
+        query = query.gte('created_at', `${dataInicio}T00:00:00`);
+    }
+    if (dataFim) {
+        query = query.lte('created_at', `${dataFim}T23:59:59`);
+    }
+
+    const { data: solicitacoes, error: solicitacoesError } = await query;
 
     if (solicitacoesError) {
         console.error('Erro ao buscar solicitações:', solicitacoesError);
@@ -227,11 +109,13 @@ async function renderDashboardAdminMatriz() {
     const totalSolicitacoes = solicitacoes.length;
     const totalPendente = solicitacoes.filter(s => s.status === 'pendente').length;
     const totalAprovado = solicitacoes.filter(s => s.status === 'aprovado').length;
+    const totalRejeitado = solicitacoes.filter(s => s.status === 'rejeitado').length;
     const totalEnviado = solicitacoes.filter(s => s.status === 'enviado').length;
     renderSummaryCards([
         { title: 'Total de Solicitações', value: totalSolicitacoes, className: '' },
         { title: 'Pendentes', value: totalPendente, className: 'pendente' },
         { title: 'Aprovadas', value: totalAprovado, className: 'aprovado' },
+        { title: 'Rejeitadas', value: totalRejeitado, className: 'rejeitado' },
         { title: 'Enviadas', value: totalEnviado, className: 'enviado' }
     ]);
 
@@ -260,11 +144,11 @@ async function renderDashboardAdminMatriz() {
     renderRecentActivityGrid(solicitacoesRecentes);
 }
 
-async function renderDashboardSupervisor(usuarioSupervisor) {
+async function renderDashboardSupervisor(usuarioSupervisor, dataInicio, dataFim) {
     // 1. Encontrar os veículos que este supervisor gerencia
     const { data: veiculosSupervisor, error: veiculosError } = await supabase
         .from('veiculos')
-        .select('id')
+        .select('id, tecnico_id')
         .eq('supervisor_id', usuarioSupervisor.id);
 
     if (veiculosError) {
@@ -272,14 +156,24 @@ async function renderDashboardSupervisor(usuarioSupervisor) {
         return;
     }
     const veiculosIds = veiculosSupervisor.map(v => v.id);
+    const tecnicosIds = veiculosSupervisor.map(v => v.tecnico_id).filter(id => id); // Filtra nulos
 
     // 2. Buscar as solicitações apenas desses veículos
     let solicitacoes = [];
     if (veiculosIds.length > 0) {
-        const { data, error } = await supabase
+        let query = supabase
             .from('solicitacoes')
             .select('id, created_at, status, itens, usuario:usuario_id(nome, nivel)')
             .in('veiculo_id', veiculosIds);
+
+        // Aplica filtro de data se fornecido
+        if (dataInicio) {
+            query = query.gte('created_at', `${dataInicio}T00:00:00`);
+        }
+        if (dataFim) {
+            query = query.lte('created_at', `${dataFim}T23:59:59`);
+        }
+        const { data, error } = await query;
         if (error) {
             console.error('Erro ao buscar solicitações da equipe:', error);
         } else {
@@ -290,11 +184,13 @@ async function renderDashboardSupervisor(usuarioSupervisor) {
     // 1. Renderizar Cards de Resumo
     const totalPendente = solicitacoes.filter(s => s.status === 'pendente').length;
     const totalAprovado = solicitacoes.filter(s => s.status === 'aprovado').length;
+    const totalRejeitado = solicitacoes.filter(s => s.status === 'rejeitado').length;
     const totalEnviado = solicitacoes.filter(s => s.status === 'enviado').length;
     renderSummaryCards([
         { title: 'Pendentes (Sua Equipe)', value: totalPendente, className: 'pendente' },
         { title: 'Aprovadas (Sua Equipe)', value: totalAprovado, className: 'aprovado' },
-        { title: 'Enviadas (Sua Equipe)', value: totalEnviado, className: 'enviado' }
+        { title: 'Rejeitadas (Sua Equipe)', value: totalRejeitado, className: 'rejeitado' },
+        { title: 'Enviadas (Sua Equipe)', value: totalEnviado, className: 'enviado' },
     ]);
 
     // 2. Renderizar Gráficos
@@ -320,11 +216,21 @@ async function renderDashboardSupervisor(usuarioSupervisor) {
     renderRecentActivityGrid(solicitacoesRecentes);
 }
 
-async function renderDashboardTecnico(usuarioTecnico) {
-    const { data: solicitacoes, error } = await supabase
+async function renderDashboardTecnico(usuarioTecnico, dataInicio, dataFim) {
+    let query = supabase
         .from('solicitacoes')
         .select('id, created_at, status, itens, usuario:usuario_id(nome)')
         .eq('usuario_id', usuarioTecnico.id);
+
+    // Aplica filtro de data se fornecido
+    if (dataInicio) {
+        query = query.gte('created_at', `${dataInicio}T00:00:00`);
+    }
+    if (dataFim) {
+        query = query.lte('created_at', `${dataFim}T23:59:59`);
+    }
+
+    const { data: solicitacoes, error } = await query;
 
     if (error) {
         console.error('Erro ao buscar suas solicitações:', error);
@@ -334,10 +240,12 @@ async function renderDashboardTecnico(usuarioTecnico) {
     // 1. Renderizar Cards de Resumo
     const totalPendente = solicitacoes.filter(s => s.status === 'pendente').length;
     const totalAprovado = solicitacoes.filter(s => s.status === 'aprovado').length;
+    const totalRejeitado = solicitacoes.filter(s => s.status === 'rejeitado').length;
     const totalEnviado = solicitacoes.filter(s => s.status === 'enviado').length;
     renderSummaryCards([
         { title: 'Minhas Pendentes', value: totalPendente, className: 'pendente' },
         { title: 'Minhas Aprovadas', value: totalAprovado, className: 'aprovado' },
+        { title: 'Minhas Rejeitadas', value: totalRejeitado, className: 'rejeitado' },
         { title: 'Minhas Enviadas', value: totalEnviado, className: 'enviado' }
     ]);
 
@@ -390,7 +298,7 @@ function renderPieChart(canvasId, label, labels, data) {
             datasets: [{
                 label: label,
                 data: data,
-                backgroundColor: ['#ff9800', '#4CAF50', '#2196F3', '#f44336'],
+                backgroundColor: ['#ff9800', '#4CAF50', '#2196F3', '#f44336'], // Pendente, Aprovado, Enviado, Rejeitado
                 hoverOffset: 4
             }]
         },
@@ -445,7 +353,7 @@ function renderRecentActivityGrid(solicitacoes) {
             <th>Data</th>
             <th>Técnico</th>
             <th>Status</th>
-            <th>Total Itens</th>
+            <th>Itens</th>
         </tr>
     `;
     tbody.innerHTML = '';
@@ -460,8 +368,8 @@ function renderRecentActivityGrid(solicitacoes) {
         tr.innerHTML = `
             <td>${String(s.id).padStart(5, '0')}</td>
             <td>${new Date(s.created_at).toLocaleString('pt-BR')}</td>
-            <td>${s.usuario?.nome || 'N/A'}</td>
-            <td>${s.status}</td>
+            <td>${s.usuario?.nome || 'N/A'}</td> 
+            <td><span class="status ${s.status.toLowerCase()}">${s.status}</span></td>
             <td>${(s.itens || []).reduce((total, item) => total + item.quantidade, 0)}</td>
         `;
         tbody.appendChild(tr);
