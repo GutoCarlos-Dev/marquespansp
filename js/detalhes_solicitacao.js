@@ -292,7 +292,7 @@ async function gerarPDF() {
             break;
         case 'aprovado':
             tituloPDF = 'Pendente Envio de Peças';
-            tituloCor = '#2196F3'; // Azul
+            tituloCor = '#7221f3ff'; // Azul
             break;
     }
     // Título do Documento
