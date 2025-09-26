@@ -161,54 +161,75 @@ async function carregarDetalhesSolicitacao() {
 function editarItens() {
     if (!window.solicitacaoAtual) return;
 
-    const solicitacao = window.solicitacaoAtual;
     const itensGrid = document.getElementById('itens-grid');
+    itensGrid.innerHTML = ''; // Limpa o grid para reconstruir
 
     // Esconde os botões principais para evitar ações conflitantes
     document.getElementById('btn-enviar').style.display = 'none';
     document.getElementById('btn-imprimir').style.display = 'none';
     document.getElementById('btn-editar-itens').style.display = 'none';
 
-    // Mostra os botões de salvar/cancelar edição
+    // Mostra os botões de salvar/cancelar edição que já existem no HTML
     document.getElementById('edit-actions-container').style.display = 'flex';
 
-    // Cria a tabela com campos de input para quantidade
+    // Cria a tabela com campos de input para quantidade e botão de excluir
     const tabela = document.createElement('table');
     tabela.innerHTML = `
         <thead>
-            <tr><th>Código</th><th>Nome da Peça</th><th>Quantidade</th></tr>
+            <tr>
+                <th>Código</th>
+                <th>Nome da Peça</th>
+                <th>QTD</th>
+                <th>Ações</th>
+            </tr>
         </thead>
         <tbody>
-            ${solicitacao.itens.map((item, index) => `
-                <tr>
+            ${window.solicitacaoAtual.itens.map((item, index) => `
+                <tr data-index="${index}">
                     <td>${item.codigo}</td>
                     <td>${item.nome}</td>
-                    <td><input type="number" class="input-quantidade" min="1" value="${item.quantidade}" data-index="${index}"></td>
+                    <td><input type="number" class="input-quantidade" min="0" value="${item.quantidade}" data-index="${index}" style="width: 70px;"></td>
+                    <td><button type="button" class="btn-excluir-item" data-index="${index}">Excluir</button></td>
                 </tr>
             `).join('')}
         </tbody>
     `;
-    itensGrid.innerHTML = ''; // Limpa o grid antigo
     itensGrid.appendChild(tabela);
+
+    // Adiciona eventos para os botões de excluir
+    tabela.querySelectorAll('.btn-excluir-item').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const index = parseInt(this.dataset.index, 10);
+            // Remove o item da lista de itens da solicitação atual
+            window.solicitacaoAtual.itens.splice(index, 1);
+            // Re-renderiza a tabela de edição para refletir a remoção
+            editarItens();
+        });
+    });
 }
 
 // Função para salvar as alterações dos itens no Supabase
 async function salvarAlteracoesItens() {
     const id = window.solicitacaoAtual.id;
     const inputs = document.querySelectorAll('.input-quantidade');
-    const novosItens = [...window.solicitacaoAtual.itens]; // Cria uma cópia para modificar
+    const itensAtualizados = [];
 
     inputs.forEach(input => {
         const index = parseInt(input.dataset.index, 10);
         const novaQtd = parseInt(input.value, 10);
-        if (novaQtd > 0) {
-            novosItens[index].quantidade = novaQtd;
+        
+        // Encontra o item original pelo índice do input
+        const itemOriginal = window.solicitacaoAtual.itens.find((_, i) => i === index);
+
+        if (itemOriginal && !isNaN(novaQtd) && novaQtd > 0) {
+            itemOriginal.quantidade = novaQtd;
+            itensAtualizados.push(itemOriginal);
         }
     });
 
     const { error } = await supabase
         .from('solicitacoes')
-        .update({ itens: novosItens, updated_at: new Date().toISOString() })
+        .update({ itens: itensAtualizados, updated_at: new Date().toISOString() })
         .eq('id', id);
 
     if (error) {
