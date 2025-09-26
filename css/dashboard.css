@@ -109,45 +109,46 @@ main {
 
 /* Cards de Resumo */
 .summary-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
+    display: grid; 
+    grid-template-columns: repeat(6, 1fr); /* Força 6 colunas */
+    gap: 1rem; /* Espaçamento reduzido */
 }
 
 .card {
     background: white;
-    padding: 1.5rem;
+    padding: 1rem; /* Padding reduzido */
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     text-align: center;
-    border-left: 5px solid #4CAF50;
+    border-top: 4px solid #4CAF50; /* Borda no topo para economizar espaço */
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-3px);
     box-shadow: 0 8px 16px rgba(0,0,0,0.1);
 }
 
 .card h4 {
     margin: 0 0 0.5rem 0;
     color: #666;
-    font-size: 1rem;
+    font-size: 0.8rem; /* Fonte do título reduzida */
     text-transform: uppercase;
 }
 
 .card p {
     margin: 0;
-    font-size: 2.5rem;
+    font-size: 2rem; /* Fonte do número reduzida */
     font-weight: 700;
     color: #333;
 }
 
 /* Cores específicas para os cards */
-.card.pendente { border-color: #ff9800; }
-.card.aprovado { border-color: #4CAF50; }
-.card.enviado { border-color: #2196F3; }
-.card.rejeitado { border-color: #f44336; }
+.card.pendente { border-top-color: #ff9800; }
+.card.aprovado { border-top-color: #4CAF50; }
+.card.enviado { border-top-color: #2196F3; }
+.card.rejeitado { border-top-color: #f44336; }
+.card.pecas-total { border-top-color: #607d8b; } /* Cinza azulado para o total de peças */
 
 /* Gráficos */
 .charts-container {
@@ -218,13 +219,18 @@ main {
     }
 }
 
-/* Mobile responsiveness improvements */
-@media (max-width: 768px) {
+/* Responsividade para tablets e telas menores */
+@media (max-width: 1200px) {
     main {
         padding: 1rem;
-        margin: 1rem;
     }
+    .summary-cards {
+        grid-template-columns: repeat(3, 1fr); /* 3 colunas */
+    }
+}
 
+/* Mobile responsiveness improvements */
+@media (max-width: 768px) {
     .dashboard-header {
         margin-bottom: 1.5rem;
         text-align: center;
@@ -242,7 +248,7 @@ main {
 
     /* Summary cards mobile layout */
     .summary-cards {
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        grid-template-columns: repeat(2, 1fr); /* 2 colunas para mobile */
         gap: 1rem;
     }
 
