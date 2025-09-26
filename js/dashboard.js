@@ -21,49 +21,94 @@ document.addEventListener('DOMContentLoaded', async () => {
         nomeUsuarioSpan.textContent = usuarioLogado.nomecompleto || usuarioLogado.nome;
     }
 
-    // --- Container de Filtros ---
+    // --- Container de Filtros ---    
     const filtroContainer = document.createElement('div');
     filtroContainer.id = 'filtro-visao-geral';
     filtroContainer.innerHTML = `
-        <div class="filtro-item">
-            <label for="data-inicio">De:</label>
-            <input type="date" id="data-inicio">
+        <div class="filtro-grupo">
+            <span class="filtro-titulo">Filtrar por Período:</span>
+            <div class="filtro-item">
+                <label for="data-inicio">De:</label>
+                <input type="date" id="data-inicio">
+            </div>
+            <div class="filtro-item">
+                <label for="data-fim">Até:</label>
+                <input type="date" id="data-fim">
+            </div>
         </div>
-        <div class="filtro-item">
-            <label for="data-fim">Até:</label>
-            <input type="date" id="data-fim">
+        <div class="filtro-grupo">
+            <span class="filtro-titulo">Mostrar Dados de:</span>
+            <div class="filtro-item-check">
+                <input type="checkbox" id="check-solicitacoes" checked>
+                <label for="check-solicitacoes">Solicitações</label>
+            </div>
+            <div class="filtro-item-check">
+                <input type="checkbox" id="check-pecas" checked>
+                <label for="check-pecas">Peças por Técnico</label>
+            </div>
         </div>
-        <div class="filtro-item">
+        <div class="filtro-grupo-botoes">
             <button id="btn-filtrar-data">Filtrar</button>
             <button id="btn-limpar-filtro" class="btn-secundario">Limpar</button>
         </div>
     `;
-
+    
     const dashboardContainer = document.getElementById('dashboard-container');
     if (dashboardContainer) {
         dashboardContainer.insertBefore(filtroContainer, dashboardContainer.firstChild);
     }
 
-    // Função para atualizar a visão geral com base nos filtros de data
+    // Função para atualizar a visão geral com base em todos os filtros
     async function atualizarVisaoGeralComFiltro() {
         const dataInicio = document.getElementById('data-inicio').value;
         const dataFim = document.getElementById('data-fim').value;
+        const mostrarSolicitacoes = document.getElementById('check-solicitacoes').checked;
+        const mostrarPecas = document.getElementById('check-pecas').checked;
 
-        // Renderiza o dashboard de acordo com o nível do usuário, passando as datas
+        // Limpa os containers antes de renderizar
+        document.getElementById('summary-cards').innerHTML = '';
+        document.getElementById('charts-container').style.display = 'none'; // Esconde para evitar layout quebrado
+        document.getElementById('recent-activity-container').style.display = 'none';
+
+        if (statusChartInstance) statusChartInstance.destroy();
+        if (barChartInstance) barChartInstance.destroy();
+
+        let solicitacoesFiltradas = [];
+
+        // Busca os dados base uma única vez
         switch (usuarioLogado.nivel) {
             case 'administrador':
             case 'matriz':
-                await renderDashboardAdminMatriz(dataInicio, dataFim);
+                solicitacoesFiltradas = await buscarSolicitacoesAdmin(dataInicio, dataFim);
                 break;
             case 'supervisor':
-                await renderDashboardSupervisor(usuarioLogado, dataInicio, dataFim);
+                solicitacoesFiltradas = await buscarSolicitacoesSupervisor(usuarioLogado, dataInicio, dataFim);
                 break;
             case 'tecnico':
-                await renderDashboardTecnico(usuarioLogado, dataInicio, dataFim);
+                solicitacoesFiltradas = await buscarSolicitacoesTecnico(usuarioLogado, dataInicio, dataFim);
                 break;
             default:
                 document.getElementById('dashboard-container').innerHTML = '<p>Nível de usuário não reconhecido.</p>';
+                return;
         }
+
+        // Renderiza os componentes com base nos checkboxes
+        if (mostrarSolicitacoes) {
+            renderizarDadosSolicitacoes(solicitacoesFiltradas, usuarioLogado.nivel);
+            document.getElementById('charts-container').style.display = 'grid';
+            document.getElementById('recent-activity-container').style.display = 'block';
+        }
+
+        if (mostrarPecas) {
+            renderizarDadosPecas(solicitacoesFiltradas, usuarioLogado.nivel);
+            document.getElementById('charts-container').style.display = 'grid';
+        }
+
+        // Se ambos estiverem desmarcados, mostra uma mensagem
+        if (!mostrarSolicitacoes && !mostrarPecas) {
+            document.getElementById('summary-cards').innerHTML = '<p class="aviso-filtro">Selecione "Solicitações" ou "Peças por Técnico" e clique em Filtrar para ver os dados.</p>';
+        }
+
     }
 
     // Adicionar listeners para os botões de filtro
@@ -71,6 +116,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btn-limpar-filtro').addEventListener('click', () => {
         document.getElementById('data-inicio').value = '';
         document.getElementById('data-fim').value = '';
+        document.getElementById('check-solicitacoes').checked = true;
+        document.getElementById('check-pecas').checked = true;
         atualizarVisaoGeralComFiltro(); // Recarrega com os filtros limpos
     });
 
@@ -78,34 +125,64 @@ document.addEventListener('DOMContentLoaded', async () => {
     atualizarVisaoGeralComFiltro();
 });
 
-// --- Funções de Renderização de Dashboards ---
-
 // Variáveis para armazenar as instâncias dos gráficos e destruí-las antes de recriar
 let statusChartInstance = null;
 let barChartInstance = null;
 
-async function renderDashboardAdminMatriz(dataInicio, dataFim) {
-    // Busca todas as solicitações com os dados do usuário associado
+// --- Funções de Busca de Dados ---
+
+async function buscarSolicitacoesComFiltro(baseQuery, dataInicio, dataFim) {
+    if (dataInicio) {
+        baseQuery = baseQuery.gte('created_at', `${dataInicio}T00:00:00`);
+    }
+    if (dataFim) {
+        baseQuery = baseQuery.lte('created_at', `${dataFim}T23:59:59`);
+    }
+    const { data, error } = await baseQuery;
+    if (error) {
+        console.error('Erro ao buscar solicitações:', error);
+        return [];
+    }
+    return data;
+}
+
+async function buscarSolicitacoesAdmin(dataInicio, dataFim) {
     let query = supabase
         .from('solicitacoes')
         .select('id, created_at, status, itens, usuario:usuario_id(nome, nivel)');
+    return await buscarSolicitacoesComFiltro(query, dataInicio, dataFim);
+}
 
-    // Aplica filtro de data se fornecido
-    if (dataInicio) {
-        query = query.gte('created_at', `${dataInicio}T00:00:00`);
+async function buscarSolicitacoesSupervisor(usuarioSupervisor, dataInicio, dataFim) {
+    const { data: veiculosSupervisor, error: veiculosError } = await supabase
+        .from('veiculos')
+        .select('id')
+        .eq('supervisor_id', usuarioSupervisor.id);
+
+    if (veiculosError || !veiculosSupervisor || veiculosSupervisor.length === 0) {
+        console.error('Erro ou nenhum veículo encontrado para o supervisor:', veiculosError);
+        return [];
     }
-    if (dataFim) {
-        query = query.lte('created_at', `${dataFim}T23:59:59`);
-    }
+    const veiculosIds = veiculosSupervisor.map(v => v.id);
+    let query = supabase
+        .from('solicitacoes')
+        .select('id, created_at, status, itens, usuario:usuario_id(nome, nivel)')
+        .in('veiculo_id', veiculosIds);
+    return await buscarSolicitacoesComFiltro(query, dataInicio, dataFim);
+}
 
-    const { data: solicitacoes, error: solicitacoesError } = await query;
+async function buscarSolicitacoesTecnico(usuarioTecnico, dataInicio, dataFim) {
+    let query = supabase
+        .from('solicitacoes')
+        .select('id, created_at, status, itens, usuario:usuario_id(nome)')
+        .eq('usuario_id', usuarioTecnico.id);
+    return await buscarSolicitacoesComFiltro(query, dataInicio, dataFim);
+}
 
-    if (solicitacoesError) {
-        console.error('Erro ao buscar solicitações:', solicitacoesError);
-        return;
-    }
+// --- Funções de Renderização de Componentes ---
 
-    // 1. Renderizar Cards de Resumo
+function renderizarDadosSolicitacoes(solicitacoes, nivelUsuario) {
+    // 1. Cards de Resumo de Solicitações
     const totalSolicitacoes = solicitacoes.length;
     const totalPendente = solicitacoes.filter(s => s.status === 'pendente').length;
     const totalAprovado = solicitacoes.filter(s => s.status === 'aprovado').length;
@@ -113,14 +190,14 @@ async function renderDashboardAdminMatriz(dataInicio, dataFim) {
     const totalEnviado = solicitacoes.filter(s => s.status === 'enviado').length;
     renderSummaryCards([
         { title: 'Total de Solicitações', value: totalSolicitacoes, className: '' },
-        { title: 'Pendentes', value: totalPendente, className: 'pendente' },
-        { title: 'Aprovadas', value: totalAprovado, className: 'aprovado' },
-        { title: 'Rejeitadas', value: totalRejeitado, className: 'rejeitado' },
-        { title: 'Enviadas', value: totalEnviado, className: 'enviado' }
+        { title: 'Pendentes', value: totalPendente, className: 'pendente', icon: 'fas fa-clock' },
+        { title: 'Aprovadas', value: totalAprovado, className: 'aprovado', icon: 'fas fa-check-circle' },
+        { title: 'Rejeitadas', value: totalRejeitado, className: 'rejeitado', icon: 'fas fa-times-circle' },
+        { title: 'Enviadas', value: totalEnviado, className: 'enviado', icon: 'fas fa-truck' }
     ]);
 
-    // 2. Renderizar Gráficos
-    // Gráfico de Pizza: Status das Solicitações
+    // 2. Gráfico de Pizza: Status
+    document.getElementById('status-chart-container').style.display = 'block';
     const statusData = {
         'Pendente': solicitacoes.filter(s => s.status === 'pendente').length,
         'Aprovado': solicitacoes.filter(s => s.status === 'aprovado').length,
@@ -129,157 +206,50 @@ async function renderDashboardAdminMatriz(dataInicio, dataFim) {
     };
     renderPieChart('status-chart', 'Status das Solicitações', Object.keys(statusData), Object.values(statusData));
 
-    // Gráfico de Barras: Solicitações por Técnico
+    // 3. Grid de Atividade Recente
+    const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
+    renderRecentActivityGrid(solicitacoesRecentes);
+}
+
+function renderizarDadosPecas(solicitacoes, nivelUsuario) {
+    // 1. Card de Total de Peças
+    const totalPecas = solicitacoes.reduce((total, s) => {
+        return total + (s.itens || []).reduce((subtotal, item) => subtotal + item.quantidade, 0);
+    }, 0);
+    renderSummaryCards([{ title: 'Total de Peças Solicitadas', value: totalPecas, className: 'pecas-total', icon: 'fas fa-cogs' }]);
+
+    // 2. Gráfico de Barras: Peças por Técnico
+    // Não mostrar para técnico, pois só teria uma barra
+    if (nivelUsuario === 'tecnico') {
+        document.getElementById('bar-chart-container').style.display = 'none';
+        return;
+    }
+    document.getElementById('bar-chart-container').style.display = 'block';
+    document.getElementById('bar-chart-title').textContent = 'Peças por Técnico';
+
     const solicitacoesPorTecnico = {};
     solicitacoes.forEach(s => {
-        if (s.usuario && s.usuario.nivel === 'tecnico') {
+        if (s.usuario && (s.usuario.nivel === 'tecnico' || nivelUsuario === 'supervisor')) {
             const nomeTecnico = s.usuario.nome;
-            solicitacoesPorTecnico[nomeTecnico] = (solicitacoesPorTecnico[nomeTecnico] || 0) + 1;
+            const totalItens = (s.itens || []).reduce((acc, item) => acc + (item.quantidade || 0), 0);
+            solicitacoesPorTecnico[nomeTecnico] = (solicitacoesPorTecnico[nomeTecnico] || 0) + totalItens;
         }
     });
-    renderBarChart('bar-chart', 'Nº de Solicitações', Object.keys(solicitacoesPorTecnico), Object.values(solicitacoesPorTecnico));
-
-    // 3. Renderizar Grid de Atividade Recente
-    const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
-    renderRecentActivityGrid(solicitacoesRecentes);
+    renderBarChart('bar-chart', 'Nº de Peças', Object.keys(solicitacoesPorTecnico), Object.values(solicitacoesPorTecnico));
 }
-
-async function renderDashboardSupervisor(usuarioSupervisor, dataInicio, dataFim) {
-    // 1. Encontrar os veículos que este supervisor gerencia
-    const { data: veiculosSupervisor, error: veiculosError } = await supabase
-        .from('veiculos')
-        .select('id, tecnico_id')
-        .eq('supervisor_id', usuarioSupervisor.id);
-
-    if (veiculosError) {
-        console.error('Erro ao buscar veículos do supervisor:', veiculosError);
-        return;
-    }
-    const veiculosIds = veiculosSupervisor.map(v => v.id);
-    const tecnicosIds = veiculosSupervisor.map(v => v.tecnico_id).filter(id => id); // Filtra nulos
-
-    // 2. Buscar as solicitações apenas desses veículos
-    let solicitacoes = [];
-    if (veiculosIds.length > 0) {
-        let query = supabase
-            .from('solicitacoes')
-            .select('id, created_at, status, itens, usuario:usuario_id(nome, nivel)')
-            .in('veiculo_id', veiculosIds);
-
-        // Aplica filtro de data se fornecido
-        if (dataInicio) {
-            query = query.gte('created_at', `${dataInicio}T00:00:00`);
-        }
-        if (dataFim) {
-            query = query.lte('created_at', `${dataFim}T23:59:59`);
-        }
-        const { data, error } = await query;
-        if (error) {
-            console.error('Erro ao buscar solicitações da equipe:', error);
-        } else {
-            solicitacoes = data;
-        }
-    }
-
-    // 1. Renderizar Cards de Resumo
-    const totalPendente = solicitacoes.filter(s => s.status === 'pendente').length;
-    const totalAprovado = solicitacoes.filter(s => s.status === 'aprovado').length;
-    const totalRejeitado = solicitacoes.filter(s => s.status === 'rejeitado').length;
-    const totalEnviado = solicitacoes.filter(s => s.status === 'enviado').length;
-    renderSummaryCards([
-        { title: 'Pendentes (Sua Equipe)', value: totalPendente, className: 'pendente' },
-        { title: 'Aprovadas (Sua Equipe)', value: totalAprovado, className: 'aprovado' },
-        { title: 'Rejeitadas (Sua Equipe)', value: totalRejeitado, className: 'rejeitado' },
-        { title: 'Enviadas (Sua Equipe)', value: totalEnviado, className: 'enviado' },
-    ]);
-
-    // 2. Renderizar Gráficos
-    const statusData = {
-        'Pendente': solicitacoes.filter(s => s.status === 'pendente').length,
-        'Aprovado': solicitacoes.filter(s => s.status === 'aprovado').length,
-        'Enviado': solicitacoes.filter(s => s.status === 'enviado').length,
-        'Rejeitado': solicitacoes.filter(s => s.status === 'rejeitado').length
-    };
-    renderPieChart('status-chart', 'Status das Solicitações (Sua Equipe)', Object.keys(statusData), Object.values(statusData));
-
-    document.getElementById('bar-chart-title').textContent = 'Solicitações por Técnico (Sua Equipe)';
-    const solicitacoesPorTecnico = {};
-    solicitacoes.forEach(s => {
-        if (s.usuario) {
-            solicitacoesPorTecnico[s.usuario.nome] = (solicitacoesPorTecnico[s.usuario.nome] || 0) + 1;
-        }
-    });
-    renderBarChart('bar-chart', 'Nº de Solicitações', Object.keys(solicitacoesPorTecnico), Object.values(solicitacoesPorTecnico));
-
-    // 3. Renderizar Grid de Atividade Recente
-    const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
-    renderRecentActivityGrid(solicitacoesRecentes);
-}
-
-async function renderDashboardTecnico(usuarioTecnico, dataInicio, dataFim) {
-    let query = supabase
-        .from('solicitacoes')
-        .select('id, created_at, status, itens, usuario:usuario_id(nome)')
-        .eq('usuario_id', usuarioTecnico.id);
-
-    // Aplica filtro de data se fornecido
-    if (dataInicio) {
-        query = query.gte('created_at', `${dataInicio}T00:00:00`);
-    }
-    if (dataFim) {
-        query = query.lte('created_at', `${dataFim}T23:59:59`);
-    }
-
-    const { data: solicitacoes, error } = await query;
-
-    if (error) {
-        console.error('Erro ao buscar suas solicitações:', error);
-        return;
-    }
-
-    // 1. Renderizar Cards de Resumo
-    const totalPendente = solicitacoes.filter(s => s.status === 'pendente').length;
-    const totalAprovado = solicitacoes.filter(s => s.status === 'aprovado').length;
-    const totalRejeitado = solicitacoes.filter(s => s.status === 'rejeitado').length;
-    const totalEnviado = solicitacoes.filter(s => s.status === 'enviado').length;
-    renderSummaryCards([
-        { title: 'Minhas Pendentes', value: totalPendente, className: 'pendente' },
-        { title: 'Minhas Aprovadas', value: totalAprovado, className: 'aprovado' },
-        { title: 'Minhas Rejeitadas', value: totalRejeitado, className: 'rejeitado' },
-        { title: 'Minhas Enviadas', value: totalEnviado, className: 'enviado' }
-    ]);
-
-    // 2. Renderizar Gráficos
-    // Esconder o gráfico de barras que não faz sentido para o técnico
-    const barChartContainer = document.getElementById('bar-chart-container');
-    if (barChartContainer) barChartContainer.style.display = 'none';
-    // Ajustar o layout para o gráfico de pizza ocupar mais espaço
-    document.getElementById('charts-container').style.gridTemplateColumns = '1fr';
-
-    const statusData = {
-        'Pendente': solicitacoes.filter(s => s.status === 'pendente').length,
-        'Aprovado': solicitacoes.filter(s => s.status === 'aprovado').length,
-        'Enviado': solicitacoes.filter(s => s.status === 'enviado').length,
-        'Rejeitado': solicitacoes.filter(s => s.status === 'rejeitado').length
-    };
-    renderPieChart('status-chart', 'Status das Minhas Solicitações', Object.keys(statusData), Object.values(statusData));
-
-    // 3. Renderizar Grid de Atividade Recente
-    const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
-    renderRecentActivityGrid(solicitacoesRecentes);
-}
-
-// --- Funções Auxiliares de Renderização ---
 
 function renderSummaryCards(cardsData) {
     const container = document.getElementById('summary-cards');
-    container.innerHTML = '';
+    // Não limpa, para que os cards de peças e solicitações possam ser adicionados juntos
     cardsData.forEach(data => {
         const card = document.createElement('div');
         card.className = `card ${data.className || ''}`;
         card.innerHTML = `
-            <h4>${data.title}</h4>
-            <p>${data.value}</p>
+            <div class="card-icon"><i class="${data.icon || 'fas fa-info-circle'}"></i></div>
+            <div class="card-content">
+                <h4>${data.title}</h4>
+                <p>${data.value}</p>
+            </div>
         `;
         container.appendChild(card);
     });
