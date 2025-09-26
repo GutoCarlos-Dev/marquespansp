@@ -21,6 +21,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         nomeUsuarioSpan.textContent = usuarioLogado.nomecompleto || usuarioLogado.nome;
     }
 
+    // Função para criar a estrutura do dashboard se não existir
+    function criarEstruturaDashboard() {
+        const container = document.getElementById('dashboard-container');
+        if (!container) return;
+
+        // Adiciona os contêineres apenas se eles não existirem
+        if (!document.getElementById('summary-cards')) {
+            container.innerHTML += '<div id="summary-cards" class="summary-cards-container"></div>';
+        }
+        if (!document.getElementById('charts-container')) {
+            container.innerHTML += `<div id="charts-container" class="charts-grid-container" style="display: none;">
+                <div id="status-chart-container" class="chart-card"><h3>Status das Solicitações</h3><canvas id="status-chart"></canvas></div>
+                <div id="bar-chart-container" class="chart-card"><h3 id="bar-chart-title"></h3><canvas id="bar-chart"></canvas></div>
+            </div>`;
+        }
+    }
+
     // --- Container de Filtros ---    
     const filtroContainer = document.createElement('div');
     filtroContainer.id = 'filtro-visao-geral';
@@ -58,6 +75,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         dashboardContainer.insertBefore(filtroContainer, dashboardContainer.firstChild);
     }
 
+    // Cria a estrutura de divs para os gráficos e cards
+    criarEstruturaDashboard();
+
     // Função para atualizar a visão geral com base em todos os filtros
     async function atualizarVisaoGeralComFiltro() {
         const dataInicio = document.getElementById('data-inicio').value;
@@ -66,9 +86,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const mostrarPecas = document.getElementById('check-pecas').checked;
 
         // Limpa os containers antes de renderizar
-        document.getElementById('summary-cards').innerHTML = '';
-        document.getElementById('charts-container').style.display = 'none'; // Esconde para evitar layout quebrado
-        document.getElementById('recent-activity-container').style.display = 'none';
+        const summaryCards = document.getElementById('summary-cards');
+        if (summaryCards) summaryCards.innerHTML = '';
+
+        const chartsContainer = document.getElementById('charts-container');
+        if (chartsContainer) chartsContainer.style.display = 'none'; // Esconde para evitar layout quebrado
+
+        const recentActivityContainer = document.getElementById('recent-activity-container');
+        if (recentActivityContainer) recentActivityContainer.style.display = 'none';
 
         if (statusChartInstance) statusChartInstance.destroy();
         if (barChartInstance) barChartInstance.destroy();
@@ -95,18 +120,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Renderiza os componentes com base nos checkboxes
         if (mostrarSolicitacoes) {
             renderizarDadosSolicitacoes(solicitacoesFiltradas, usuarioLogado.nivel);
-            document.getElementById('charts-container').style.display = 'grid';
-            document.getElementById('recent-activity-container').style.display = 'block';
+            if (chartsContainer) chartsContainer.style.display = 'grid';
+            if (recentActivityContainer) recentActivityContainer.style.display = 'block';
         }
 
         if (mostrarPecas) {
             renderizarDadosPecas(solicitacoesFiltradas, usuarioLogado.nivel);
-            document.getElementById('charts-container').style.display = 'grid';
+            if (chartsContainer) chartsContainer.style.display = 'grid';
         }
 
         // Se ambos estiverem desmarcados, mostra uma mensagem
         if (!mostrarSolicitacoes && !mostrarPecas) {
-            document.getElementById('summary-cards').innerHTML = '<p class="aviso-filtro">Selecione uma opção e clique em "Filtrar" para ver os dados.</p>';
+            if (summaryCards) {
+                summaryCards.innerHTML = '<p class="aviso-filtro">Selecione uma opção e clique em "Filtrar" para ver os dados.</p>';
+            }
+        }
+        // Se nenhum gráfico for exibido, esconde o container
+        if (!mostrarSolicitacoes && !mostrarPecas) {
+            if (chartsContainer) chartsContainer.style.display = 'none';
         }
     }
 
@@ -199,7 +230,8 @@ function renderizarDadosSolicitacoes(solicitacoes, nivelUsuario) {
     ]);
 
     // 2. Gráfico de Pizza: Status
-    document.getElementById('status-chart-container').style.display = 'block';
+    const statusChartContainer = document.getElementById('status-chart-container');
+    if (statusChartContainer) statusChartContainer.style.display = 'block';
     const statusData = {
         'Pendente': solicitacoes.filter(s => s.status === 'pendente').length,
         'Aprovado': solicitacoes.filter(s => s.status === 'aprovado').length,
@@ -223,11 +255,15 @@ function renderizarDadosPecas(solicitacoes, nivelUsuario) {
     // 2. Gráfico de Barras: Peças por Técnico
     // Não mostrar para técnico, pois só teria uma barra
     if (nivelUsuario === 'tecnico') {
-        document.getElementById('bar-chart-container').style.display = 'none';
+        const barChartContainer = document.getElementById('bar-chart-container');
+        if (barChartContainer) barChartContainer.style.display = 'none';
         return;
     }
-    document.getElementById('bar-chart-container').style.display = 'block';
-    document.getElementById('bar-chart-title').textContent = 'Peças por Técnico';
+    const barChartContainer = document.getElementById('bar-chart-container');
+    if (barChartContainer) barChartContainer.style.display = 'block';
+    
+    const barChartTitle = document.getElementById('bar-chart-title');
+    if (barChartTitle) barChartTitle.textContent = 'Peças por Técnico';
 
     const solicitacoesPorTecnico = {};
     solicitacoes.forEach(s => {
@@ -244,6 +280,7 @@ function renderizarDadosPecas(solicitacoes, nivelUsuario) {
 
 function renderSummaryCards(cardsData) {
     const container = document.getElementById('summary-cards');
+    if (!container) return;
     // Não limpa, para que os cards de peças e solicitações possam ser adicionados juntos
     cardsData.forEach(data => {
         const card = document.createElement('div');
@@ -261,7 +298,9 @@ function renderPieChart(canvasId, label, labels, data) {
     if (statusChartInstance) {
         statusChartInstance.destroy();
     }
-    const ctx = document.getElementById(canvasId).getContext('2d');
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
     statusChartInstance = new Chart(ctx, {
         type: 'pie',
         data: {
@@ -285,7 +324,9 @@ function renderBarChart(canvasId, label, labels, data) {
     if (barChartInstance) {
         barChartInstance.destroy();
     }
-    const ctx = document.getElementById(canvasId).getContext('2d');
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
     barChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -315,6 +356,7 @@ function renderBarChart(canvasId, label, labels, data) {
 
 function renderRecentActivityGrid(solicitacoes) {
     const table = document.getElementById('tabela-recente');
+    if (!table) return;
     const thead = table.querySelector('thead');
     const tbody = table.querySelector('tbody');
     
