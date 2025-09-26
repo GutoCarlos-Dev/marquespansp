@@ -329,8 +329,8 @@ async function gerarPDF() {
             tituloCor = '#f44336'; // Vermelho
             break;
         case 'aprovado':
-            tituloPDF = 'Aprovado, Aguardando Envio de Peças';
-            tituloCor = '#2196F3'; // Azul
+            tituloPDF = 'Aprovado, separando de peças';
+            tituloCor = '#f3aa21ff'; // Azul
             break;
     }
     // Título do Documento
