@@ -350,7 +350,7 @@ async function gerarPDF() {
             tituloCor = '#f44336'; // Vermelho
             break;
         case 'aprovado':
-            tituloPDF = 'Aprovado, Separar Peças';
+            tituloPDF = 'Aprovado para Envio';
             tituloCor = '#2196F3'; // Azul
             break;
     }
@@ -383,6 +383,15 @@ async function gerarPDF() {
 
     // Coluna da Esquerda (Dados da Solicitação)
     const dataHora = new Date(solicitacao.created_at).toLocaleString('pt-BR');
+
+    // ROTA DE ENTREGA primeiro
+    doc.setFontSize(15); // Aumentar fonte para destacar
+    doc.setTextColor('#f44336'); // Cor vermelha para destacar
+    drawLabeledText('ROTA DE ENTREGA:  ', solicitacao.rota || 'Não definida', leftMargin, startY);
+    doc.setTextColor(40); // Restaurar cor padrão
+    doc.setFontSize(10); // Restaurar fonte padrão
+    startY += lineHeight;
+
     drawLabeledText('Código da Solicitação:    ', String(solicitacao.id).padStart(5, '0'), leftMargin, startY);
     startY += lineHeight;
     drawLabeledText('Data da Solicitação:   ', dataHora, leftMargin, startY);
@@ -413,9 +422,6 @@ async function gerarPDF() {
     // 4. Valor do "Supervisor" (Normal)
     doc.setFont('helvetica', 'normal');
     doc.text(solicitacao.veiculo?.supervisor?.nome || 'N/A', currentXPlaca, startY);
-    startY += lineHeight;
-
-    drawLabeledText('Rota de Entrega:  ', solicitacao.rota || 'Não definida', leftMargin, startY);
     startY += lineHeight;
     const dataEnvio = solicitacao.data_envio ? new Date(solicitacao.data_envio).toLocaleString('pt-BR') : 'Aguardando envio';
     const enviadoPor = solicitacao.enviado_por?.nome || (solicitacao.status === 'enviado' ? 'Não registrado' : '');
@@ -456,16 +462,16 @@ async function gerarPDF() {
     // Coluna da Direita (Assinaturas)
     let signatureY = 40;
     doc.setFont('helvetica', 'bold');
-    doc.text('Motorista:', rightMargin, signatureY);
+    doc.text('Status:', rightMargin, signatureY);
     doc.setFont('helvetica', 'normal');
-    doc.text(' _____________________________', rightMargin + doc.getTextWidth('Motorista:'), signatureY);
+    doc.text(' _____________________________', rightMargin + doc.getTextWidth('Status:'), signatureY);
 
     signatureY += lineHeight * 2; // Espaço maior entre as assinaturas
 
     doc.setFont('helvetica', 'bold');
-    doc.text('Recebido Por:', rightMargin, signatureY);
+    doc.text('Separado por:', rightMargin, signatureY);
     doc.setFont('helvetica', 'normal');
-    doc.text(' ___________________________', rightMargin + doc.getTextWidth('Recebido Por:'), signatureY);
+    doc.text(' ___________________________', rightMargin + doc.getTextWidth('Separado por:'), signatureY);
 
     // Adicionar total de peças antes da tabela
     const totalQuantidadePDF = solicitacao.itens.reduce((total, item) => total + item.quantidade, 0);
