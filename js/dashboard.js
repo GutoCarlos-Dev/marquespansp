@@ -288,7 +288,7 @@ function renderizarDadosPecas(solicitacoes, nivelUsuario) {
     }
     const barChartContainer = document.getElementById('bar-chart-container');
     if (barChartContainer) barChartContainer.style.display = 'block';
-    
+
     const barChartTitle = document.getElementById('bar-chart-title');
     if (barChartTitle) barChartTitle.textContent = 'Peças por Técnico';
 
