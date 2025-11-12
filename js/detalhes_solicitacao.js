@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Adiciona o evento de clique para o novo botão Fechar
     document.getElementById('btn-fechar').addEventListener('click', function() {
-        window.close();
+        window.close(); // Fecha a aba atual
     });
 
     // Adiciona o evento de clique para o botão Editar Itens
@@ -156,7 +156,6 @@ async function carregarDetalhesSolicitacao() {
     if (solicitacao.status !== 'pendente' && !podeEditar) {
         btnAprovar.style.display = 'none';
         btnRejeitar.style.display = 'none';
-        btnFechar.style.display = 'inline-block'; // Mostra o botão fechar
 
         const rotaInput = document.getElementById('rota');
         rotaInput.readOnly = true;
