@@ -274,9 +274,11 @@ function renderizarDadosSolicitacoes(solicitacoes, nivelUsuario) {
 
 function renderizarDadosPecas(solicitacoes, nivelUsuario) {
     // 1. Card de Total de Peças
-    const totalPecas = solicitacoes.reduce((total, s) => {
-        return total + (s.itens || []).reduce((subtotal, item) => subtotal + item.quantidade, 0);
-    }, 0);
+    const totalPecas = solicitacoes
+        .filter(s => s.status !== 'rejeitado') // Filtra para não somar peças de solicitações rejeitadas
+        .reduce((total, s) => {
+            return total + (s.itens || []).reduce((subtotal, item) => subtotal + item.quantidade, 0);
+        }, 0);
     renderSummaryCards([{ title: 'Total de Peças Solicitadas', value: totalPecas, className: 'pecas-total' }]);
 
     // 2. Gráfico de Barras: Peças por Técnico
@@ -293,13 +295,15 @@ function renderizarDadosPecas(solicitacoes, nivelUsuario) {
     if (barChartTitle) barChartTitle.textContent = 'Peças por Técnico';
 
     const solicitacoesPorTecnico = {};
-    solicitacoes.forEach(s => {
-        if (s.usuario && (s.usuario.nivel === 'tecnico' || nivelUsuario === 'supervisor')) {
-            const nomeTecnico = s.usuario.nome;
-            const totalItens = (s.itens || []).reduce((acc, item) => acc + (item.quantidade || 0), 0);
-            solicitacoesPorTecnico[nomeTecnico] = (solicitacoesPorTecnico[nomeTecnico] || 0) + totalItens;
-        }
-    });
+    solicitacoes
+        .filter(s => s.status !== 'rejeitado') // Filtra também para o gráfico de barras
+        .forEach(s => {
+            if (s.usuario && (s.usuario.nivel === 'tecnico' || nivelUsuario === 'supervisor')) {
+                const nomeTecnico = s.usuario.nome;
+                const totalItens = (s.itens || []).reduce((acc, item) => acc + (item.quantidade || 0), 0);
+                solicitacoesPorTecnico[nomeTecnico] = (solicitacoesPorTecnico[nomeTecnico] || 0) + totalItens;
+            }
+        });
     renderBarChart('bar-chart', 'Nº de Peças', Object.keys(solicitacoesPorTecnico), Object.values(solicitacoesPorTecnico));
 }
 
