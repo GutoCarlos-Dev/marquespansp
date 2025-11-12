@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Adiciona o contêiner para a atividade recente
         if (!document.getElementById('recent-activity-container')) {
             container.innerHTML += `<div id="recent-activity-container" class="recent-activity-grid-container" style="display: none;">
-                <h2>Atividade Recente</h2><table id="tabela-recente"><thead></thead><tbody></tbody></table>
+                <table id="tabela-recente"><thead></thead><tbody></tbody></table>
             </div>`;
         }
     }

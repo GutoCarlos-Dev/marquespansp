@@ -152,52 +152,131 @@ main {
 
 /* Filtros do Dashboard */
 #filtro-visao-geral {
-    background-color: #ffffff;
-    padding: 1.5rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
     margin-bottom: 2rem;
     display: flex;
     flex-wrap: wrap;
     gap: 2rem;
-    align-items: flex-end; /* Alinha os grupos na base */
+    align-items: flex-end;
+    position: relative;
+    overflow: hidden;
+}
+
+#filtro-visao-geral::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4CAF50 0%, #81C784 100%);
 }
 
 .filtro-grupo {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    background: rgba(76, 175, 80, 0.02);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid rgba(76, 175, 80, 0.1);
+    min-width: 200px;
+    flex: 1;
 }
 
 .filtro-titulo {
-    font-weight: 600;
-    color: #333;
-    font-size: 0.9rem;
-    margin-bottom: 0.25rem;
-}
-
-.filtro-item, .filtro-item-check {
+    font-weight: 700;
+    color: #4CAF50;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
+.filtro-titulo::before {
+    content: '📊';
+    font-size: 1rem;
+}
+
+.filtro-item, .filtro-item-check {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.25rem 0;
+}
+
 .filtro-item label, .filtro-item-check label {
     font-size: 0.9rem;
     color: #555;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.filtro-item label:hover, .filtro-item-check label:hover {
+    color: #4CAF50;
 }
 
 .filtro-item input[type="date"] {
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    padding: 0.6rem 0.8rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
     font-family: 'Segoe UI', sans-serif;
+    font-size: 0.9rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background: white;
+    width: 100%;
+}
+
+.filtro-item input[type="date"]:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.filtro-item-check input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #4CAF50;
+    cursor: pointer;
 }
 
 .filtro-grupo-botoes {
     display: flex;
-    gap: 0.5rem;
-    margin-left: auto; /* Empurra os botões para a direita */
+    gap: 0.75rem;
+    margin-left: auto;
+    align-self: flex-end;
+}
+
+.filtro-grupo-botoes button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filtro-grupo-botoes button:first-child {
+    background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.filtro-grupo-botoes button:first-child:hover {
+    background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
 }
 
 /* Estilo para o botão de limpar filtro */
@@ -294,6 +373,11 @@ main {
     }
     .filtro-grupo-botoes {
         margin-left: 0;
+        align-self: stretch;
+        justify-content: center;
+    }
+    .filtro-grupo {
+        min-width: unset;
     }
 }
 
