@@ -250,9 +250,10 @@ async function gerarPDF() {
     const { data: solicitacao, error: fetchError } = await supabase
         .from('solicitacoes')
         .select(`
-            id, created_at, status, itens, rota,
+            *,
             usuario:usuario_id(nome),
-            veiculo:veiculo_id(placa, qtd_equipe, supervisor:supervisor_id(nome))
+            veiculo:veiculo_id(placa, qtd_equipe, supervisor:supervisor_id(nome)),
+            enviado_por:enviado_por_id(nome)
         `)
         .eq('id', id)
         .single();
@@ -301,7 +302,7 @@ async function gerarPDF() {
             tituloCor = '#f44336'; // Vermelho
             break;
         case 'aprovado':
-            tituloPDF = 'Pendente Envio de Peças';
+            tituloPDF = 'Aprovado para Envio';
             tituloCor = '#2196F3'; // Azul
             break;
     }
@@ -316,47 +317,114 @@ async function gerarPDF() {
     doc.setLineWidth(0.5);
     doc.line(14, 25, 196, 25);
 
-    // --- INFORMAÇÕES GERAIS ---
-
-    const labelCol1 = 58;
-    const valueCol1 = 60;
-    const labelCol2 = 143;
-    const valueCol2 = 145;
-
-    doc.setFontSize(12);
-    doc.setTextColor(40); // Cor de texto padrão (cinza escuro)
-
+    // --- INFORMAÇÕES GERAIS E ASSINATURAS (NOVO LAYOUT) ---
+    doc.setFontSize(10);
+    doc.setTextColor(40);
     let startY = 40;
+    const lineHeight = 7; // Espaçamento entre linhas
+    const leftMargin = 14;
+    const rightMargin = 120;
 
-    // Helper para desenhar campos alinhados
-    const drawField = (label, value, y, isSecondColumn = false) => {
-        const labelX = isSecondColumn ? labelCol2 : labelCol1;
-        const valueX = isSecondColumn ? valueCol2 : valueCol1;
+    // Função auxiliar para desenhar texto com rótulo em negrito
+    const drawLabeledText = (label, value, x, y) => {
         doc.setFont('helvetica', 'bold');
-        doc.text(label, labelX, y, { align: 'right' });
+        doc.text(label, x, y);
         doc.setFont('helvetica', 'normal');
-        doc.text(String(value), valueX, y);
+        doc.text(String(value), x + doc.getTextWidth(label), y);
     };
 
+    // Coluna da Esquerda (Dados da Solicitação)
     const dataHora = new Date(solicitacao.created_at).toLocaleString('pt-BR');
-    drawField('Código da Solicitação:', String(solicitacao.id).padStart(5, '0'), startY);
-    drawField('Data da Solicitação:', dataHora, startY, true);
 
-    startY += 8;
-    drawField('Técnico:', solicitacao.usuario ? solicitacao.usuario.nome : 'N/A', startY);
+    // ROTA DE ENTREGA primeiro
+    doc.setFontSize(15); // Aumentar fonte para destacar
+    doc.setTextColor('#f44336'); // Cor vermelha para destacar
+    drawLabeledText('ROTA DE ENTREGA:  ', solicitacao.rota || 'Não definida', leftMargin, startY);
+    doc.setTextColor(40); // Restaurar cor padrão
+    doc.setFontSize(10); // Restaurar fonte padrão
+    startY += lineHeight;
 
-    startY += 8;
-    drawField('Placa do Veículo:', solicitacao.veiculo ? solicitacao.veiculo.placa : 'N/A', startY);
-    drawField('Supervisor:', solicitacao.veiculo?.supervisor?.nome || 'N/A', startY, true);
+    drawLabeledText('Código da Solicitação:    ', String(solicitacao.id).padStart(5, '0'), leftMargin, startY);
+    startY += lineHeight;
+    drawLabeledText('Data da Solicitação:   ', dataHora, leftMargin, startY);
+    startY += lineHeight;
+    drawLabeledText('Técnico:  ', solicitacao.usuario?.nome || 'N/A', leftMargin, startY);
+    startY += lineHeight;
 
-    startY += 8;
-    drawField('Rota de Entrega:', solicitacao.rota || 'Não definida', startY);
+    // Lógica para negritar "Placa do Veículo" e "Supervisor" na mesma linha
+    let currentXPlaca = leftMargin;
+    // 1. "Placa do Veículo:" (Negrito)
+    doc.setFont('helvetica', 'bold');
+    const labelPlaca = 'Placa do Veículo:   ';
+    doc.text(labelPlaca, currentXPlaca, startY);
+    currentXPlaca += doc.getTextWidth(labelPlaca);
 
-    startY += 8;
+    // 2. Valor da placa (Normal)
+    doc.setFont('helvetica', 'normal');
+    const valorPlaca = `${solicitacao.veiculo?.placa || 'N/A'}    `; // Adiciona espaço para separar
+    doc.text(valorPlaca, currentXPlaca, startY);
+    currentXPlaca += doc.getTextWidth(valorPlaca);
+
+    // 3. "Supervisor:" (Negrito)
+    doc.setFont('helvetica', 'bold');
+    const labelSupervisor = 'Supervisor: ';
+    doc.text(labelSupervisor, currentXPlaca, startY);
+    currentXPlaca += doc.getTextWidth(labelSupervisor);
+
+    // 4. Valor do "Supervisor" (Normal)
+    doc.setFont('helvetica', 'normal');
+    doc.text(solicitacao.veiculo?.supervisor?.nome || 'N/A', currentXPlaca, startY);
+    startY += lineHeight;
+
+    const dataEnvio = solicitacao.data_envio ? new Date(solicitacao.data_envio).toLocaleString('pt-BR') : 'Aguardando envio';
+    const enviadoPor = solicitacao.enviado_por?.nome || (solicitacao.status === 'enviado' ? 'Não registrado' : '');
+
+    // Lógica para negritar múltiplos rótulos na mesma linha
+    let currentX = leftMargin;
+    // 1. "Data de Envio:" (Negrito)
+    doc.setFont('helvetica', 'bold');
+    const labelData = 'Data de Envio:  ';
+    doc.text(labelData, currentX, startY);
+    currentX += doc.getTextWidth(labelData);
+
+    // 2. Valor da data (Normal)
+    doc.setFont('helvetica', 'normal');
+    const valorData = `${dataEnvio}    `; // Adiciona espaço para separar
+    doc.text(valorData, currentX, startY);
+    currentX += doc.getTextWidth(valorData);
+
+    // 3. "Enviado por:" (Negrito)
+    doc.setFont('helvetica', 'bold');
+    const labelEnviado = 'Enviado por: ';
+    doc.text(labelEnviado, currentX, startY);
+    currentX += doc.getTextWidth(labelEnviado);
+
+    // 4. Valor do "Enviado por" (Normal)
+    doc.setFont('helvetica', 'normal');
+    doc.text(enviadoPor, currentX, startY);
+
+    // Pula para a próxima linha antes de adicionar o campo QTD Equipe
+    startY += lineHeight;
+
     // Adicionar QTD Equipe em vermelho
     doc.setTextColor('#f44336'); // Cor vermelha
-    drawField('QTD Equipe:', solicitacao.veiculo?.qtd_equipe || 'N/A', startY);
+    drawLabeledText('QTD Equipe: ', solicitacao.veiculo?.qtd_equipe || 'N/A', leftMargin, startY);
     doc.setTextColor(40); // Restaurar cor padrão (cinza escuro)
+    startY += lineHeight;
+
+    // Coluna da Direita (Assinaturas)
+    let signatureY = 40;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Status:', rightMargin, signatureY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(' _____________________________', rightMargin + doc.getTextWidth('Status:'), signatureY);
+
+    signatureY += lineHeight * 2; // Espaço maior entre as assinaturas
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Separado Por:', rightMargin, signatureY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(' ___________________________', rightMargin + doc.getTextWidth('Separado Por:'), signatureY);
     
     // --- TABELA DE ITENS ---
 

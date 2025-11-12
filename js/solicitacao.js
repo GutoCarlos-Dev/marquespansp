@@ -4,6 +4,214 @@
 let todosVeiculos = []; // Cache para os dados dos veículos
 let itensSelecionados = [];
 
+// Função para gerar PDF
+async function gerarPDF() {
+    // Simular dados para o PDF (como não há solicitação salva, usar dados da tela)
+    const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+    const solicitacao = {
+        id: '00000', // Placeholder
+        created_at: new Date().toISOString(),
+        status: 'pendente',
+        rota: '', // Não definido ainda
+        itens: itensSelecionados,
+        usuario: { nome: usuarioLogado?.nome || 'N/A' },
+        veiculo: {
+            placa: document.getElementById('placa')?.selectedOptions[0]?.text || 'N/A',
+            qtd_equipe: 'N/A', // Não disponível na criação
+            supervisor: { nome: document.getElementById('supervisor')?.value || 'N/A' }
+        }
+    };
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // --- CABEÇALHO ---
+
+    // IMPORTANTE: Para usar seu logo 'logo.png', converta-o para o formato Base64.
+    // 1. Acesse um conversor online como: https://www.base64-image.de/
+    // 2. Envie seu arquivo 'logo.png'.
+    // 3. Copie o texto gerado e cole-o dentro das aspas da variável 'logoBase64' abaixo.
+    const logoBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXQAAABKCAYAAACrZK86AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABSSURBVHhe7cExAQAAAMKg9U9tCF8gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwZ08AAQAB2ds4AAAAAElFTkSuQmCC'; // Substitua este conteúdo
+    const placeholderLogo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXQAAABKCAYAAACrZK86AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABSSURBVHhe7cExAQAAAMKg9U9tCF8gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwZ08AAQAB2ds4AAAAAElFTkSuQmCC';
+
+    // Adiciona a logo apenas se não for o placeholder, tratando possíveis erros.
+    if (logoBase64 && logoBase64 !== placeholderLogo) {
+        try {
+            doc.addImage(logoBase64, 'PNG', 150, 8, 45, 15);
+        } catch (e) {
+            console.warn('Não foi possível adicionar o logo ao PDF. Verifique se o código Base64 está correto.', e);
+            alert('Aviso: O logo não pôde ser carregado, mas o PDF foi gerado mesmo assim.');
+        }
+    } else {
+        console.log('Logo placeholder detectado. Pulando a adição do logo no PDF. Substitua o conteúdo da variável "logoBase64" para exibir o logo da sua empresa.');
+    }
+
+    // Título do Documento dinâmico com base no status
+    let tituloPDF = 'Relatório de Solicitação de Peças'; // Título padrão
+    let tituloCor = '#000000'; // Preto (padrão)
+
+    switch (solicitacao.status) {
+        case 'enviado':
+            tituloPDF = 'Resumo de Envio de Peças';
+            tituloCor = '#4CAF50'; // Verde
+            break;
+        case 'rejeitado':
+            tituloPDF = 'Rejeitado o Envio de Peças';
+            tituloCor = '#f44336'; // Vermelho
+            break;
+        case 'aprovado':
+            tituloPDF = 'Detalhes da Solicitação';
+            tituloCor = '#2196F3'; // Azul
+            break;
+    }
+    // Título do Documento
+    doc.setFontSize(20);
+    doc.setTextColor(tituloCor);
+    doc.setFont('helvetica', 'bold');
+    doc.text(tituloPDF, 14, 20);
+
+    // Linha divisória
+    doc.setDrawColor(76, 175, 80);
+    doc.setLineWidth(0.5);
+    doc.line(14, 25, 196, 25);
+
+    // --- INFORMAÇÕES GERAIS E ASSINATURAS (NOVO LAYOUT) ---
+    doc.setFontSize(10);
+    doc.setTextColor(40);
+    let startY = 40;
+    const lineHeight = 7; // Espaçamento entre linhas
+    const leftMargin = 14;
+    const rightMargin = 120;
+
+    // Função auxiliar para desenhar texto com rótulo em negrito
+    const drawLabeledText = (label, value, x, y) => {
+        doc.setFont('helvetica', 'bold');
+        doc.text(label, x, y);
+        doc.setFont('helvetica', 'normal');
+        doc.text(String(value), x + doc.getTextWidth(label), y);
+    };
+
+    // Coluna da Esquerda (Dados da Solicitação)
+    const dataHora = new Date(solicitacao.created_at).toLocaleString('pt-BR');
+
+    // ROTA DE ENTREGA primeiro
+    doc.setFontSize(15); // Aumentar fonte para destacar
+    doc.setTextColor('#f44336'); // Cor vermelha para destacar
+    drawLabeledText('ROTA DE ENTREGA:  ', solicitacao.rota || 'Não definida', leftMargin, startY);
+    doc.setTextColor(40); // Restaurar cor padrão
+    doc.setFontSize(10); // Restaurar fonte padrão
+    startY += lineHeight;
+
+    drawLabeledText('Código da Solicitação:    ', String(solicitacao.id).padStart(5, '0'), leftMargin, startY);
+    startY += lineHeight;
+    drawLabeledText('Data da Solicitação:   ', dataHora, leftMargin, startY);
+    startY += lineHeight;
+    drawLabeledText('Técnico:  ', solicitacao.usuario?.nome || 'N/A', leftMargin, startY);
+    startY += lineHeight;
+
+    // Lógica para negritar "Placa do Veículo" e "Supervisor" na mesma linha
+    let currentXPlaca = leftMargin;
+    // 1. "Placa do Veículo:" (Negrito)
+    doc.setFont('helvetica', 'bold');
+    const labelPlaca = 'Placa do Veículo:   ';
+    doc.text(labelPlaca, currentXPlaca, startY);
+    currentXPlaca += doc.getTextWidth(labelPlaca);
+
+    // 2. Valor da placa (Normal)
+    doc.setFont('helvetica', 'normal');
+    const valorPlaca = `${solicitacao.veiculo?.placa || 'N/A'}    `; // Adiciona espaço para separar
+    doc.text(valorPlaca, currentXPlaca, startY);
+    currentXPlaca += doc.getTextWidth(valorPlaca);
+
+    // 3. "Supervisor:" (Negrito)
+    doc.setFont('helvetica', 'bold');
+    const labelSupervisor = 'Supervisor: ';
+    doc.text(labelSupervisor, currentXPlaca, startY);
+    currentXPlaca += doc.getTextWidth(labelSupervisor);
+
+    // 4. Valor do "Supervisor" (Normal)
+    doc.setFont('helvetica', 'normal');
+    doc.text(solicitacao.veiculo?.supervisor?.nome || 'N/A', currentXPlaca, startY);
+    startY += lineHeight;
+
+    // Adicionar QTD Equipe em vermelho
+    doc.setTextColor('#f44336'); // Cor vermelha
+    drawLabeledText('QTD Equipe: ', solicitacao.veiculo?.qtd_equipe || 'N/A', leftMargin, startY);
+    doc.setTextColor(40); // Restaurar cor padrão (cinza escuro)
+    startY += lineHeight;
+
+    // Coluna da Direita (Assinaturas)
+    let signatureY = 40;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Status:', rightMargin, signatureY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(' _____________________________', rightMargin + doc.getTextWidth('Status:'), signatureY);
+
+    signatureY += lineHeight * 2; // Espaço maior entre as assinaturas
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Separado Por:', rightMargin, signatureY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(' ___________________________', rightMargin + doc.getTextWidth('Separado Por:'), signatureY);
+
+    // --- TABELA DE ITENS ---
+
+    // Adicionar total de peças antes da tabela
+    const totalQuantidadePDF = solicitacao.itens.reduce((total, item) => total + item.quantidade, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Total de Peças: ${totalQuantidadePDF}`, 196, startY + 10, { align: 'right' });
+
+    const tableColumn = ["Código", "Nome da Peça", "Quantidade"];
+    const tableRows = [];
+
+    solicitacao.itens.forEach(item => {
+        tableRows.push([item.codigo, item.nome, item.quantidade]);
+    });
+
+    doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: startY + 15, // Posição inicial da tabela ajustada para depois do total
+        theme: 'grid',
+        headStyles: { fillColor: [76, 175, 80] },
+        styles: { font: 'helvetica', fontSize: 8, cellPadding: 2 }, // Fonte e padding reduzidos para caber mais itens
+        margin: { bottom: 20 } // Margem inferior para o rodapé
+    });
+
+    // --- RODAPÉ ---
+    const pageCount = doc.internal.getNumberOfPages();
+    const codigoSolicitacaoFormatado = String(solicitacao.id).padStart(5, '0');
+
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        // --- INFORMAÇÕES DO DOCUMENTO ---
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+
+        const textoData = `Documento gerado em: ${new Date().toLocaleString('pt-BR')}`;
+
+        // Se houver mais de uma página, adiciona o código da solicitação em negrito
+        if (pageCount > 1) {
+            doc.setFont('helvetica', 'normal');
+            doc.text(textoData, 14, 287);
+
+            const textoCodigo = ` (Código da Solicitação: ${codigoSolicitacaoFormatado})`;
+            doc.setFont('helvetica', 'bold');
+            doc.text(textoCodigo, 14 + doc.getTextWidth(textoData), 287);
+        } else {
+            doc.setFont('helvetica', 'normal');
+            doc.text(textoData, 14, 287);
+        }
+
+        // Restaura a fonte para normal para a paginação
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Página ${i} de ${pageCount}`, 196, 287, { align: 'right' });
+    }
+
+    // Salvar o PDF
+    doc.save(`solicitacao_${String(solicitacao.id).padStart(5, '0')}.pdf`);
+}
+
 // Função para carregar grid de itens vazia com botão adicionar
 function carregarGridItens() {
     const container = document.getElementById('itens-grid');
