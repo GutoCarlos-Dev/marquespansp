@@ -648,6 +648,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Preencher nome do técnico
     document.getElementById('nome-tecnico').value = usuarioLogado.nome;
 
+    // Configurar botão Modo APP
+    setupBotaoApp();
+
     // Carregar dados dinâmicos do Supabase
     preencherCodigoSolicitacao(); // Apenas preenche o campo com texto padrão
     await carregarVeiculos(usuarioLogado); // Passa o objeto do usuário logado
@@ -707,3 +710,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 });
+
+function setupBotaoApp() {
+    const tituloPagina = document.querySelector('main h2');
+    if (tituloPagina && !document.getElementById('btn-modo-app')) {
+        const btnApp = document.createElement('button');
+        btnApp.id = 'btn-modo-app';
+        btnApp.innerHTML = '📱 Modo APP';
+        btnApp.style.marginLeft = '15px';
+        btnApp.style.padding = '6px 12px';
+        btnApp.style.backgroundColor = '#4CAF50';
+        btnApp.style.color = 'white';
+        btnApp.style.border = 'none';
+        btnApp.style.borderRadius = '20px';
+        btnApp.style.cursor = 'pointer';
+        btnApp.style.fontSize = '0.9rem';
+        btnApp.style.verticalAlign = 'middle';
+        
+        btnApp.onclick = () => window.location.href = 'solicitacao_app.html';
+        
+        tituloPagina.appendChild(btnApp);
+    }
+}

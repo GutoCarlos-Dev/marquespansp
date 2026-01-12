@@ -68,14 +68,11 @@ function atualizarMenu() {
 
     if (usuarioLogado.nivel === 'tecnico') {
         menuContainer.appendChild(criarBotao('Nova Solicitação', carregarSolicitacao));
-        menuContainer.appendChild(criarBotao('📱 Modo App', carregarAppMobile));
     } else if (usuarioLogado.nivel === 'supervisor') {
         menuContainer.appendChild(criarBotao('Nova Solicitação', carregarSolicitacao));
-        menuContainer.appendChild(criarBotao('📱 Modo App', carregarAppMobile));
         menuContainer.appendChild(criarBotao('Aprovar Solicitações', carregarAprovacao));
     } else if (usuarioLogado.nivel === 'matriz') {
         menuContainer.appendChild(criarBotao('Nova Solicitação', carregarSolicitacao));
-        menuContainer.appendChild(criarBotao('📱 Modo App', carregarAppMobile));
         menuContainer.appendChild(criarBotao('Aprovar Solicitações', carregarAprovacao));
         menuContainer.appendChild(criarBotao('Solicitações Aprovadas', carregarAprovados));
     } else if (usuarioLogado.nivel === 'administrador') {
@@ -99,7 +96,6 @@ function atualizarMenu() {
 
         // Outros botões
         menuContainer.appendChild(criarBotao('Nova Solicitação', carregarSolicitacao));
-        menuContainer.appendChild(criarBotao('📱 Modo App', carregarAppMobile));
         menuContainer.appendChild(criarBotao('Aprovar Solicitações', carregarAprovacao));
         menuContainer.appendChild(criarBotao('Solicitações Aprovadas', carregarAprovados));
     }
@@ -134,11 +130,6 @@ function carregarDashboard() {
 // Função para carregar solicitação
 function carregarSolicitacao() {
     window.location.href = 'solicitacao.html';
-}
-
-// Função para carregar versão mobile (App)
-function carregarAppMobile() {
-    window.location.href = 'solicitacao_app.html';
 }
 
 // Função para carregar aprovação
