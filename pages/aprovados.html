@@ -6,6 +6,33 @@
     <title>Solicitações Aprovadas</title>
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/aprovados.css" />
+    <style>
+        /* Estilos para tabela com scroll e cabeçalho fixo */
+        .table-container {
+            max-height: 70vh; /* Altura máxima para ativar o scroll */
+            overflow-y: auto;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        #tabela-aprovados thead th {
+            position: sticky;
+            top: 0;
+            background-color: #4CAF50; /* Mantém o fundo verde do cabeçalho */
+            color: white;
+            z-index: 10;
+            cursor: pointer; /* Indica que é clicável */
+        }
+
+        #tabela-aprovados thead th:hover {
+            background-color: #45a049; /* Efeito hover */
+        }
+
+        /* Indicadores de ordenação */
+        .sort-asc::after { content: " ▲"; font-size: 0.8em; }
+        .sort-desc::after { content: " ▼"; font-size: 0.8em; }
+    </style>
 </head>
 <body>
     <header>
@@ -76,24 +103,26 @@
         </form>
 
         <!-- Grid de Solicitações Aprovadas -->
-        <table id="tabela-aprovados">
-            <thead>
-                <tr>
-                    <th>Código</th>
-                    <th>Data</th>
-                    <th>Técnico</th>
-                    <th>Placa</th>
-                    <th>Supervisor</th>
-                    <th>Status</th>
-                    <th>Data Envio</th>
-                    <th>Enviado Por</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr><td colspan="9">Utilize os filtros e clique em "Buscar" para ver as solicitações.</td></tr>
-            </tbody>
-        </table>
+        <div class="table-container">
+            <table id="tabela-aprovados">
+                <thead>
+                    <tr>
+                        <th data-sort="id">Código</th>
+                        <th data-sort="data_aprovacao">Data</th>
+                        <th data-sort="usuario.nome">Técnico</th>
+                        <th data-sort="veiculo.placa">Placa</th>
+                        <th data-sort="veiculo.supervisor.nome">Supervisor</th>
+                        <th data-sort="status">Status</th>
+                        <th data-sort="data_envio">Data Envio</th>
+                        <th data-sort="enviado_por.nome">Enviado Por</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="9">Utilize os filtros e clique em "Buscar" para ver as solicitações.</td></tr>
+                </tbody>
+            </table>
+        </div>
     </main>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

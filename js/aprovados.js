@@ -4,6 +4,9 @@
 let todosVeiculos = [];
 let todosUsuariosEnvio = [];
 let todosSupervisores = [];
+let solicitacoesAtuais = []; // Armazena os dados atuais para ordenação
+let colunaAtualOrdenacao = '';
+let ordemAscendente = true;
 
 // Carregar opções de filtros
 async function carregarOpcoesFiltros() {
@@ -140,7 +143,8 @@ async function buscarSolicitacoes() {
         return;
     }
 
-    exibirSolicitacoes(solicitacoes);
+    solicitacoesAtuais = solicitacoes || [];
+    exibirSolicitacoes(solicitacoesAtuais);
 }
 
 // Exibir solicitações na tabela
@@ -412,6 +416,45 @@ async function enviarSolicitacoesEmMassa() {
     }
 }
 
+// Função para ordenar a tabela
+function ordenarTabela(coluna) {
+    if (colunaAtualOrdenacao === coluna) {
+        ordemAscendente = !ordemAscendente;
+    } else {
+        colunaAtualOrdenacao = coluna;
+        ordemAscendente = true;
+    }
+
+    // Atualizar indicadores visuais
+    document.querySelectorAll('#tabela-aprovados th').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (th.dataset.sort === coluna) {
+            th.classList.add(ordemAscendente ? 'sort-asc' : 'sort-desc');
+        }
+    });
+
+    solicitacoesAtuais.sort((a, b) => {
+        let valorA = obterValor(a, coluna);
+        let valorB = obterValor(b, coluna);
+
+        if (valorA === null || valorA === undefined) valorA = '';
+        if (valorB === null || valorB === undefined) valorB = '';
+
+        if (typeof valorA === 'string') valorA = valorA.toLowerCase();
+        if (typeof valorB === 'string') valorB = valorB.toLowerCase();
+
+        if (valorA < valorB) return ordemAscendente ? -1 : 1;
+        if (valorA > valorB) return ordemAscendente ? 1 : -1;
+        return 0;
+    });
+
+    exibirSolicitacoes(solicitacoesAtuais);
+}
+
+// Função auxiliar para obter valor de objeto aninhado (ex: usuario.nome)
+function obterValor(obj, caminho) {
+    return caminho.split('.').reduce((o, k) => (o || {})[k], obj);
+}
 
 
 // Função para exportar os dados da tabela para um arquivo .xlsx
@@ -441,4 +484,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btn-buscar').addEventListener('click', buscarSolicitacoes);
     document.getElementById('btn-exportar').addEventListener('click', exportarParaPlanilha);
     document.getElementById('btn-enviar-massa').addEventListener('click', enviarSolicitacoesEmMassa);
+
+    // Adicionar eventos de clique para ordenação
+    document.querySelectorAll('#tabela-aprovados th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+            ordenarTabela(th.dataset.sort);
+        });
+    });
 });
