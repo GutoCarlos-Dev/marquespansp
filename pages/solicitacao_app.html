@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nova Solicitação (App)</title>
+    <link rel="stylesheet" href="../css/solicitacao_app.css">
+</head>
+<body>
+    <!-- Header Fixo -->
+    <header class="app-header">
+        <button id="btn-voltar" class="btn-icon" onclick="window.history.back()">&#8592;</button>
+        <h1>Nova Solicitação</h1>
+        <div class="header-spacer"></div>
+    </header>
+
+    <main class="app-content">
+        <form id="form-solicitacao" onsubmit="return false;">
+            <!-- Card do Técnico e Data -->
+            <div class="card info-card">
+                <div class="row">
+                    <div class="col">
+                        <label class="label-sm">Técnico</label>
+                        <div id="nome-tecnico" class="value-text">Carregando...</div>
+                    </div>
+                    <div class="col text-right">
+                        <label class="label-sm">Data</label>
+                        <div id="data-hoje" class="value-text">--/--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card do Veículo -->
+            <div class="card">
+                <div class="form-group">
+                    <label for="placa">Veículo / Placa</label>
+                    <select id="placa" class="form-control" required>
+                        <option value="">Selecione...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Supervisor</label>
+                    <input type="text" id="supervisor" class="form-control" readonly placeholder="Selecione o veículo">
+                </div>
+            </div>
+
+            <!-- Lista de Itens -->
+            <div class="items-section">
+                <div class="section-header">
+                    <h2>Itens da Solicitação</h2>
+                    <span class="badge" id="contador-itens">0</span>
+                </div>
+                
+                <div id="lista-itens" class="items-list">
+                    <div class="empty-state">
+                        <p>Nenhum item adicionado</p>
+                        <button type="button" class="btn-outline" onclick="abrirModalAdicionar()">+ Adicionar Peça</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="spacer-bottom"></div>
+        </form>
+    </main>
+
+    <!-- Botão Flutuante de Adicionar -->
+    <button class="fab-add" onclick="abrirModalAdicionar()">+</button>
+
+    <!-- Barra Inferior de Ação -->
+    <div class="bottom-bar">
+        <button type="button" id="btn-salvar" class="btn-primary btn-block btn-lg">ENVIAR SOLICITAÇÃO</button>
+    </div>
+
+    <!-- Modal Adicionar Peça (Full Screen Mobile) -->
+    <div id="modal-adicionar" class="modal-mobile">
+        <div class="modal-header">
+            <button type="button" class="btn-close" onclick="fecharModalAdicionar()">&#10005;</button>
+            <h3>Adicionar Peça</h3>
+            <div style="width: 24px;"></div>
+        </div>
+        <div class="modal-body">
+            <div class="form-group search-group">
+                <input type="text" id="busca-peca" class="form-control search-input" placeholder="Buscar peça por nome ou código..." autocomplete="off">
+                <div id="resultados-busca" class="search-results"></div>
+            </div>
+
+            <div id="container-selecao" style="display: none;">
+                <div class="selected-item-card">
+                    <div class="selected-label">Peça selecionada:</div>
+                    <div id="nome-peca-selecionada" class="selected-name"></div>
+                    <div id="codigo-peca-selecionada" class="selected-code"></div>
+                </div>
+
+                <div class="form-group qtd-group">
+                    <label>Quantidade</label>
+                    <div class="qtd-control">
+                        <button type="button" class="btn-qtd" onclick="alterarQtd(-1)">-</button>
+                        <input type="number" id="qtd-item" value="1" min="1" class="form-control qtd-input">
+                        <button type="button" class="btn-qtd" onclick="alterarQtd(1)">+</button>
+                    </div>
+                </div>
+
+                <button type="button" id="btn-confirmar-item" class="btn-primary btn-block btn-lg">ADICIONAR À LISTA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/solicitacao_app.js"></script>
+</body>
+</html>
