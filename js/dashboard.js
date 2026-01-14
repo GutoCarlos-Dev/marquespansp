@@ -409,6 +409,12 @@ function renderRecentActivityGrid(solicitacoes) {
 
     solicitacoes.forEach(s => {
         const tr = document.createElement('tr');
+        
+        // Configura a linha para ser clicável e abrir o resumo do pedido
+        tr.style.cursor = 'pointer';
+        tr.title = 'Clique para ver o Resumo do Pedido';
+        tr.onclick = () => window.open(`detalhes_solicitacao.html?id=${s.id}`, '_blank');
+
         tr.innerHTML = `
             <td>${String(s.id).padStart(5, '0')}</td>
             <td>${new Date(s.created_at).toLocaleString('pt-BR')}</td>
