@@ -88,6 +88,29 @@ function setupEventos() {
     const inputBusca = document.getElementById('busca-peca');
     inputBusca.addEventListener('input', debounce(buscarPecas, 500));
 
+    // Adicionar botão de "Listar Tudo" (setinha) ao lado do campo de busca
+    if (inputBusca && inputBusca.parentNode) {
+        // Criar wrapper para alinhar input e botão
+        const wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.alignItems = 'center';
+        wrapper.style.gap = '8px';
+        
+        inputBusca.parentNode.insertBefore(wrapper, inputBusca);
+        wrapper.appendChild(inputBusca);
+        inputBusca.style.flex = '1'; // Input ocupa o espaço restante
+
+        const btnListar = document.createElement('button');
+        btnListar.type = 'button';
+        btnListar.innerHTML = '&#9662;'; // Seta para baixo
+        btnListar.className = 'btn-outline'; // Reutiliza classe existente
+        btnListar.style.padding = '0 15px';
+        btnListar.style.height = '42px'; // Altura aproximada para alinhar
+        btnListar.title = 'Listar todas as peças';
+        btnListar.addEventListener('click', listarTodasPecas);
+        wrapper.appendChild(btnListar);
+    }
+
     // Botão Salvar
     document.getElementById('btn-salvar').addEventListener('click', salvarSolicitacao);
     
@@ -149,6 +172,36 @@ async function buscarPecas() {
         });
     } else {
         resultadosDiv.style.display = 'none';
+    }
+}
+
+async function listarTodasPecas() {
+    const resultadosDiv = document.getElementById('resultados-busca');
+    resultadosDiv.style.display = 'block';
+    resultadosDiv.innerHTML = '<div style="padding:10px; text-align:center; color:#666;">Carregando...</div>';
+
+    const { data, error } = await supabase
+        .from('pecas')
+        .select('id, codigo, nome')
+        .order('nome');
+
+    if (error) {
+        console.error(error);
+        resultadosDiv.innerHTML = '<div style="padding:10px; text-align:center; color:red;">Erro ao carregar peças.</div>';
+        return;
+    }
+
+    resultadosDiv.innerHTML = '';
+    if (data && data.length > 0) {
+        data.forEach(peca => {
+            const div = document.createElement('div');
+            div.className = 'search-item';
+            div.innerHTML = `<strong>${peca.codigo}</strong> - ${peca.nome}`;
+            div.onclick = () => selecionarPeca(peca);
+            resultadosDiv.appendChild(div);
+        });
+    } else {
+        resultadosDiv.innerHTML = '<div style="padding:10px; text-align:center;">Nenhuma peça encontrada.</div>';
     }
 }
 
