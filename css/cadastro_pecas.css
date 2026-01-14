@@ -206,7 +206,7 @@ table .btn-excluir {
 
 /* Estilos para o contêiner da tabela com rolagem */
 .table-container {
-    max-height: 400px; /* Altura máxima antes da rolagem aparecer */
+    max-height: 60vh; /* Altura máxima para permitir rolagem vertical */
     overflow-y: auto;  /* Adiciona a barra de rolagem vertical */
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -217,7 +217,8 @@ table .btn-excluir {
 .table-container th {
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: 10;
+    background-color: #4CAF50; /* Garante que o fundo cubra o conteúdo ao rolar */
 }
 
 /* Responsivo para mobile */
