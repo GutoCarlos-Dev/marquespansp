@@ -147,7 +147,6 @@ table th {
 /* Estilos para cabeçalhos ordenáveis */
 table th.sortable {
     cursor: pointer;
-    position: relative;
     user-select: none; /* Impede a seleção de texto no cabeçalho */
 }
 
