@@ -291,29 +291,34 @@ main {
 
 /* Gráficos */
 .charts-container {
-    display: grid;
-    grid-template-columns: 1fr 2fr; /* Pie chart menor, bar chart maior */
-    gap: 2rem;
+    display: block;
+    position: relative;
+    width: 100%; /* Ajustado para ocupar a largura total, igual à tabela de atividades */
+    padding-bottom: 20px;
+    overflow: hidden; /* Esconde a barra de rolagem padrão */
+}
+
+.marquee-wrapper {
+    position: relative;
+    width: 100%;
+    overflow-x: hidden;
+    padding: 10px 0;
+}
+
+.marquee-track {
+    display: flex;
+    gap: 20px;
+    width: max-content; /* Permite que os itens fiquem em linha */
 }
 
 .chart-card {
     background: white;
-    padding: 1.5rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-.chart-card h3 {
-    margin-top: 0;
-    text-align: center;
-    color: #333;
-    margin-bottom: 1.5rem;
-}
-
-.chart-wrapper {
-    position: relative;
-    height: 300px; /* Define uma altura fixa para o container do gráfico */
-    width: 100%;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    display: block; /* Mostra sempre */
+    min-width: 450px; /* Largura fixa para parecer um card */
+    flex: 0 0 auto; /* Impede que o card encolha */
 }
 
 /* Grid de Atividade Recente */

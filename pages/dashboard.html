@@ -30,23 +30,39 @@
             </div>
 
             <!-- Gráficos -->
-            <div id="charts-container" class="charts-container">
-                <div class="chart-card">
-                    <h3>Status das Solicitações</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="status-chart"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card">
-                    <h3 id="bar-chart-title">Visão Geral</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="bar-chart"></canvas>
+            <div id="charts-container" class="charts-container" style="display: none;">
+                <div class="marquee-wrapper">
+                    <div class="marquee-track" id="marqueeTrack">
+                        <div id="status-chart-container" class="chart-card">
+                            <h3>Status das Solicitações</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="status-chart"></canvas>
+                            </div>
+                        </div>
+                        <div id="status-count-chart-container" class="chart-card">
+                            <h3>Quantidade por Status</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="status-count-chart"></canvas>
+                            </div>
+                        </div>
+                        <div id="bar-chart-container" class="chart-card">
+                            <h3 id="bar-chart-title">Visão Geral</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="bar-chart"></canvas>
+                            </div>
+                        </div>
+                        <div id="top-pecas-chart-container" class="chart-card">
+                            <h3>Top 10 Peças Mais Solicitadas</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="top-pecas-chart"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Grid de Atividade Recente -->
-            <div id="recent-activity-grid" class="recent-activity-grid">
+            <div id="recent-activity-container" class="recent-activity-grid">
                 <h3>Atividade Recentes</h3>
                 <table id="tabela-recente">
                     <thead></thead>
@@ -56,6 +72,7 @@
         </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>

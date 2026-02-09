@@ -21,28 +21,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         nomeUsuarioSpan.textContent = usuarioLogado.nomecompleto || usuarioLogado.nome;
     }
 
-    // Função para criar a estrutura do dashboard se não existir
-    function criarEstruturaDashboard() {
-        const container = document.getElementById('dashboard-container');
-        if (!container) return;
-
-        // Adiciona os contêineres apenas se eles não existirem
-        if (!document.getElementById('summary-cards')) {
-            container.innerHTML += '<div id="summary-cards" class="summary-cards-container"></div>';
-        }
-        if (!document.getElementById('charts-container')) {
-            container.innerHTML += `<div id="charts-container" class="charts-grid-container" style="display: none;">
-                <div id="status-chart-container" class="chart-card"><h3>Status das Solicitações</h3><canvas id="status-chart"></canvas></div>
-                <div id="bar-chart-container" class="chart-card"><h3 id="bar-chart-title"></h3><canvas id="bar-chart"></canvas></div>
-            </div>`;
-        }
-        // Adiciona o contêiner para a atividade recente
-        if (!document.getElementById('recent-activity-container')) {
-            container.innerHTML += `<div id="recent-activity-container" class="recent-activity-grid-container" style="display: none;">
-                <table id="tabela-recente"><thead></thead><tbody></tbody></table>
-            </div>`;
-        }
-    }
 
     // --- Container de Filtros ---    
     const filtroContainer = document.createElement('div');
@@ -81,9 +59,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         dashboardContainer.insertBefore(filtroContainer, dashboardContainer.firstChild);
     }
 
-    // Cria a estrutura de divs para os gráficos e cards
-    criarEstruturaDashboard();
-
     // Função para atualizar a visão geral com base em todos os filtros
     async function atualizarVisaoGeralComFiltro() {
         const dataInicio = document.getElementById('data-inicio').value;
@@ -103,6 +78,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (statusChartInstance) statusChartInstance.destroy();
         if (barChartInstance) barChartInstance.destroy();
+        if (topPecasChartInstance) topPecasChartInstance.destroy();
+        if (statusCountChartInstance) statusCountChartInstance.destroy();
 
         let solicitacoesFiltradas = [];
 
@@ -126,21 +103,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Renderiza os componentes com base nos checkboxes
         if (mostrarSolicitacoes) {
             renderizarDadosSolicitacoes(solicitacoesFiltradas, usuarioLogado.nivel);
-            if (chartsContainer) chartsContainer.style.display = 'grid';
+            if (chartsContainer) chartsContainer.style.display = 'block';
             if (recentActivityContainer) recentActivityContainer.style.display = 'block';
         }
 
         // Lógica para o gráfico de barras
-        const barChartContainer = document.getElementById('bar-chart-container');
-        if (barChartContainer) barChartContainer.style.display = 'none'; // Esconde por padrão
-
         if (mostrarPecas) {
             renderizarDadosPecas(solicitacoesFiltradas, usuarioLogado.nivel);
-            if (chartsContainer) chartsContainer.style.display = 'grid';
+            if (chartsContainer) chartsContainer.style.display = 'block';
+            
+            // NOVO: Renderiza o gráfico de Top 10 Peças
+            renderizarTopPecas(solicitacoesFiltradas);
+
         } else if (mostrarSolicitacoes) {
             // Se 'Peças' não está marcado, mas 'Solicitações' está, mostramos solicitações por técnico
             if (usuarioLogado.nivel !== 'tecnico') {
-                if (barChartContainer) barChartContainer.style.display = 'block';
                 const barChartTitle = document.getElementById('bar-chart-title');
                 if (barChartTitle) barChartTitle.textContent = 'Nº de Solicitações por Técnico';
 
@@ -166,6 +143,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!mostrarSolicitacoes && !mostrarPecas) {
             if (chartsContainer) chartsContainer.style.display = 'none';
         }
+
+        // NOVO: Configura o carrossel após renderizar os gráficos
+        setupCarousel();
     }
 
     // Adicionar listeners para os botões de filtro
@@ -187,6 +167,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Variáveis para armazenar as instâncias dos gráficos e destruí-las antes de recriar
 let statusChartInstance = null;
 let barChartInstance = null;
+let topPecasChartInstance = null;
+let statusCountChartInstance = null;
 
 // --- Funções de Busca de Dados ---
 
@@ -257,8 +239,6 @@ function renderizarDadosSolicitacoes(solicitacoes, nivelUsuario) {
     ]);
 
     // 2. Gráfico de Pizza: Status
-    const statusChartContainer = document.getElementById('status-chart-container');
-    if (statusChartContainer) statusChartContainer.style.display = 'block';
     const statusData = {
         'Pendente': solicitacoes.filter(s => s.status === 'pendente').length,
         'Aprovado': solicitacoes.filter(s => s.status === 'aprovado').length,
@@ -266,6 +246,9 @@ function renderizarDadosSolicitacoes(solicitacoes, nivelUsuario) {
         'Rejeitado': solicitacoes.filter(s => s.status === 'rejeitado').length
     };
     renderPieChart('status-chart', 'Status das Solicitações', Object.keys(statusData), Object.values(statusData));
+
+    // 4. Gráfico de Barras: Quantidade por Status (Novo)
+    renderStatusCountChart('status-count-chart', 'Quantidade por Status', Object.keys(statusData), Object.values(statusData));
 
     // 3. Grid de Atividade Recente
     const solicitacoesRecentes = [...solicitacoes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
@@ -283,13 +266,7 @@ function renderizarDadosPecas(solicitacoes, nivelUsuario) {
 
     // 2. Gráfico de Barras: Peças por Técnico
     // Não mostrar para técnico, pois só teria uma barra
-    if (nivelUsuario === 'tecnico') {
-        const barChartContainer = document.getElementById('bar-chart-container');
-        if (barChartContainer) barChartContainer.style.display = 'none';
-        return;
-    }
-    const barChartContainer = document.getElementById('bar-chart-container');
-    if (barChartContainer) barChartContainer.style.display = 'block';
+    if (nivelUsuario === 'tecnico') return;
 
     const barChartTitle = document.getElementById('bar-chart-title');
     if (barChartTitle) barChartTitle.textContent = 'Peças por Técnico';
@@ -305,6 +282,28 @@ function renderizarDadosPecas(solicitacoes, nivelUsuario) {
             }
         });
     renderBarChart('bar-chart', 'Nº de Peças', Object.keys(solicitacoesPorTecnico), Object.values(solicitacoesPorTecnico));
+}
+
+// NOVO: Função para renderizar o gráfico de Top 10 Peças
+function renderizarTopPecas(solicitacoes) {
+    const pecasCount = {};
+    solicitacoes
+        .filter(s => s.status !== 'rejeitado') // Não conta peças de solicitações rejeitadas
+        .forEach(s => {
+            (s.itens || []).forEach(item => {
+                const nomePeca = item.nome || 'Peça sem nome';
+                pecasCount[nomePeca] = (pecasCount[nomePeca] || 0) + item.quantidade;
+            });
+        });
+
+    const sortedPecas = Object.entries(pecasCount)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 10);
+
+    const labels = sortedPecas.map(([nome]) => nome);
+    const data = sortedPecas.map(([, quantidade]) => quantidade);
+
+    renderTopPecasChart('top-pecas-chart', 'Quantidade', labels, data);
 }
 
 // --- Funções Auxiliares de Renderização ---
@@ -333,20 +332,45 @@ function renderPieChart(canvasId, label, labels, data) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     statusChartInstance = new Chart(ctx, {
-        type: 'pie',
+        type: 'doughnut',
         data: {
             labels: labels,
             datasets: [{
                 label: label,
                 data: data,
-                backgroundColor: ['#ff9800', '#4CAF50', '#2196F3', '#f44336'], // Pendente, Aprovado, Enviado, Rejeitado
+                backgroundColor: [
+                    '#ff0019', // Pendente (Vermelho)
+                    '#249c40', // Aprovado (Verde)
+                    '#0cabf5', // Enviado (Azul)
+                    '#6c757d'  // Rejeitado (Cinza)
+                ],
+                borderColor: '#ffffff',
+                borderWidth: 2,
                 hoverOffset: 4
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false
-        }
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { 
+                    position: 'right',
+                    labels: { font: { size: 12 } }
+                },
+                datalabels: {
+                    color: '#fff',
+                    font: { weight: 'bold' },
+                    formatter: (value, ctx) => {
+                        let sum = 0;
+                        let dataArr = ctx.chart.data.datasets[0].data;
+                        dataArr.map(data => { sum += data; });
+                        let percentage = (value*100 / sum).toFixed(1)+"%";
+                        return value > 0 ? percentage : '';
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
     });
 }
 
@@ -365,9 +389,9 @@ function renderBarChart(canvasId, label, labels, data) {
             datasets: [{
                 label: label,
                 data: data,
-                backgroundColor: 'rgba(76, 175, 80, 0.6)',
-                borderColor: 'rgba(76, 175, 80, 1)',
-                borderWidth: 1
+                backgroundColor: '#17a2b8', // Azul Ciano
+                borderRadius: 4,
+                borderWidth: 0
             }]
         },
         options: {
@@ -380,8 +404,105 @@ function renderBarChart(canvasId, label, labels, data) {
                         stepSize: 1
                     }
                 }
+            },
+            plugins: {
+                legend: { display: false }
             }
         }
+    });
+}
+
+function renderTopPecasChart(canvasId, label, labels, data) {
+    if (topPecasChartInstance) {
+        topPecasChartInstance.destroy();
+    }
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    topPecasChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: label,
+                data: data,
+                backgroundColor: '#007bff', // Azul
+                borderRadius: 4,
+                borderWidth: 0
+            }]
+        },
+        options: {
+            indexAxis: 'y', // Gráfico de barras horizontal para melhor leitura
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        precision: 0
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false // O título do card já é suficiente
+                }
+            }
+        }
+    });
+}
+
+function renderStatusCountChart(canvasId, label, labels, data) {
+    if (statusCountChartInstance) {
+        statusCountChartInstance.destroy();
+    }
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    // Cores correspondentes aos status (mesmas do gráfico de rosca)
+    const bgColors = labels.map(l => {
+        if (l === 'Pendente') return '#ff0019';
+        if (l === 'Aprovado') return '#249c40';
+        if (l === 'Enviado') return '#0cabf5';
+        if (l === 'Rejeitado') return '#6c757d';
+        return '#333';
+    });
+
+    statusCountChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: label,
+                data: data,
+                backgroundColor: bgColors,
+                borderRadius: 4,
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                datalabels: {
+                    color: '#333',
+                    anchor: 'end',
+                    align: 'top',
+                    formatter: (value) => value > 0 ? value : '',
+                    font: { weight: 'bold' }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
     });
 }
 
@@ -423,5 +544,45 @@ function renderRecentActivityGrid(solicitacoes) {
             <td>${(s.itens || []).reduce((total, item) => total + item.quantidade, 0)}</td>
         `;
         tbody.appendChild(tr);
+    });
+}
+
+// NOVO: Função para controlar a rolagem automática (Marquee)
+function setupCarousel() {
+    const wrapper = document.querySelector('.marquee-wrapper');
+    if (!wrapper) return;
+
+    // Cancela animação anterior se houver (para evitar aceleração ao recarregar filtros)
+    if (wrapper.animationId) cancelAnimationFrame(wrapper.animationId);
+
+    let direction = 1; // 1 = direita, -1 = esquerda
+    const speed = 1;   // Velocidade da rolagem
+
+    function step() {
+        // Se o conteúdo couber na tela, não rola
+        if (wrapper.scrollWidth <= wrapper.clientWidth) {
+             wrapper.animationId = requestAnimationFrame(step);
+             return;
+        }
+
+        // Verifica se chegou ao fim ou ao início para inverter a direção
+        if (wrapper.scrollLeft + wrapper.clientWidth >= wrapper.scrollWidth - 1) {
+            direction = -1;
+        } else if (wrapper.scrollLeft <= 0) {
+            direction = 1;
+        }
+        wrapper.scrollLeft += speed * direction;
+        wrapper.animationId = requestAnimationFrame(step);
+    }
+    
+    // Inicia o loop de animação
+    wrapper.animationId = requestAnimationFrame(step);
+    
+    // Pausar ao passar o mouse para facilitar a leitura
+    wrapper.addEventListener('mouseenter', () => {
+        if (wrapper.animationId) cancelAnimationFrame(wrapper.animationId);
+    });
+    wrapper.addEventListener('mouseleave', () => {
+        wrapper.animationId = requestAnimationFrame(step);
     });
 }
