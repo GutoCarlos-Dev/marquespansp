@@ -75,6 +75,7 @@ function atualizarMenu() {
         menuContainer.appendChild(criarBotao('Nova Solicitação', carregarSolicitacao));
         menuContainer.appendChild(criarBotao('Aprovar Solicitações', carregarAprovacao));
         menuContainer.appendChild(criarBotao('Solicitações Aprovadas', carregarAprovados));
+        menuContainer.appendChild(criarBotao('Relatórios', carregarRelatorio));
     } else if (usuarioLogado.nivel === 'administrador') {
         // Dropdown de Cadastro
         const dropdown = document.createElement('div');
@@ -98,6 +99,7 @@ function atualizarMenu() {
         menuContainer.appendChild(criarBotao('Nova Solicitação', carregarSolicitacao));
         menuContainer.appendChild(criarBotao('Aprovar Solicitações', carregarAprovacao));
         menuContainer.appendChild(criarBotao('Solicitações Aprovadas', carregarAprovados));
+        menuContainer.appendChild(criarBotao('Relatórios', carregarRelatorio));
     }
 
     // Botão de Sair para todos
@@ -132,6 +134,11 @@ function carregarSolicitacao() {
     window.location.href = 'solicitacao.html';
 }
 
+// Função para carregar relatórios
+function carregarRelatorio() {
+    window.location.href = 'relatorio.html';
+}
+
 // Função para carregar aprovação
 function carregarAprovacao() {
     window.location.href = 'aprovacao.html';
@@ -161,7 +168,7 @@ console.log('Script app.js carregado');
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOMContentLoaded disparado');
-    if (window.location.pathname.includes('dashboard.html') || window.location.pathname.includes('cadastro_') || window.location.pathname.includes('solicitacao.html') || window.location.pathname.includes('aprovacao.html') || window.location.pathname.includes('aprovados.html') || window.location.pathname.includes('detalhes_solicitacao.html') || window.location.pathname.includes('envio_solicitacao.html')) {
+    if (window.location.pathname.includes('dashboard.html') || window.location.pathname.includes('cadastro_') || window.location.pathname.includes('solicitacao.html') || window.location.pathname.includes('aprovacao.html') || window.location.pathname.includes('aprovados.html') || window.location.pathname.includes('detalhes_solicitacao.html') || window.location.pathname.includes('envio_solicitacao.html') || window.location.pathname.includes('relatorio.html')) {
         console.log('Estamos em uma página do sistema');
         usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
         if (!usuarioLogado) {

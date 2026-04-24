@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - Sistema de Solicitação de Peças</title>
+    <link rel="stylesheet" href="../css/relatorio.css">
+    <link rel="stylesheet" href="../css/mobile-responsive.css">
+    <!-- Bibliotecas Necessárias -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <header>
+        <nav>
+            <div style="display: flex; align-items: center;">
+                <img src="../logo.png" alt="Logo" class="logo">
+                <h1>Painel de Relatórios</h1>
+            </div>
+            <div id="menu">
+                <button onclick="window.location.href='dashboard.html'">Dashboard</button>
+                <button onclick="window.location.href='solicitacao.html'">Nova Solicitação</button>
+                <button onclick="window.location.href='relatorio.html'" style="background-color: #388E3C; color: white;">Relatórios</button>
+                <button onclick="localStorage.removeItem('usuarioLogado'); window.location.href='../index.html'" class="btn-sair">Sair</button>
+            </div>
+            <button class="mobile-menu-toggle" onclick="document.getElementById('menu').classList.toggle('mobile-open')"></button>
+        </nav>
+    </header>
+
+    <main>
+        <div class="dashboard-header">
+            <h2>Centro de Relatórios, <span id="nome-usuario">...</span></h2>
+            <p>Filtre os dados e extraia informações detalhadas sobre as solicitações de peças.</p>
+        </div>
+
+        <div id="dashboard-container">
+            <!-- Os filtros são inseridos dinamicamente pelo relatorio.js -->
+             
+            <div id="summary-cards" class="summary-cards">
+                <!-- Cards preenchidos via JS -->
+            </div>
+
+            <div id="charts-container" class="charts-container">
+                <div class="marquee-wrapper">
+                    <div class="marquee-track">
+                        <div class="chart-card">
+                            <h3>Distribuição por Status (%)</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="status-chart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3 id="bar-chart-title">Desempenho por Técnico</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="bar-chart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Top 10 Peças Mais Pedidas</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="top-pecas-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="recent-activity-container" class="recent-activity-grid">
+                <h3>Listagem de Solicitações do Período</h3>
+                <table id="tabela-recente"></table>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/relatorio.js"></script>
+</body>
+</html>

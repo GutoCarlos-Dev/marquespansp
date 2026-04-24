@@ -13,7 +13,12 @@
         <nav>
             <img src="../logo.png" alt="Logo" class="logo">
             <h1>Nova Solicitação</h1>
-            <div id="menu"><!-- Menu será carregado dinamicamente pelo app.js --></div>
+            <div id="menu">
+                <button onclick="window.location.href='dashboard.html'">Dashboard</button>
+                <button onclick="window.location.href='solicitacao.html'" style="background-color: #388E3C; color: white;">Nova Solicitação</button>
+                <button onclick="localStorage.removeItem('usuarioLogado'); window.location.href='../index.html'" class="btn-sair">Sair</button>
+            </div>
+            <button class="mobile-menu-toggle" onclick="document.getElementById('menu').classList.toggle('mobile-open')"></button>
         </nav>
     </header>
     <main>
