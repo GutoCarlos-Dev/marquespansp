@@ -3,6 +3,7 @@
 let todosVeiculos = [];
 let itensSelecionados = [];
 let pecaSelecionadaAtual = null;
+let itemEditandoIndex = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Verificar Login
@@ -123,8 +124,12 @@ function setupEventos() {
 function abrirModalAdicionar() {
     const modal = document.getElementById('modal-adicionar');
     modal.classList.add('active');
+    itemEditandoIndex = null;
     
     // Resetar estado do modal
+    document.querySelector('#modal-adicionar .modal-header h3').textContent = 'Adicionar Peça';
+    document.getElementById('btn-confirmar-item').textContent = 'ADICIONAR À LISTA';
+    document.querySelector('#modal-adicionar .search-group').style.display = 'block';
     document.getElementById('busca-peca').value = '';
     document.getElementById('resultados-busca').innerHTML = '';
     document.getElementById('resultados-busca').style.display = 'none';
@@ -136,8 +141,34 @@ function abrirModalAdicionar() {
     setTimeout(() => document.getElementById('busca-peca').focus(), 300);
 }
 
+function abrirModalEditar(index) {
+    const item = itensSelecionados[index];
+    if (!item) return;
+
+    itemEditandoIndex = index;
+    pecaSelecionadaAtual = {
+        codigo: item.codigo,
+        nome: item.nome
+    };
+
+    document.querySelector('#modal-adicionar .modal-header h3').textContent = 'Editar Peça';
+    document.getElementById('btn-confirmar-item').textContent = 'SALVAR ALTERAÇÃO';
+    document.querySelector('#modal-adicionar .search-group').style.display = 'none';
+    document.getElementById('busca-peca').value = '';
+    document.getElementById('resultados-busca').innerHTML = '';
+    document.getElementById('resultados-busca').style.display = 'none';
+    document.getElementById('nome-peca-selecionada').textContent = item.nome;
+    document.getElementById('codigo-peca-selecionada').textContent = item.codigo;
+    document.getElementById('qtd-item').value = item.quantidade;
+    document.getElementById('container-selecao').style.display = 'block';
+    document.getElementById('modal-adicionar').classList.add('active');
+
+    setTimeout(() => document.getElementById('qtd-item').focus(), 300);
+}
+
 function fecharModalAdicionar() {
     document.getElementById('modal-adicionar').classList.remove('active');
+    itemEditandoIndex = null;
 }
 
 async function buscarPecas() {
@@ -230,6 +261,18 @@ function adicionarItemNaLista() {
     if (!pecaSelecionadaAtual) return;
     
     const qtd = parseInt(document.getElementById('qtd-item').value) || 1;
+
+    if (qtd < 1) {
+        alert('Informe uma quantidade válida.');
+        return;
+    }
+
+    if (itemEditandoIndex !== null) {
+        itensSelecionados[itemEditandoIndex].quantidade = qtd;
+        renderizarLista();
+        fecharModalAdicionar();
+        return;
+    }
     
     // Verificar se já existe
     const indexExistente = itensSelecionados.findIndex(i => i.codigo === pecaSelecionadaAtual.codigo);
@@ -274,9 +317,10 @@ function renderizarLista() {
             </div>
             <div class="item-actions">
                 <div class="item-qtd">${item.quantidade} un</div>
-                <button class="btn-delete" onclick="removerItem(${index})">&#128465;</button>
+                <button class="btn-delete" onclick="event.stopPropagation(); removerItem(${index})">&#128465;</button>
             </div>
         `;
+        card.onclick = () => abrirModalEditar(index);
         container.appendChild(card);
     });
 }
